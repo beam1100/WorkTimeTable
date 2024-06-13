@@ -3,11 +3,14 @@ package com.worktimetable
 import android.app.Dialog
 import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.CheckBox
+import android.widget.TextView
 import com.worktimetable.databinding.FragmentWorkBinding
 
 
@@ -25,6 +28,9 @@ class WorkFragment : Fragment() {
     private val vBinding get() = _vBinding!!
     private lateinit var mainActivity:MainActivity
 
+    private val workMapList = arrayListOf<HashMap<String,Any>>()
+    private val timeMapList = arrayListOf<HashMap<String,Any>>()
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _vBinding = FragmentWorkBinding.inflate(inflater, container, false)
         return vBinding.root
@@ -40,11 +46,11 @@ class WorkFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         vBinding.mkWorkTypeBtn.setOnClickListener {
-            mkWorkDilog()
+            mkWorkDialog()
         }
     }
 
-    private fun mkWorkDilog(){
+    private fun mkWorkDialog(){
         Dialog(requireContext()).apply {
             setContentView(R.layout.dialog_set_work)
             val layoutParams = window?.attributes
@@ -54,11 +60,33 @@ class WorkFragment : Fragment() {
             layoutParams?.height = (viewHeight * 0.9).toInt()
             window?.attributes = layoutParams
 
-            this.findViewById<Button>(R.id.mkAddWorkItemDialog).setOnClickListener {
 
+            this.findViewById<Button>(R.id.mkAddWorkDialogBtn).setOnClickListener {
+                mkAddWorkDialog {
+                    Log.d("test", """
+                        ${it.first}
+                        ${it.second}
+                    """.trimIndent())
+                }
             }
 
+            this.findViewById<Button>(R.id.saveWorkBtn).setOnClickListener {
+            }
+            show()
+        }
+    }
 
+    private fun mkAddWorkDialog(callback:(Pair<String,Boolean>)->Unit){
+        Dialog(requireContext()).apply{
+            setContentView(R.layout.dialog_add_work)
+            this.findViewById<Button>(R.id.addWorkBtn).setOnClickListener {
+                callback(
+                    Pair(
+                        this.findViewById<TextView>(R.id.toAddWorkName).text.toString(),
+                        this.findViewById<CheckBox>(R.id.isToAddPatrol).isChecked)
+                )
+                this.dismiss()
+            }
             show()
         }
     }

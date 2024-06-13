@@ -5,7 +5,7 @@
     android:layout_height="wrap_content">
 
     <ImageButton
-        android:id="@+id/imageButton2"
+        android:id="@+id/moveWorkUpBtn"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
@@ -14,7 +14,7 @@
         tools:src="@drawable/up" />
 
     <ImageButton
-        android:id="@+id/imageButton3"
+        android:id="@+id/moveWorkDownBtn"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
@@ -22,17 +22,15 @@
         tools:ignore="SpeakableTextPresentCheck"
         tools:src="@drawable/down" />
 
-    <EditText
-        android:id="@+id/itemWorkName"
+    <TextView
+        android:id="@+id/workNameInHolder"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:layout_weight="5"
-        android:ems="10"
-        android:inputType="text"
-        tools:ignore="SpeakableTextPresentCheck" />
+        android:gravity="center" />
 
     <ImageButton
-        android:id="@+id/imageButton4"
+        android:id="@+id/deleteWorkBtn"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
