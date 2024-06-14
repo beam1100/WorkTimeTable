@@ -2,40 +2,41 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="100dp">
 
     <ImageButton
         android:id="@+id/moveWorkUpBtn"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:layout_weight="1"
-        android:src="@android:drawable/btn_star"
+        android:src="@android:drawable/arrow_up_float"
         tools:ignore="SpeakableTextPresentCheck"
-        tools:src="@drawable/up" />
+        tools:src="@android:drawable/arrow_up_float" />
 
     <ImageButton
         android:id="@+id/moveWorkDownBtn"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:layout_weight="1"
-        android:src="@android:drawable/btn_star"
+        android:src="@android:drawable/arrow_down_float"
         tools:ignore="SpeakableTextPresentCheck"
-        tools:src="@drawable/down" />
+        tools:src="@android:drawable/arrow_down_float" />
 
     <TextView
         android:id="@+id/workNameInHolder"
         android:layout_width="0dp"
         android:layout_height="match_parent"
-        android:layout_weight="5"
-        android:gravity="center" />
+        android:layout_weight="3"
+        android:gravity="center"
+        android:textSize="20sp" />
 
     <ImageButton
         android:id="@+id/deleteWorkBtn"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:layout_weight="1"
-        android:src="@android:drawable/btn_star"
+        android:src="@android:drawable/ic_delete"
         tools:ignore="SpeakableTextPresentCheck"
-        tools:src="@drawable/delete" />
+        tools:src="@android:drawable/ic_delete" />
 
 </LinearLayout>

@@ -10,6 +10,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.CheckBox
+import android.widget.LinearLayout
 import android.widget.TextView
 import com.worktimetable.databinding.FragmentWorkBinding
 
@@ -60,16 +61,17 @@ class WorkFragment : Fragment() {
             layoutParams?.height = (viewHeight * 0.9).toInt()
             window?.attributes = layoutParams
 
-
             this.findViewById<Button>(R.id.mkAddWorkDialogBtn).setOnClickListener {
                 mkAddWorkDialog {
-                    Log.d("test", """
-                        ${it.first}
-                        ${it.second}
-                    """.trimIndent())
+                    this.findViewById<LinearLayout>(R.id.workLayout).removeAllViews()
+                    workMapList.add(hashMapOf(
+                        "workName" to it.first,
+                        "isPatrol" to it.second
+                    ))
+                    printWorkToLayout(this)
+                    Log.d("test", workMapList.toString())
                 }
             }
-
             this.findViewById<Button>(R.id.saveWorkBtn).setOnClickListener {
             }
             show()
@@ -91,93 +93,15 @@ class WorkFragment : Fragment() {
         }
     }
 
+    private fun printWorkToLayout(dialog:Dialog){
+        workMapList.forEach {
+            val inflater = LayoutInflater.from(requireContext())
+            val holder = inflater.inflate(R.layout.holder_set_work, null) as LinearLayout
+            val holderTV = holder.findViewById<TextView>(R.id.workNameInHolder)
+            holderTV.text = it["workName"] as String
+            dialog.findViewById<LinearLayout>(R.id.workLayout).addView(holder)
+        }
+    }
+
 
 }
-
-/*private fun mkSubWorkerDialog(callback: (ArrayList<String>) -> Unit){
-		val resultArrayList = arrayListOf<String>()
-		val inflater = LayoutInflater.from(this@MainActivity)
-
-		Dialog(this@MainActivity).apply {
-			this.setContentView(R.layout.dialog_sub_worker)
-			val subWorkerLayout = findViewById<LinearLayout>(R.id.subWorkerLayout)
-			subWorkerList.forEach { subName->
-				resultArrayList.add(subName)
-				val holder = inflater.inflate(R.layout.holder_sub_worker, null) as LinearLayout
-				val holderTV = holder.findViewById<TextView>(R.id.subWorkerTV)
-				holderTV.text = subName
-				subWorkerLayout.addView(holder)
-				holder.findViewById<ImageButton>(R.id.subWorkerDelBtn).setOnClickListener{
-					subWorkerLayout.removeView(holder)
-					resultArrayList.remove(holder.findViewById<TextView>(R.id.subWorkerTV).text.toString())
-				}
-			}
-
-			this.findViewById<ImageButton>(R.id.addSubWorkerBtn).setOnClickListener {
-				val subET = findViewById<EditText>(R.id.subWorkerET)
-				val holder = inflater.inflate(R.layout.holder_sub_worker, null) as LinearLayout
-				val holderTV = holder.findViewById<TextView>(R.id.subWorkerTV)
-				holderTV.text = subET.text
-				resultArrayList.add(subET.text.toString())
-				holder.findViewById<ImageButton>(R.id.subWorkerDelBtn).setOnClickListener{
-					subWorkerLayout.removeView(holder)
-					resultArrayList.remove(holder.findViewById<TextView>(R.id.subWorkerTV).text.toString())
-				}
-				subET.setText("")
-				subWorkerLayout.addView(holder)
-			}
-
-			this.findViewById<Button>(R.id.setSubWorkerBtn).setOnClickListener {
-				this.dismiss()
-				callback(resultArrayList)
-			}
-			this.show()
-			window?.attributes.apply {
-				this?.width=(vBinding.mainLayout.width * 0.9).toInt()
-				window?.attributes = this
-			}
-		}
-	}private fun mkSubWorkerDialog(callback: (ArrayList<String>) -> Unit){
-		val resultArrayList = arrayListOf<String>()
-		val inflater = LayoutInflater.from(this@MainActivity)
-
-		Dialog(this@MainActivity).apply {
-			this.setContentView(R.layout.dialog_sub_worker)
-			val subWorkerLayout = findViewById<LinearLayout>(R.id.subWorkerLayout)
-			subWorkerList.forEach { subName->
-				resultArrayList.add(subName)
-				val holder = inflater.inflate(R.layout.holder_sub_worker, null) as LinearLayout
-				val holderTV = holder.findViewById<TextView>(R.id.subWorkerTV)
-				holderTV.text = subName
-				subWorkerLayout.addView(holder)
-				holder.findViewById<ImageButton>(R.id.subWorkerDelBtn).setOnClickListener{
-					subWorkerLayout.removeView(holder)
-					resultArrayList.remove(holder.findViewById<TextView>(R.id.subWorkerTV).text.toString())
-				}
-			}
-
-			this.findViewById<ImageButton>(R.id.addSubWorkerBtn).setOnClickListener {
-				val subET = findViewById<EditText>(R.id.subWorkerET)
-				val holder = inflater.inflate(R.layout.holder_sub_worker, null) as LinearLayout
-				val holderTV = holder.findViewById<TextView>(R.id.subWorkerTV)
-				holderTV.text = subET.text
-				resultArrayList.add(subET.text.toString())
-				holder.findViewById<ImageButton>(R.id.subWorkerDelBtn).setOnClickListener{
-					subWorkerLayout.removeView(holder)
-					resultArrayList.remove(holder.findViewById<TextView>(R.id.subWorkerTV).text.toString())
-				}
-				subET.setText("")
-				subWorkerLayout.addView(holder)
-			}
-
-			this.findViewById<Button>(R.id.setSubWorkerBtn).setOnClickListener {
-				this.dismiss()
-				callback(resultArrayList)
-			}
-			this.show()
-			window?.attributes.apply {
-				this?.width=(vBinding.mainLayout.width * 0.9).toInt()
-				window?.attributes = this
-			}
-		}
-	}*/
