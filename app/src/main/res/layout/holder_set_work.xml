@@ -2,10 +2,10 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="100dp">
+    android:layout_height="150dp">
 
     <ImageButton
-        android:id="@+id/moveWorkUpBtn"
+        android:id="@+id/holderMoveItemUp"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
@@ -14,7 +14,7 @@
         tools:src="@android:drawable/arrow_up_float" />
 
     <ImageButton
-        android:id="@+id/moveWorkDownBtn"
+        android:id="@+id/holderMoveItemDown"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
@@ -23,7 +23,7 @@
         tools:src="@android:drawable/arrow_down_float" />
 
     <TextView
-        android:id="@+id/workNameInHolder"
+        android:id="@+id/holderWorkName"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="3"
@@ -31,7 +31,7 @@
         android:textSize="20sp" />
 
     <ImageButton
-        android:id="@+id/deleteWorkBtn"
+        android:id="@+id/holderDeleteWorkBtn"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
