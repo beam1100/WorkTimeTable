@@ -1,9 +1,7 @@
 package com.worktimetable
 
 import android.app.Dialog
-import android.app.ProgressDialog.show
 import android.content.Context
-import android.media.Image
 import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.Fragment
@@ -12,7 +10,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.CheckBox
-import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -36,6 +33,30 @@ class WorkFragment : Fragment() {
     private val workMapList = arrayListOf<HashMap<String,Any>>()
     private val timeMapList = arrayListOf<HashMap<String,Any>>()
 
+
+    private val sampleData = arrayListOf<HashMap<String,Any>>(
+        hashMapOf(
+            "workName" to "주간근무",
+            "work" to arrayListOf<HashMap<String, Any>>(
+                hashMapOf("work" to "상황","isPatrol" to false),
+                hashMapOf("work" to "1지구","isPatrol" to true),
+                hashMapOf("work" to "2지구","isPatrol" to true),
+                hashMapOf("work" to "3지구","isPatrol" to true),
+                hashMapOf("work" to "도보","isPatrol" to false),
+            )
+        ),
+        hashMapOf(
+            "workName" to "야간근무",
+            "work" to arrayListOf<HashMap<String, Any>>(
+                hashMapOf("workType" to "상황","isPatrol" to false),
+                hashMapOf("workType" to "1지구","isPatrol" to true),
+                hashMapOf("workType" to "2지구","isPatrol" to true),
+                hashMapOf("workType" to "3지구","isPatrol" to true),
+                hashMapOf("workType" to "대기","isPatrol" to false),
+            )
+        )
+    )
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _vBinding = FragmentWorkBinding.inflate(inflater, container, false)
         return vBinding.root
@@ -50,6 +71,14 @@ class WorkFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        val inflater = LayoutInflater.from(requireContext())
+        val holderLayout = vBinding.workLayout
+        sampleData.forEach { map ->
+            val holder = inflater.inflate(R.layout.holder_set_work, null) as LinearLayout
+            mkHolder(sampleData, holderLayout, holder, hashMapOf("workName" to map["workName"] as String))
+        }
+
         vBinding.mkWorkTypeBtn.setOnClickListener {
             mkWorkDialog()
         }
@@ -65,75 +94,20 @@ class WorkFragment : Fragment() {
             layoutParams?.height = (viewHeight * 0.9).toInt()
             window?.attributes = layoutParams
 
-
             val holderLayout = this.findViewById<LinearLayout>(R.id.workLayout)
             holderLayout.removeAllViews()
 
             this.findViewById<ImageButton>(R.id.mkAddWorkDialogBtn).setOnClickListener { _ ->
                 mkAddWorkDialog { it ->
-                    val workMap = hashMapOf<String, Any>(
-                        "workName" to it.first,
-                        "isPatrol" to it.second
-                    )
-
+                    val workMap = hashMapOf<String, Any>("workType" to it.first,"isPatrol" to it.second)
                     workMapList.add(workMap)
                     val inflater = LayoutInflater.from(requireContext())
                     val holder = inflater.inflate(R.layout.holder_set_work, null) as LinearLayout
-                    holderLayout.addView(holder)
 
-                    //홀더 근무이름 텍스트뷰
-                    holder.findViewById<TextView>(R.id.holderWorkName).apply{
-                        text = it.first
-                        setOnLongClickListener {_ ->
-                            getMapByCondition(workMapList, hashMapOf("workName" to text))?.let{ map ->
-                                mkEditWorkDialog(map["workName"] as String, map["isPatrol"] as Boolean){
-                                    holder.findViewById<TextView>(R.id.holderWorkName).text = it.first
-                                    map["workName"] = it.first
-                                    map["isPatrol"] = it.second
-                                }
-                            }
-                            return@setOnLongClickListener true
-                        }
-                    }
-
-
-                    //홀더: 근무삭제
-                    holder.findViewById<ImageButton>(R.id.holderDeleteWorkBtn).setOnClickListener {
-                        workMapList.remove(workMap)
-                        holderLayout.removeView(holder)
-                    }
-
-                    //홀더: 근무이동(위로)
-                    holder.findViewById<ImageButton>(R.id.holderMoveItemUp).setOnClickListener {
-                        val holderIndex = holderLayout.indexOfChild(holder)
-                        if(holderIndex > 0 && holderLayout.childCount>=2){
-                            holderLayout.removeView(holder)
-                            holderLayout.addView(holder, holderIndex-1)
-                        }
-                        val mapIndex = workMapList.indexOf(workMap)
-                        if(mapIndex > 0){
-                            workMapList[mapIndex] = workMapList[mapIndex-1]
-                            workMapList[mapIndex-1] = workMap
-                        }
-                    }
-
-                    //홀더: 근무이동(아래로)
-                    holder.findViewById<ImageButton>(R.id.holderMoveItemDown).setOnClickListener {
-                        val holderIndex = holderLayout.indexOfChild(holder)
-                        if(holderIndex < holderLayout.childCount-1 && holderLayout.childCount>=2){
-                            holderLayout.removeView(holder)
-                            holderLayout.addView(holder, holderIndex+1)
-                        }
-                        val mapIndex = workMapList.indexOf(workMap)
-                        if(mapIndex < workMapList.size-1){
-                            workMapList[mapIndex] = workMapList[mapIndex+1]
-                            workMapList[mapIndex+1] = workMap
-                        }
-                    }
+                    mkHolder(workMapList, holderLayout, holder, hashMapOf("workType" to it.first))
 
                 } // mkAddWorkDialog End
             } // this.findViewById<Button>(R.id.mkAddWorkDialogBtn).setOnClickListener End
-
             show()
 
             this.findViewById<Button>(R.id.saveWorkBtn).setOnClickListener {
@@ -142,6 +116,72 @@ class WorkFragment : Fragment() {
 
         } // Dialog(requireContext()).apply End
     } // private fun mkWorkDialog() End
+
+    private fun mkHolder(data:ArrayList<HashMap<String, Any>>, holderLayout:LinearLayout, holder:LinearLayout, condition:HashMap<String,Any>){
+        try{
+            val workMap = getMapByCondition(data, condition)
+
+            //홀더 근무이름 텍스트뷰
+            holder.findViewById<TextView>(R.id.holderWorkName).apply{
+                text = condition.entries.first().value as String
+                /*setOnLongClickListener {_ ->
+                    workMap?.let{ map ->
+                        mkEditWorkDialog(map["workType"] as String, map["isPatrol"] as Boolean){ result ->
+                            holder.findViewById<TextView>(R.id.holderWorkName).text = result.first
+                            map["workType"] = result.first
+                            map["isPatrol"] = result.second
+                        }
+                    }
+                    return@setOnLongClickListener true
+                }*/
+            }
+
+            //홀더: 근무삭제
+            holder.findViewById<ImageButton>(R.id.holderDeleteWorkBtn).setOnClickListener {
+                data.remove(workMap)
+                holderLayout.removeView(holder)
+            }
+
+            //홀더: 근무이동(위로)
+            holder.findViewById<ImageButton>(R.id.holderMoveItemUp).setOnClickListener {
+                val holderIndex = holderLayout.indexOfChild(holder)
+                if(holderIndex > 0 && holderLayout.childCount>=2){
+                    holderLayout.removeView(holder)
+                    holderLayout.addView(holder, holderIndex-1)
+                }
+                workMap?.let{ map->
+                    val mapIndex = data.indexOf(map)
+                    if(mapIndex > 0){
+                        data[mapIndex] = data[mapIndex-1]
+                        data[mapIndex-1] = map
+                    }
+                }
+            }
+
+            //홀더: 근무이동(아래로)
+            holder.findViewById<ImageButton>(R.id.holderMoveItemDown).setOnClickListener {
+                val holderIndex = holderLayout.indexOfChild(holder)
+                if(holderIndex < holderLayout.childCount-1 && holderLayout.childCount>=2){
+                    holderLayout.removeView(holder)
+                    holderLayout.addView(holder, holderIndex+1)
+                }
+                workMap?.let{map->
+                    val mapIndex = data.indexOf(map)
+                    if(mapIndex < data.size-1){
+                        data[mapIndex] = data[mapIndex+1]
+                        data[mapIndex+1] = map
+                    }
+                }
+            }
+
+        holderLayout.addView(holder)
+
+        }catch(err:Exception){
+            Log.d("test", err.toString())
+            Log.d("test", err.stackTraceToString())
+        }
+
+    }
 
 
     private fun mkAddWorkDialog(callback:(Pair<String,Boolean>)->Unit){
