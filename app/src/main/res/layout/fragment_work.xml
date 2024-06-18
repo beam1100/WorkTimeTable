@@ -20,7 +20,7 @@
             tools:ignore="SpeakableTextPresentCheck">
 
             <LinearLayout
-                android:id="@+id/workLayout"
+                android:id="@+id/workTypeLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"></LinearLayout>
@@ -34,12 +34,21 @@
 
             <Button
                 android:id="@+id/mkWorkTypeBtn"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:fontFamily="@font/ongulip"
                 android:text="근무 만들기"
-                android:textSize="25sp" />
+                android:textSize="30sp" />
+
+            <Button
+                android:id="@+id/workTestBtn"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:fontFamily="@font/ongulip"
+                android:text="TEST"
+                android:textSize="30sp" />
 
         </LinearLayout>
 

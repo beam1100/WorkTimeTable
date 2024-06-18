@@ -6,7 +6,7 @@
     android:orientation="vertical">
 
     <EditText
-        android:id="@+id/editTextText"
+        android:id="@+id/inputWorkName"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
@@ -30,7 +30,7 @@
             tools:ignore="SpeakableTextPresentCheck">
 
             <LinearLayout
-                android:id="@+id/workLayout"
+                android:id="@+id/workTypeLayout"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:orientation="vertical"></LinearLayout>
