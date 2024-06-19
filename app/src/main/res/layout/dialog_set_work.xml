@@ -93,4 +93,10 @@
         android:text="저장"
         android:textSize="30sp" />
 
+    <Button
+        android:id="@+id/test2Btn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="테스트" />
+
 </LinearLayout>

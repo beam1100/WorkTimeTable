@@ -141,27 +141,29 @@ class WorkFragment : Fragment() {
 
                 val selectedTypeList = selectedWorkMap["typeList"] as ArrayList<HashMap<String,Any>>
 
+                //기존 근무 홀더에 담아서 출력
                 selectedTypeList.forEach { typeMap->
                     val inflater = LayoutInflater.from(requireContext())
                     val holder = inflater.inflate(R.layout.holder_set_work, null) as LinearLayout
                     val type = typeMap["type"] as String
                     val typeIsPatrol = typeMap["isPatrol"] as Boolean
 
-                    //두 번째 수정할때 이전 이름이 출력되는 문제
-                    mkHolder(selectedTypeList, holderLayout, holder, hashMapOf("type" to type)){
-                        mkEditWorkDialog(type, typeIsPatrol){ newType, isPatrol ->
+                    //한번 수정하고 또 수정할 때, 수정 창에 이전 이름이 전달되는 문제
+                    mkHolder(selectedTypeList, holderLayout, holder, hashMapOf("type" to type)){ clickedTypeMap ->
+                        mkEditWorkDialog(clickedTypeMap["type"] as String, typeIsPatrol){ newType, isPatrol ->
                             holder.findViewById<TextView>(R.id.holderWorkName).text = newType
-                            typeMap["type"] = newType
-                            typeMap["isPatrol"] = isPatrol
-                            Log.d("test", sampleData.toString())
+                            clickedTypeMap["type"] = newType
+                            clickedTypeMap["isPatrol"] = isPatrol
                         }
                     }
                 }
 
+                // 근무이름 출력
                 clickedMap?.get("workName")?.let{
                     this.findViewById<EditText>(R.id.inputWorkName).setText(it as String)
                 }
 
+                //근무 추가하기 버튼 누르면 출력
                 this.findViewById<ImageButton>(R.id.mkAddWorkDialogBtn).setOnClickListener { _ ->
                     mkAddWorkDialog { addedType, addedIsPatrol ->
                         selectedTypeList.add(
@@ -170,15 +172,20 @@ class WorkFragment : Fragment() {
                         val inflater = LayoutInflater.from(requireContext())
                         val holder = inflater.inflate(R.layout.holder_set_work, null) as LinearLayout
                         mkHolder(selectedTypeList, holderLayout, holder, hashMapOf("type" to addedType)){ clickedTypeMap->
-                            mkEditWorkDialog(clickedTypeMap["type"] as String, clickedTypeMap["isPatrol"] as Boolean){ newName, newIsPatrol ->
-                                holder.findViewById<TextView>(R.id.holderWorkName).text = newName
-                                clickedTypeMap["type"] = newName
+                            mkEditWorkDialog(clickedTypeMap["type"] as String, clickedTypeMap["isPatrol"] as Boolean){ newType, newIsPatrol ->
+                                holder.findViewById<TextView>(R.id.holderWorkName).text = newType
+                                clickedTypeMap["type"] = newType
                                 clickedTypeMap["isPatrol"] = newIsPatrol
                             }
                         }
                     } // mkAddWorkDialog End
                 } // this.findViewById<Button>(R.id.mkAddWorkDialogBtn).setOnClickListener End
 
+                this.findViewById<Button>(R.id.test2Btn).setOnClickListener {
+                    Log.d("test", selectedTypeList.toString())
+                }
+
+                // 저장 버튼
                 this.findViewById<Button>(R.id.saveWorkBtn).setOnClickListener {_->
                     val newWorkName = this.findViewById<EditText>(R.id.inputWorkName).text.toString()
                     if(newWorkName.isEmpty()){
@@ -231,13 +238,11 @@ class WorkFragment : Fragment() {
                         holderLayout.removeView(holder)
                         holderLayout.addView(holder, holderIndex-1)
                     }
-
                     val mapIndex = data.indexOf(map)
                     if(mapIndex > 0){
                         data[mapIndex] = data[mapIndex-1]
                         data[mapIndex-1] = map
                     }
-
                 }
 
                 //홀더: 근무이동(아래로)
