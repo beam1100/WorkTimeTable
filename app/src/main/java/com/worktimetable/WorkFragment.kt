@@ -14,6 +14,7 @@ import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
 import com.worktimetable.databinding.FragmentWorkBinding
 
 
@@ -45,13 +46,13 @@ class WorkFragment : Fragment() {
                 hashMapOf("type" to "3구역","isPatrol" to true),
                 hashMapOf("type" to "도보","isPatrol" to false),
             ),
-            "shiftList" to arrayListOf<HashMap<String, Any>>(
+/*            "shiftList" to arrayListOf<HashMap<String, Any>>(
                 hashMapOf("shift" to "07:00~07:30", "minuet" to 30),
                 hashMapOf("shift" to "07:30~11:00", "minuet" to 210),
                 hashMapOf("shift" to "11:00~14:00", "minuet" to 180),
                 hashMapOf("shift" to "14:00~17:00", "minuet" to 180),
                 hashMapOf("shift" to "17:00~19:30", "minuet" to 150),
-            )
+            )*/
         ),
         hashMapOf(
             "workName" to "야간근무",
@@ -62,13 +63,13 @@ class WorkFragment : Fragment() {
                 hashMapOf("type" to "3구역","isPatrol" to true),
                 hashMapOf("type" to "대기","isPatrol" to false),
             ),
-            "shiftList" to arrayListOf<HashMap<String, Any>>(
+/*            "shiftList" to arrayListOf<HashMap<String, Any>>(
                 hashMapOf("shift" to "19:30~20:00", "minuet" to 30),
                 hashMapOf("shift" to "20:00~00:00", "minuet" to 240),
                 hashMapOf("shift" to "00:00~03:30", "minuet" to 180),
                 hashMapOf("shift" to "03:30~07:00", "minuet" to 210),
                 hashMapOf("shift" to "07:00~07:30", "minuet" to 30),
-            )
+            )*/
         )
     )
 
@@ -117,18 +118,14 @@ class WorkFragment : Fragment() {
 
     private fun showWorkDetailsDialog(clickedMap:HashMap<String, Any>?=null){
 
-        /*try{*/
+        try{
 
-            val selectedWorkMap = if(clickedMap != null){
-                getMapByCondition(sampleData, hashMapOf("workName" to clickedMap["workName"] as String))
-            }
-            else{
-                hashMapOf(
+            val selectedWorkMap = clickedMap
+                ?: hashMapOf(
                     "workName" to "",
                     "typeList" to arrayListOf<HashMap<String, Any>>(),
                     "shiftList" to arrayListOf<HashMap<String, Any>>(),
                 )
-            }
 
             Dialog(requireContext()).apply {
                 setContentView(R.layout.dialog_set_work)
@@ -140,64 +137,67 @@ class WorkFragment : Fragment() {
                 window?.attributes = layoutParams
 
                 val holderLayout = this.findViewById<LinearLayout>(R.id.workTypeLayout)
-
                 holderLayout.removeAllViews()
 
-                clickedMap?.let{
-                    (it["typeList"] as ArrayList<HashMap<String,Any>>).forEach { typeMapItem->
-                        val inflater = LayoutInflater.from(requireContext())
-                        val holder = inflater.inflate(R.layout.holder_set_work, null) as LinearLayout
-                        val typeMapList = clickedMap["typeList"] as ArrayList<HashMap<String, Any>>
-                        (typeMapItem["type"] as String).let{ typeName ->
-                            mkHolder(typeMapList, holderLayout, holder, hashMapOf("type" to typeName)){
-                                mkEditWorkDialog(typeName, typeMapItem["isPatrol"] as Boolean){ name, isPatrol ->
-                                    holder.findViewById<TextView>(R.id.holderWorkName).text = name
-                                    typeMapItem["type"] = name
-                                    typeMapItem["isPatrol"] = isPatrol
-                                }
-                            }
+                val selectedTypeList = selectedWorkMap["typeList"] as ArrayList<HashMap<String,Any>>
+
+                selectedTypeList.forEach { typeMap->
+                    val inflater = LayoutInflater.from(requireContext())
+                    val holder = inflater.inflate(R.layout.holder_set_work, null) as LinearLayout
+                    val type = typeMap["type"] as String
+                    val typeIsPatrol = typeMap["isPatrol"] as Boolean
+
+                    //두 번째 수정할때 이전 이름이 출력되는 문제
+                    mkHolder(selectedTypeList, holderLayout, holder, hashMapOf("type" to type)){
+                        mkEditWorkDialog(type, typeIsPatrol){ newType, isPatrol ->
+                            holder.findViewById<TextView>(R.id.holderWorkName).text = newType
+                            typeMap["type"] = newType
+                            typeMap["isPatrol"] = isPatrol
+                            Log.d("test", sampleData.toString())
                         }
                     }
                 }
 
+                clickedMap?.get("workName")?.let{
+                    this.findViewById<EditText>(R.id.inputWorkName).setText(it as String)
+                }
+
                 this.findViewById<ImageButton>(R.id.mkAddWorkDialogBtn).setOnClickListener { _ ->
-                    mkAddWorkDialog { type, isPatrol ->
-
-                        selectedWorkMap?.get("typeList")?.let{typeList ->
-                                (typeList as ArrayList<HashMap<String, Any>>).add(
-                                    hashMapOf("type" to type,"isPatrol" to isPatrol)
-                                )
-
-                            val inflater = LayoutInflater.from(requireContext())
-                            val holder = inflater.inflate(R.layout.holder_set_work, null) as LinearLayout
-                            mkHolder(typeList, holderLayout, holder, hashMapOf("type" to type)){ clickedTypeMap->
-                                mkEditWorkDialog(clickedTypeMap["type"] as String, clickedTypeMap["isPatrol"] as Boolean){ name, isPatrol ->
-                                    holder.findViewById<TextView>(R.id.holderWorkName).text = name
-                                    clickedTypeMap["type"] = name
-                                    clickedTypeMap["isPatrol"] = isPatrol
-                                }
+                    mkAddWorkDialog { addedType, addedIsPatrol ->
+                        selectedTypeList.add(
+                            hashMapOf("type" to addedType,"isPatrol" to addedIsPatrol)
+                        )
+                        val inflater = LayoutInflater.from(requireContext())
+                        val holder = inflater.inflate(R.layout.holder_set_work, null) as LinearLayout
+                        mkHolder(selectedTypeList, holderLayout, holder, hashMapOf("type" to addedType)){ clickedTypeMap->
+                            mkEditWorkDialog(clickedTypeMap["type"] as String, clickedTypeMap["isPatrol"] as Boolean){ newName, newIsPatrol ->
+                                holder.findViewById<TextView>(R.id.holderWorkName).text = newName
+                                clickedTypeMap["type"] = newName
+                                clickedTypeMap["isPatrol"] = newIsPatrol
                             }
-
                         }
                     } // mkAddWorkDialog End
                 } // this.findViewById<Button>(R.id.mkAddWorkDialogBtn).setOnClickListener End
 
                 this.findViewById<Button>(R.id.saveWorkBtn).setOnClickListener {_->
-                    selectedWorkMap?.let{selectedWorkMap->
-                        val workName = this.findViewById<EditText>(R.id.inputWorkName).text.toString()
-                        Log.d("test", selectedWorkMap["workName"].toString())
-                        Log.d("test", selectedWorkMap["workName"]!!::class.simpleName.toString())
+                    val newWorkName = this.findViewById<EditText>(R.id.inputWorkName).text.toString()
+                    if(newWorkName.isEmpty()){
+                        Toast.makeText(requireContext(), "근무이름을 입력하세요", Toast.LENGTH_LONG).show()
+                        Log.d("test", selectedWorkMap.toString())
+                    }else{
+                        Toast.makeText(requireContext(), "test", Toast.LENGTH_LONG).show()
                     }
+                    Log.d("test", selectedWorkMap.toString())
                 }
 
                 show()
 
 
             } // Dialog(requireContext()).apply End
-        /*}catch(err:Exception){
+        }catch(err:Exception){
             Log.d("test", err.toString())
             Log.d("test", err.stackTraceToString())
-        }*/
+        }
 
     } // private fun showWorkDetailsDialog() End
 
@@ -209,7 +209,6 @@ class WorkFragment : Fragment() {
                          callback: (HashMap<String,Any>) -> Unit){
         try{
             getMapByCondition(data, condition)?.let{map ->
-
                 //홀더 근무이름 텍스트뷰
                 holder.findViewById<TextView>(R.id.holderWorkName).apply{
                     text = condition.entries.first().value as String
