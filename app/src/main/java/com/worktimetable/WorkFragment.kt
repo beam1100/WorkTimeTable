@@ -46,13 +46,13 @@ class WorkFragment : Fragment() {
                 hashMapOf("type" to "3구역","isPatrol" to true),
                 hashMapOf("type" to "도보","isPatrol" to false),
             ),
-/*            "shiftList" to arrayListOf<HashMap<String, Any>>(
+            "shiftList" to arrayListOf<HashMap<String, Any>>(
                 hashMapOf("shift" to "07:00~07:30", "minuet" to 30),
                 hashMapOf("shift" to "07:30~11:00", "minuet" to 210),
                 hashMapOf("shift" to "11:00~14:00", "minuet" to 180),
                 hashMapOf("shift" to "14:00~17:00", "minuet" to 180),
                 hashMapOf("shift" to "17:00~19:30", "minuet" to 150),
-            )*/
+            )
         ),
         hashMapOf(
             "workName" to "야간근무",
@@ -63,13 +63,13 @@ class WorkFragment : Fragment() {
                 hashMapOf("type" to "3구역","isPatrol" to true),
                 hashMapOf("type" to "대기","isPatrol" to false),
             ),
-/*            "shiftList" to arrayListOf<HashMap<String, Any>>(
+            "shiftList" to arrayListOf<HashMap<String, Any>>(
                 hashMapOf("shift" to "19:30~20:00", "minuet" to 30),
                 hashMapOf("shift" to "20:00~00:00", "minuet" to 240),
                 hashMapOf("shift" to "00:00~03:30", "minuet" to 180),
                 hashMapOf("shift" to "03:30~07:00", "minuet" to 210),
                 hashMapOf("shift" to "07:00~07:30", "minuet" to 30),
-            )*/
+            )
         )
     )
 
@@ -120,6 +120,11 @@ class WorkFragment : Fragment() {
 
         try{
 
+            clickedMap?.let{
+                deepCopyMap(it)
+            }
+
+
             val selectedWorkMap = clickedMap
                 ?: hashMapOf(
                     "workName" to "",
@@ -136,35 +141,36 @@ class WorkFragment : Fragment() {
                 layoutParams?.height = (viewHeight * 0.9).toInt()
                 window?.attributes = layoutParams
 
-                val holderLayout = this.findViewById<LinearLayout>(R.id.workTypeLayout)
-                holderLayout.removeAllViews()
-
-                val selectedTypeList = selectedWorkMap["typeList"] as ArrayList<HashMap<String,Any>>
-
-                //기존 근무 홀더에 담아서 출력
-                selectedTypeList.forEach { typeMap->
-                    val inflater = LayoutInflater.from(requireContext())
-                    val holder = inflater.inflate(R.layout.holder_set_work, null) as LinearLayout
-                    val type = typeMap["type"] as String
-                    val typeIsPatrol = typeMap["isPatrol"] as Boolean
-
-                    //한번 수정하고 또 수정할 때, 수정 창에 이전 이름이 전달되는 문제
-                    mkHolder(selectedTypeList, holderLayout, holder, hashMapOf("type" to type)){ clickedTypeMap ->
-                        mkEditWorkDialog(clickedTypeMap["type"] as String, typeIsPatrol){ newType, isPatrol ->
-                            holder.findViewById<TextView>(R.id.holderWorkName).text = newType
-                            clickedTypeMap["type"] = newType
-                            clickedTypeMap["isPatrol"] = isPatrol
-                        }
-                    }
-                }
-
                 // 근무이름 출력
                 clickedMap?.get("workName")?.let{
                     this.findViewById<EditText>(R.id.inputWorkName).setText(it as String)
                 }
 
+                val holderLayout = this.findViewById<LinearLayout>(R.id.workTypeLayout)
+                holderLayout.removeAllViews()
+
+                val selectedTypeList = selectedWorkMap["typeList"] as ArrayList<HashMap<String,Any>>
+
+                //기존 근무유형 홀더에 담기
+                selectedTypeList.forEach { typeMap->
+                    val inflater = LayoutInflater.from(requireContext())
+                    val holder = inflater.inflate(R.layout.holder_set_work, null) as LinearLayout
+                    val existingType = typeMap["type"] as String
+                    val existingIsPatrol = typeMap["isPatrol"] as Boolean
+
+                    mkHolder(selectedTypeList, holderLayout, holder, hashMapOf("type" to existingType)){ clickedTypeMap ->
+                        mkEditWorkDialog(clickedTypeMap["type"] as String, existingIsPatrol){ newType, newIsPatrol ->
+                            holder.findViewById<TextView>(R.id.holderWorkName).text = newType
+                            clickedTypeMap["type"] = newType
+                            clickedTypeMap["isPatrol"] = newIsPatrol
+                        }
+                    }
+                }
+
+
                 //근무 추가하기 버튼 누르면 출력
                 this.findViewById<ImageButton>(R.id.mkAddWorkDialogBtn).setOnClickListener { _ ->
+                    //다이얼로그에서 새로운 근무유형 홀더에 담기
                     mkAddWorkDialog { addedType, addedIsPatrol ->
                         selectedTypeList.add(
                             hashMapOf("type" to addedType,"isPatrol" to addedIsPatrol)
@@ -181,9 +187,6 @@ class WorkFragment : Fragment() {
                     } // mkAddWorkDialog End
                 } // this.findViewById<Button>(R.id.mkAddWorkDialogBtn).setOnClickListener End
 
-                this.findViewById<Button>(R.id.test2Btn).setOnClickListener {
-                    Log.d("test", selectedTypeList.toString())
-                }
 
                 // 저장 버튼
                 this.findViewById<Button>(R.id.saveWorkBtn).setOnClickListener {_->
@@ -197,15 +200,17 @@ class WorkFragment : Fragment() {
                     Log.d("test", selectedWorkMap.toString())
                 }
 
+                //테스트 버튼
+                this.findViewById<Button>(R.id.test2Btn).setOnClickListener {
+                    Log.d("test", selectedTypeList.toString())
+                }
+
                 show()
-
-
             } // Dialog(requireContext()).apply End
         }catch(err:Exception){
             Log.d("test", err.toString())
             Log.d("test", err.stackTraceToString())
         }
-
     } // private fun showWorkDetailsDialog() End
 
 
@@ -314,6 +319,21 @@ class WorkFragment : Fragment() {
             }
         }
         return null
+    }
+
+    private fun deepCopyMap(map:HashMap<String, Any>):HashMap<String, Any>{
+        val result = hashMapOf<String, Any>()
+
+        map.forEach { key, value ->
+
+            Log.d("test", """
+                키: ${key}
+                밸류: ${value}
+            """.trimIndent())
+        }
+
+
+        return result
     }
 
 } // class WorkFragment : Fragment() End
