@@ -120,9 +120,10 @@ class WorkFragment : Fragment() {
 
         try{
 
-            clickedMap?.let{
+            val test = clickedMap?.let{
                 deepCopyMap(it)
             }
+
 
 
             val selectedWorkMap = clickedMap
@@ -202,7 +203,8 @@ class WorkFragment : Fragment() {
 
                 //테스트 버튼
                 this.findViewById<Button>(R.id.test2Btn).setOnClickListener {
-                    Log.d("test", selectedTypeList.toString())
+                    Log.d("test", clickedMap.toString())
+                    Log.d("test", test.toString())
                 }
 
                 show()
@@ -279,7 +281,7 @@ class WorkFragment : Fragment() {
 
     private fun mkAddWorkDialog(callback:(String,Boolean)->Unit){
         Dialog(requireContext()).apply{
-            setContentView(R.layout.dialog_add_work)
+            setContentView(R.layout.dialog_add_type)
             val workNameEditText = this.findViewById<TextView>(R.id.toAddWorkName)
             val isWorkPatrolBox = this.findViewById<CheckBox>(R.id.isToAddPatrol)
             this.findViewById<Button>(R.id.addWorkBtn).setOnClickListener {
@@ -292,7 +294,7 @@ class WorkFragment : Fragment() {
 
     private fun mkEditWorkDialog(name:String, isPatrol:Boolean, callback:(String, Boolean)->Unit){
         Dialog(requireContext()).apply{
-            setContentView(R.layout.dialog_add_work)
+            setContentView(R.layout.dialog_add_type)
             val workNameEditText = this.findViewById<TextView>(R.id.toAddWorkName)
             val isWorkPatrolBox = this.findViewById<CheckBox>(R.id.isToAddPatrol)
             workNameEditText.text = name
@@ -323,16 +325,9 @@ class WorkFragment : Fragment() {
 
     private fun deepCopyMap(map:HashMap<String, Any>):HashMap<String, Any>{
         val result = hashMapOf<String, Any>()
-
-        map.forEach { key, value ->
-
-            Log.d("test", """
-                키: ${key}
-                밸류: ${value}
-            """.trimIndent())
+        map.forEach { (key, value) ->
+            result[key] = value
         }
-
-
         return result
     }
 
