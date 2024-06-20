@@ -3,6 +3,7 @@ package com.worktimetable
 import android.app.Dialog
 import android.content.Context
 import android.os.Bundle
+import android.provider.Settings.Global
 import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -18,6 +19,7 @@ import android.widget.RadioGroup
 import android.widget.TextView
 import androidx.core.view.isGone
 import com.worktimetable.databinding.FragmentWorkBinding
+import java.io.Serializable
 
 
 class WorkFragment : Fragment() {
@@ -32,7 +34,6 @@ class WorkFragment : Fragment() {
     private var _vBinding: FragmentWorkBinding? = null
     private val vBinding get() = _vBinding!!
     private lateinit var mainActivity:MainActivity
-
 
     private val sampleData = arrayListOf<HashMap<String,Any>>(
         hashMapOf(
@@ -122,8 +123,10 @@ class WorkFragment : Fragment() {
                     "typeList" to arrayListOf<HashMap<String, Any>>(),
                     "shiftList" to arrayListOf<HashMap<String, Any>>(),
                 )
-            val beforeTypeMapList = (selectedWorkMap["typeList"] as ArrayList<*>)
-            val typeMapList = ArrayList(beforeTypeMapList.map{deepCopy(it) as HashMap<String, Any>})
+            val exTypeMapList = (selectedWorkMap["typeList"] as ArrayList<*>)
+            val copiedTypeMapList = ArrayList(exTypeMapList.map{deepCopy(it) as HashMap<String, Any>})
+            val exShiftMapList = (selectedWorkMap["shiftList"] as ArrayList<*>)
+            val copiedShiftMapList = ArrayList(exShiftMapList.map{deepCopy(it) as HashMap<String, Any>})
 
 
             Dialog(requireContext()).apply {
@@ -146,13 +149,13 @@ class WorkFragment : Fragment() {
 
 
                 //기존 근무유형 홀더에 담기
-                typeMapList.forEach { typeMap ->
+                copiedTypeMapList.forEach { typeMap ->
                     val inflater = LayoutInflater.from(requireContext())
                     val holder = inflater.inflate(R.layout.holder_set_work, null) as LinearLayout
                     val existingType = typeMap["type"] as String
 
-                    mkHolder(typeMapList, holderLayout, holder, hashMapOf("type" to existingType)){ clickedTypeMap ->
-                        mkEditWorkDialog(typeMapList, clickedTypeMap, holderLayout, holder){
+                    mkHolder(copiedTypeMapList, holderLayout, holder, hashMapOf("type" to existingType)){ clickedTypeMap ->
+                        mkEditWorkDialog(copiedTypeMapList, clickedTypeMap, holderLayout, holder){
                             newType, newIsPatrol, newIsConcurrent ->
                             holder.findViewById<TextView>(R.id.holderWorkName).text = newType
                             clickedTypeMap["type"] = newType
@@ -167,13 +170,13 @@ class WorkFragment : Fragment() {
                 this.findViewById<ImageButton>(R.id.mkAddWorkDialogBtn).setOnClickListener { _ ->
                     //다이얼로그에서 새로운 근무유형 홀더에 담기
                     mkAddWorkDialog { addedType, addedIsPatrol, addedIsConcurrent ->
-                        typeMapList.add(
+                        copiedTypeMapList.add(
                             hashMapOf("type" to addedType,"isPatrol" to addedIsPatrol, "isConcurrent" to addedIsConcurrent)
                         )
                         val inflater = LayoutInflater.from(requireContext())
                         val holder = inflater.inflate(R.layout.holder_set_work, null) as LinearLayout
-                        mkHolder(typeMapList, holderLayout, holder, hashMapOf("type" to addedType)){ clickedTypeMap->
-                            mkEditWorkDialog(typeMapList, clickedTypeMap, holderLayout, holder){
+                        mkHolder(copiedTypeMapList, holderLayout, holder, hashMapOf("type" to addedType)){ clickedTypeMap->
+                            mkEditWorkDialog(copiedTypeMapList, clickedTypeMap, holderLayout, holder){
                                 newType, newIsPatrol, newIsConcurrent ->
                                 holder.findViewById<TextView>(R.id.holderWorkName).text = newType
                                 clickedTypeMap["type"] = newType
@@ -199,11 +202,13 @@ class WorkFragment : Fragment() {
                     }
                 }
 
-                //테스트 버튼
+                //저장버튼
                 this.findViewById<Button>(R.id.workSaveBtn).setOnClickListener {
-                    Log.d("test", beforeTypeMapList.toString())
-                    Log.d("test", typeMapList.toString())
-
+                    val result = hashMapOf(
+                        "workName" to this.findViewById<EditText>(R.id.inputWorkName).text.toString(),
+                        "typeList" to copiedTypeMapList,
+                        "shiftList" to copiedShiftMapList
+                    )
                 }
 
                 show()
@@ -215,11 +220,12 @@ class WorkFragment : Fragment() {
     } // private fun showWorkDetailsDialog() End
 
 
-    private fun mkHolder(data:ArrayList<HashMap<String, Any>>,
-                         holderLayout:LinearLayout,
-                         holder:LinearLayout,
-                         condition:HashMap<String,Any>,
-                         callback: (HashMap<String,Any>) -> Unit){
+    private fun mkHolder(
+        data:ArrayList<HashMap<String, Any>>,
+        holderLayout:LinearLayout,
+        holder:LinearLayout,
+        condition:HashMap<String,Any>,
+        callback: (HashMap<String,Any>) -> Unit){
         try{
             getMapByCondition(data, condition)?.let{map ->
                 //홀더 근무이름 텍스트뷰
@@ -261,12 +267,10 @@ class WorkFragment : Fragment() {
                 }
                 holderLayout.addView(holder)
             }
-
         }catch(err:Exception){
             Log.d("test", err.toString())
             Log.d("test", err.stackTraceToString())
         }
-
     }
 
 
@@ -336,11 +340,11 @@ class WorkFragment : Fragment() {
             is Boolean -> obj
             is Map<*, *> -> obj
                 .mapKeys { it.key}
-                .mapValues {it.value?.let {value -> deepCopy(value)}}
+                .mapValues {it.value?.let {deepCopy(it)}}
             is List<*> -> obj.map {
                 it?.let{deepCopy(it)}
             }
-            else -> obj // Handle other custom data types here
+            else -> obj
         }
     }
 
