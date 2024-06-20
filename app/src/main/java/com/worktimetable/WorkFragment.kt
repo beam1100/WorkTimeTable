@@ -122,10 +122,8 @@ class WorkFragment : Fragment() {
                     "typeList" to arrayListOf<HashMap<String, Any>>(),
                     "shiftList" to arrayListOf<HashMap<String, Any>>(),
                 )
-            val beforeSelectedWorkMap = deepCopyHashMap(selectedWorkMap as HashMap<String, Any>)
             val beforeTypeMapList = (selectedWorkMap["typeList"] as ArrayList<*>)
             val typeMapList = ArrayList(beforeTypeMapList.map{deepCopy(it) as HashMap<String, Any>})
-
 
 
             Dialog(requireContext()).apply {
@@ -148,23 +146,19 @@ class WorkFragment : Fragment() {
 
 
                 //기존 근무유형 홀더에 담기
-                typeMapList.forEach { typeMap->
+                typeMapList.forEach { typeMap ->
                     val inflater = LayoutInflater.from(requireContext())
                     val holder = inflater.inflate(R.layout.holder_set_work, null) as LinearLayout
                     val existingType = typeMap["type"] as String
 
                     mkHolder(typeMapList, holderLayout, holder, hashMapOf("type" to existingType)){ clickedTypeMap ->
-                        mkEditWorkDialog(
-                            typeMapList,
-                            clickedTypeMap,
-                            holderLayout,
-                            holder){
-                                newType, newIsPatrol, newIsConcurrent ->
-                                holder.findViewById<TextView>(R.id.holderWorkName).text = newType
-                                clickedTypeMap["type"] = newType
-                                clickedTypeMap["isPatrol"] = newIsPatrol
-                                clickedTypeMap["isConcurrent"] = newIsConcurrent
-                            }
+                        mkEditWorkDialog(typeMapList, clickedTypeMap, holderLayout, holder){
+                            newType, newIsPatrol, newIsConcurrent ->
+                            holder.findViewById<TextView>(R.id.holderWorkName).text = newType
+                            clickedTypeMap["type"] = newType
+                            clickedTypeMap["isPatrol"] = newIsPatrol
+                            clickedTypeMap["isConcurrent"] = newIsConcurrent
+                        }
                     }
                 }
 
@@ -264,9 +258,7 @@ class WorkFragment : Fragment() {
                         data[mapIndex] = data[mapIndex+1]
                         data[mapIndex+1] = map
                     }
-
                 }
-
                 holderLayout.addView(holder)
             }
 
@@ -336,26 +328,18 @@ class WorkFragment : Fragment() {
         return null
     }
 
-    private fun deepCopyHashMap(map: HashMap<String, Any>): HashMap<String, Any> {
-        val copiedMap = hashMapOf<String, Any>()
-        for ((key, value) in map) {
-            copiedMap[key] = deepCopy(value)
-        }
-        return copiedMap
-    }
-
     private fun deepCopy(obj: Any): Any {
         return when (obj) {
-            is Map<*, *> -> obj.mapKeys { it.key }.mapValues { it.value?.let { it1 -> deepCopy(it1) } }
-            is List<*> -> obj.map {
-                if (it != null) {
-                    deepCopy(it)
-                }
-            }
             is String -> obj
             is Int -> obj
             is Double -> obj
             is Boolean -> obj
+            is Map<*, *> -> obj
+                .mapKeys { it.key}
+                .mapValues {it.value?.let {value -> deepCopy(value)}}
+            is List<*> -> obj.map {
+                it?.let{deepCopy(it)}
+            }
             else -> obj // Handle other custom data types here
         }
     }
