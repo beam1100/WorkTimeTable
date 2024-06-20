@@ -9,25 +9,81 @@
         android:id="@+id/inputWorkName"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
+        android:layout_weight="2"
         android:ems="10"
         android:fontFamily="@font/ongulip"
         android:gravity="center"
         android:hint="근무 이름"
         android:inputType="text"
-        android:textSize="30sp"
+        android:textSize="60sp"
         tools:ignore="SpeakableTextPresentCheck" />
 
-    <LinearLayout
+    <RadioGroup
+        android:id="@+id/setWorkRadioGroup"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="8"
+        android:layout_weight="1"
         android:orientation="horizontal">
 
+        <RadioButton
+            android:id="@+id/setTypeRadio"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:fontFamily="@font/ongulip"
+            android:text="근무유형 설정"
+            android:textSize="30sp"
+            android:checked="true"
+            />
+
+        <RadioButton
+            android:id="@+id/setTimeRadio"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:fontFamily="@font/ongulip"
+            android:text="근무시간 설정"
+            android:textSize="30sp"
+            android:visibility="visible" />
+    </RadioGroup>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="7">
+
         <LinearLayout
+            android:id="@+id/setTimeLayout"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_weight="3"
+            android:orientation="vertical">
+
+            <ScrollView
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="9"
+                tools:ignore="SpeakableTextPresentCheck">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"></LinearLayout>
+            </ScrollView>
+
+            <ImageButton
+                android:id="@+id/mkSetTimeDialogBtn"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_gravity="center"
+                android:layout_weight="2"
+                android:src="@drawable/time"
+                tools:ignore="SpeakableTextPresentCheck" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/setTypeLayout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
             android:orientation="vertical">
 
             <ScrollView
@@ -48,56 +104,34 @@
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_gravity="center"
-                android:layout_weight="1"
+                android:layout_weight="2"
                 android:src="@drawable/add"
-                tools:ignore="SpeakableTextPresentCheck" />
+                tools:ignore="SpeakableTextPresentCheck,DuplicateClickableBoundsCheck" />
         </LinearLayout>
+    </FrameLayout>
 
-        <LinearLayout
-            android:layout_width="match_parent"
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/saveWorkBtn"
+            android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="3"
-            android:orientation="vertical">
+            android:layout_margin="5dp"
+            android:layout_weight="1"
+            android:fontFamily="@font/ongulip"
+            android:text="저장"
+            android:textSize="30sp" />
 
-            <ScrollView
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="9"
-                tools:ignore="SpeakableTextPresentCheck">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:orientation="vertical"></LinearLayout>
-            </ScrollView>
-
-            <ImageButton
-                android:id="@+id/mkSetTimeDialogBtn"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_gravity="center"
-                android:layout_weight="1"
-                android:src="@drawable/time"
-                tools:ignore="SpeakableTextPresentCheck" />
-        </LinearLayout>
-
+        <Button
+            android:id="@+id/test2Btn"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:text="테스트" />
     </LinearLayout>
-
-    <Button
-        android:id="@+id/saveWorkBtn"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_margin="5dp"
-        android:layout_weight="1"
-        android:fontFamily="@font/ongulip"
-        android:text="저장"
-        android:textSize="30sp" />
-
-    <Button
-        android:id="@+id/test2Btn"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:text="테스트" />
 
 </LinearLayout>

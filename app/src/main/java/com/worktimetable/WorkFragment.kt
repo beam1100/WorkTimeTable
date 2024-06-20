@@ -13,8 +13,12 @@ import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.LinearLayout
+import android.widget.RadioButton
+import android.widget.RadioGroup
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.view.isGone
+import androidx.core.view.isVisible
 import com.worktimetable.databinding.FragmentWorkBinding
 
 
@@ -40,11 +44,11 @@ class WorkFragment : Fragment() {
         hashMapOf(
             "workName" to "주간근무",
             "typeList" to arrayListOf<HashMap<String, Any>>(
-                hashMapOf("type" to "주간상황","isPatrol" to false),
-                hashMapOf("type" to "1구역","isPatrol" to true),
-                hashMapOf("type" to "2구역","isPatrol" to true),
-                hashMapOf("type" to "3구역","isPatrol" to true),
-                hashMapOf("type" to "도보","isPatrol" to false),
+                hashMapOf("type" to "주간상황","isPatrol" to false, "isConcurrent" to false),
+                hashMapOf("type" to "1구역","isPatrol" to true, "isConcurrent" to false),
+                hashMapOf("type" to "2구역","isPatrol" to true, "isConcurrent" to false),
+                hashMapOf("type" to "3구역","isPatrol" to true, "isConcurrent" to false),
+                hashMapOf("type" to "도보","isPatrol" to false, "isConcurrent" to false),
             ),
             "shiftList" to arrayListOf<HashMap<String, Any>>(
                 hashMapOf("shift" to "07:00~07:30", "minuet" to 30),
@@ -57,11 +61,11 @@ class WorkFragment : Fragment() {
         hashMapOf(
             "workName" to "야간근무",
             "typeList" to arrayListOf<HashMap<String, Any>>(
-                hashMapOf("type" to "야간상황","isPatrol" to false),
-                hashMapOf("type" to "1구역","isPatrol" to true),
-                hashMapOf("type" to "2구역","isPatrol" to true),
-                hashMapOf("type" to "3구역","isPatrol" to true),
-                hashMapOf("type" to "대기","isPatrol" to false),
+                hashMapOf("type" to "야간상황","isPatrol" to false, "isConcurrent" to false),
+                hashMapOf("type" to "1구역","isPatrol" to true, "isConcurrent" to false),
+                hashMapOf("type" to "2구역","isPatrol" to true, "isConcurrent" to false),
+                hashMapOf("type" to "3구역","isPatrol" to true, "isConcurrent" to false),
+                hashMapOf("type" to "대기","isPatrol" to false, "isConcurrent" to false),
             ),
             "shiftList" to arrayListOf<HashMap<String, Any>>(
                 hashMapOf("shift" to "19:30~20:00", "minuet" to 30),
@@ -120,12 +124,6 @@ class WorkFragment : Fragment() {
 
         try{
 
-            val test = clickedMap?.let{
-                deepCopyMap(it)
-            }
-
-
-
             val selectedWorkMap = clickedMap
                 ?: hashMapOf(
                     "workName" to "",
@@ -157,14 +155,19 @@ class WorkFragment : Fragment() {
                     val inflater = LayoutInflater.from(requireContext())
                     val holder = inflater.inflate(R.layout.holder_set_work, null) as LinearLayout
                     val existingType = typeMap["type"] as String
-                    val existingIsPatrol = typeMap["isPatrol"] as Boolean
 
                     mkHolder(selectedTypeList, holderLayout, holder, hashMapOf("type" to existingType)){ clickedTypeMap ->
-                        mkEditWorkDialog(clickedTypeMap["type"] as String, existingIsPatrol){ newType, newIsPatrol ->
-                            holder.findViewById<TextView>(R.id.holderWorkName).text = newType
-                            clickedTypeMap["type"] = newType
-                            clickedTypeMap["isPatrol"] = newIsPatrol
-                        }
+                        mkEditWorkDialog(
+                            selectedTypeList,
+                            clickedTypeMap,
+                            holderLayout,
+                            holder){
+                                newType, newIsPatrol, newIsConcurrent ->
+                                holder.findViewById<TextView>(R.id.holderWorkName).text = newType
+                                clickedTypeMap["type"] = newType
+                                clickedTypeMap["isPatrol"] = newIsPatrol
+                                clickedTypeMap["isConcurrent"] = newIsConcurrent
+                            }
                     }
                 }
 
@@ -172,17 +175,19 @@ class WorkFragment : Fragment() {
                 //근무 추가하기 버튼 누르면 출력
                 this.findViewById<ImageButton>(R.id.mkAddWorkDialogBtn).setOnClickListener { _ ->
                     //다이얼로그에서 새로운 근무유형 홀더에 담기
-                    mkAddWorkDialog { addedType, addedIsPatrol ->
+                    mkAddWorkDialog { addedType, addedIsPatrol, addedIsConcurrent ->
                         selectedTypeList.add(
-                            hashMapOf("type" to addedType,"isPatrol" to addedIsPatrol)
+                            hashMapOf("type" to addedType,"isPatrol" to addedIsPatrol, "isConcurrent" to addedIsConcurrent)
                         )
                         val inflater = LayoutInflater.from(requireContext())
                         val holder = inflater.inflate(R.layout.holder_set_work, null) as LinearLayout
                         mkHolder(selectedTypeList, holderLayout, holder, hashMapOf("type" to addedType)){ clickedTypeMap->
-                            mkEditWorkDialog(clickedTypeMap["type"] as String, clickedTypeMap["isPatrol"] as Boolean){ newType, newIsPatrol ->
+                            mkEditWorkDialog(selectedTypeList, clickedTypeMap, holderLayout, holder){
+                                newType, newIsPatrol, newIsConcurrent ->
                                 holder.findViewById<TextView>(R.id.holderWorkName).text = newType
                                 clickedTypeMap["type"] = newType
                                 clickedTypeMap["isPatrol"] = newIsPatrol
+                                clickedTypeMap["isConcurrent"] =newIsConcurrent
                             }
                         }
                     } // mkAddWorkDialog End
@@ -201,10 +206,23 @@ class WorkFragment : Fragment() {
                     Log.d("test", selectedWorkMap.toString())
                 }
 
+                //근무유형, 근무시간 설정
+                this.findViewById<RadioGroup>(R.id.setWorkRadioGroup).setOnCheckedChangeListener { _, id ->
+                    when(id){
+                        this.findViewById<RadioButton>(R.id.setTypeRadio).id -> {
+                            this.findViewById<LinearLayout>(R.id.setTypeLayout).isGone = false
+                            this.findViewById<LinearLayout>(R.id.setTimeLayout).isGone = true
+                        }
+                        this.findViewById<RadioButton>(R.id.setTimeRadio).id -> {
+                            this.findViewById<LinearLayout>(R.id.setTypeLayout).isGone = true
+                            this.findViewById<LinearLayout>(R.id.setTimeLayout).isGone = false
+                        }
+                    }
+                }
+
                 //테스트 버튼
                 this.findViewById<Button>(R.id.test2Btn).setOnClickListener {
                     Log.d("test", clickedMap.toString())
-                    Log.d("test", test.toString())
                 }
 
                 show()
@@ -230,12 +248,6 @@ class WorkFragment : Fragment() {
                         callback(map)
 						return@setOnLongClickListener true
 					}
-                }
-
-                //홀더: 근무삭제
-                holder.findViewById<ImageButton>(R.id.holderDeleteWorkBtn).setOnClickListener {
-                    data.remove(map)
-                    holderLayout.removeView(holder)
                 }
 
                 //홀더: 근무이동(위로)
@@ -279,28 +291,42 @@ class WorkFragment : Fragment() {
     }
 
 
-    private fun mkAddWorkDialog(callback:(String,Boolean)->Unit){
+    private fun mkAddWorkDialog(callback:(String,Boolean, Boolean)->Unit){
         Dialog(requireContext()).apply{
             setContentView(R.layout.dialog_add_type)
             val workNameEditText = this.findViewById<TextView>(R.id.toAddWorkName)
-            val isWorkPatrolBox = this.findViewById<CheckBox>(R.id.isToAddPatrol)
+            val isWorkPatrolBox = this.findViewById<CheckBox>(R.id.isPatrolCheckBox)
+            val isConcurrentBox = this.findViewById<CheckBox>(R.id.isConcurentCheckBox)
+            this.findViewById<Button>(R.id.deleteWorkTypeBtn).isGone = true
             this.findViewById<Button>(R.id.addWorkBtn).setOnClickListener {
-                callback(workNameEditText.text.toString(), isWorkPatrolBox.isChecked)
+                callback(workNameEditText.text.toString(), isWorkPatrolBox.isChecked, isConcurrentBox.isChecked)
                 this.dismiss()
             }
             show()
         }
     }
 
-    private fun mkEditWorkDialog(name:String, isPatrol:Boolean, callback:(String, Boolean)->Unit){
+    private fun mkEditWorkDialog(
+        typeMapList:ArrayList<HashMap<String, Any>>,
+        typeMap:HashMap<String, Any>,
+        holderLayout:LinearLayout,
+        holder:LinearLayout,
+        callback:(String, Boolean, Boolean)->Unit){
         Dialog(requireContext()).apply{
             setContentView(R.layout.dialog_add_type)
             val workNameEditText = this.findViewById<TextView>(R.id.toAddWorkName)
-            val isWorkPatrolBox = this.findViewById<CheckBox>(R.id.isToAddPatrol)
-            workNameEditText.text = name
-            isWorkPatrolBox.isChecked=isPatrol
+            val isWorkPatrolBox = this.findViewById<CheckBox>(R.id.isPatrolCheckBox)
+            val isConcurrentBox = this.findViewById<CheckBox>(R.id.isConcurentCheckBox)
+            workNameEditText.text = typeMap["type"] as String
+            isWorkPatrolBox.isChecked= typeMap["isPatrol"] as Boolean
+            isConcurrentBox.isChecked= typeMap["isConcurrent"] as Boolean
             this.findViewById<Button>(R.id.addWorkBtn).setOnClickListener {
-                callback(workNameEditText.text.toString(), isWorkPatrolBox.isChecked)
+                callback(workNameEditText.text.toString(), isWorkPatrolBox.isChecked, isConcurrentBox.isChecked)
+                this.dismiss()
+            }
+            this.findViewById<Button>(R.id.deleteWorkTypeBtn).setOnClickListener {
+                typeMapList.remove(typeMap)
+                holderLayout.removeView(holder)
                 this.dismiss()
             }
             show()
