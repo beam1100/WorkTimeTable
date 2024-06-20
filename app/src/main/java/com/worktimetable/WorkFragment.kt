@@ -90,15 +90,22 @@ class WorkFragment : Fragment() {
             super.onViewCreated(view, savedInstanceState)
             val inflater = LayoutInflater.from(requireContext())
             val holderLayout = vBinding.workTypeLayout
+            holderLayout.removeAllViews()
             sampleData.forEach { workMap ->
                 val holder = inflater.inflate(R.layout.holder_set_work, null) as LinearLayout
                 mkHolder(sampleData, holderLayout, holder, hashMapOf("workName" to workMap["workName"] as String)){ clickedWorkMap->
-                    showWorkDetailsDialog(clickedWorkMap)
+                    showWorkDetailsDialog(clickedWorkMap){ resultMap->
+                        sampleData[sampleData.indexOf(clickedWorkMap)] = resultMap
+                        onViewCreated(view, savedInstanceState)
+                    }
                 }
             }
 
             vBinding.mkWorkTypeBtn.setOnClickListener {
-                showWorkDetailsDialog()
+                showWorkDetailsDialog(){ resultMap->
+                    sampleData.add(resultMap)
+                    onViewCreated(view, savedInstanceState)
+                }
             }
 
             vBinding.workTestBtn.setOnClickListener {
@@ -115,7 +122,7 @@ class WorkFragment : Fragment() {
 
 
 
-    private fun showWorkDetailsDialog(clickedMap:HashMap<String, Any>?=null){
+    private fun showWorkDetailsDialog(clickedMap:HashMap<String, Any>?=null, callback: (HashMap<String, Any>) -> Unit){
 
         try{
             val selectedWorkMap = clickedMap?: hashMapOf(
@@ -204,11 +211,13 @@ class WorkFragment : Fragment() {
 
                 //저장버튼
                 this.findViewById<Button>(R.id.workSaveBtn).setOnClickListener {
-                    val result = hashMapOf(
+                    val resultMap = hashMapOf<String, Any>(
                         "workName" to this.findViewById<EditText>(R.id.inputWorkName).text.toString(),
                         "typeList" to copiedTypeMapList,
                         "shiftList" to copiedShiftMapList
                     )
+                    callback(resultMap)
+                    dismiss()
                 }
 
                 show()
