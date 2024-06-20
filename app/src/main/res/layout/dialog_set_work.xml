@@ -30,11 +30,10 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
+            android:checked="true"
             android:fontFamily="@font/ongulip"
             android:text="근무유형 설정"
-            android:textSize="30sp"
-            android:checked="true"
-            />
+            android:textSize="30sp" />
 
         <RadioButton
             android:id="@+id/setTimeRadio"
@@ -110,28 +109,13 @@
         </LinearLayout>
     </FrameLayout>
 
-    <LinearLayout
+    <Button
+        android:id="@+id/workSaveBtn"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:orientation="horizontal">
-
-        <Button
-            android:id="@+id/saveWorkBtn"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_margin="5dp"
-            android:layout_weight="1"
-            android:fontFamily="@font/ongulip"
-            android:text="저장"
-            android:textSize="30sp" />
-
-        <Button
-            android:id="@+id/test2Btn"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:text="테스트" />
-    </LinearLayout>
+        android:fontFamily="@font/ongulip"
+        android:text="저장"
+        android:textSize="30sp" />
 
 </LinearLayout>

@@ -16,11 +16,8 @@ import android.widget.LinearLayout
 import android.widget.RadioButton
 import android.widget.RadioGroup
 import android.widget.TextView
-import android.widget.Toast
 import androidx.core.view.isGone
-import androidx.core.view.isVisible
 import com.worktimetable.databinding.FragmentWorkBinding
-
 
 
 class WorkFragment : Fragment() {
@@ -35,9 +32,6 @@ class WorkFragment : Fragment() {
     private var _vBinding: FragmentWorkBinding? = null
     private val vBinding get() = _vBinding!!
     private lateinit var mainActivity:MainActivity
-
-    private val workMapList = arrayListOf<HashMap<String,Any>>()
-    private val timeMapList = arrayListOf<HashMap<String,Any>>()
 
 
     private val sampleData = arrayListOf<HashMap<String,Any>>(
@@ -123,13 +117,16 @@ class WorkFragment : Fragment() {
     private fun showWorkDetailsDialog(clickedMap:HashMap<String, Any>?=null){
 
         try{
-
-            val selectedWorkMap = clickedMap
-                ?: hashMapOf(
+            val selectedWorkMap = clickedMap?: hashMapOf(
                     "workName" to "",
                     "typeList" to arrayListOf<HashMap<String, Any>>(),
                     "shiftList" to arrayListOf<HashMap<String, Any>>(),
                 )
+            val beforeSelectedWorkMap = deepCopyHashMap(selectedWorkMap as HashMap<String, Any>)
+            val beforeTypeMapList = (selectedWorkMap["typeList"] as ArrayList<*>)
+            val typeMapList = ArrayList(beforeTypeMapList.map{deepCopy(it) as HashMap<String, Any>})
+
+
 
             Dialog(requireContext()).apply {
                 setContentView(R.layout.dialog_set_work)
@@ -148,17 +145,17 @@ class WorkFragment : Fragment() {
                 val holderLayout = this.findViewById<LinearLayout>(R.id.workTypeLayout)
                 holderLayout.removeAllViews()
 
-                val selectedTypeList = selectedWorkMap["typeList"] as ArrayList<HashMap<String,Any>>
+
 
                 //기존 근무유형 홀더에 담기
-                selectedTypeList.forEach { typeMap->
+                typeMapList.forEach { typeMap->
                     val inflater = LayoutInflater.from(requireContext())
                     val holder = inflater.inflate(R.layout.holder_set_work, null) as LinearLayout
                     val existingType = typeMap["type"] as String
 
-                    mkHolder(selectedTypeList, holderLayout, holder, hashMapOf("type" to existingType)){ clickedTypeMap ->
+                    mkHolder(typeMapList, holderLayout, holder, hashMapOf("type" to existingType)){ clickedTypeMap ->
                         mkEditWorkDialog(
-                            selectedTypeList,
+                            typeMapList,
                             clickedTypeMap,
                             holderLayout,
                             holder){
@@ -176,13 +173,13 @@ class WorkFragment : Fragment() {
                 this.findViewById<ImageButton>(R.id.mkAddWorkDialogBtn).setOnClickListener { _ ->
                     //다이얼로그에서 새로운 근무유형 홀더에 담기
                     mkAddWorkDialog { addedType, addedIsPatrol, addedIsConcurrent ->
-                        selectedTypeList.add(
+                        typeMapList.add(
                             hashMapOf("type" to addedType,"isPatrol" to addedIsPatrol, "isConcurrent" to addedIsConcurrent)
                         )
                         val inflater = LayoutInflater.from(requireContext())
                         val holder = inflater.inflate(R.layout.holder_set_work, null) as LinearLayout
-                        mkHolder(selectedTypeList, holderLayout, holder, hashMapOf("type" to addedType)){ clickedTypeMap->
-                            mkEditWorkDialog(selectedTypeList, clickedTypeMap, holderLayout, holder){
+                        mkHolder(typeMapList, holderLayout, holder, hashMapOf("type" to addedType)){ clickedTypeMap->
+                            mkEditWorkDialog(typeMapList, clickedTypeMap, holderLayout, holder){
                                 newType, newIsPatrol, newIsConcurrent ->
                                 holder.findViewById<TextView>(R.id.holderWorkName).text = newType
                                 clickedTypeMap["type"] = newType
@@ -193,18 +190,6 @@ class WorkFragment : Fragment() {
                     } // mkAddWorkDialog End
                 } // this.findViewById<Button>(R.id.mkAddWorkDialogBtn).setOnClickListener End
 
-
-                // 저장 버튼
-                this.findViewById<Button>(R.id.saveWorkBtn).setOnClickListener {_->
-                    val newWorkName = this.findViewById<EditText>(R.id.inputWorkName).text.toString()
-                    if(newWorkName.isEmpty()){
-                        Toast.makeText(requireContext(), "근무이름을 입력하세요", Toast.LENGTH_LONG).show()
-                        Log.d("test", selectedWorkMap.toString())
-                    }else{
-                        Toast.makeText(requireContext(), "test", Toast.LENGTH_LONG).show()
-                    }
-                    Log.d("test", selectedWorkMap.toString())
-                }
 
                 //근무유형, 근무시간 설정
                 this.findViewById<RadioGroup>(R.id.setWorkRadioGroup).setOnCheckedChangeListener { _, id ->
@@ -221,8 +206,10 @@ class WorkFragment : Fragment() {
                 }
 
                 //테스트 버튼
-                this.findViewById<Button>(R.id.test2Btn).setOnClickListener {
-                    Log.d("test", clickedMap.toString())
+                this.findViewById<Button>(R.id.workSaveBtn).setOnClickListener {
+                    Log.d("test", beforeTypeMapList.toString())
+                    Log.d("test", typeMapList.toString())
+
                 }
 
                 show()
@@ -349,12 +336,28 @@ class WorkFragment : Fragment() {
         return null
     }
 
-    private fun deepCopyMap(map:HashMap<String, Any>):HashMap<String, Any>{
-        val result = hashMapOf<String, Any>()
-        map.forEach { (key, value) ->
-            result[key] = value
+    private fun deepCopyHashMap(map: HashMap<String, Any>): HashMap<String, Any> {
+        val copiedMap = hashMapOf<String, Any>()
+        for ((key, value) in map) {
+            copiedMap[key] = deepCopy(value)
         }
-        return result
+        return copiedMap
+    }
+
+    private fun deepCopy(obj: Any): Any {
+        return when (obj) {
+            is Map<*, *> -> obj.mapKeys { it.key }.mapValues { it.value?.let { it1 -> deepCopy(it1) } }
+            is List<*> -> obj.map {
+                if (it != null) {
+                    deepCopy(it)
+                }
+            }
+            is String -> obj
+            is Int -> obj
+            is Double -> obj
+            is Boolean -> obj
+            else -> obj // Handle other custom data types here
+        }
     }
 
 } // class WorkFragment : Fragment() End
