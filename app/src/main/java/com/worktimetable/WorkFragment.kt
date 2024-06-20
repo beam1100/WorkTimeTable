@@ -102,7 +102,7 @@ class WorkFragment : Fragment() {
             }
 
             vBinding.mkWorkTypeBtn.setOnClickListener {
-                showWorkDetailsDialog(){ resultMap->
+                showWorkDetailsDialog{ resultMap->
                     sampleData.add(resultMap)
                     onViewCreated(view, savedInstanceState)
                 }

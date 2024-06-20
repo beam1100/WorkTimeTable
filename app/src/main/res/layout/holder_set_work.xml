@@ -13,15 +13,6 @@
         tools:ignore="SpeakableTextPresentCheck"
         tools:src="@android:drawable/arrow_up_float" />
 
-    <ImageButton
-        android:id="@+id/holderMoveItemDown"
-        android:layout_width="0dp"
-        android:layout_height="60dp"
-        android:layout_weight="1"
-        android:src="@android:drawable/arrow_down_float"
-        tools:ignore="SpeakableTextPresentCheck"
-        tools:src="@android:drawable/arrow_down_float" />
-
     <TextView
         android:id="@+id/holderWorkName"
         android:layout_width="0dp"
@@ -30,5 +21,14 @@
         android:fontFamily="@font/ongulip"
         android:gravity="center"
         android:textSize="50sp" />
+
+    <ImageButton
+        android:id="@+id/holderMoveItemDown"
+        android:layout_width="0dp"
+        android:layout_height="60dp"
+        android:layout_weight="1"
+        android:src="@android:drawable/arrow_down_float"
+        tools:ignore="SpeakableTextPresentCheck"
+        tools:src="@android:drawable/arrow_down_float" />
 
 </LinearLayout>
