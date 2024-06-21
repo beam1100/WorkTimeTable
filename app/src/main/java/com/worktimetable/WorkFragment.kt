@@ -97,8 +97,8 @@ class WorkFragment : Fragment() {
                 mkHolder(sampleData, holderLayout, holder, hashMapOf("workName" to workMap["workName"] as String)){ clickedWorkMap->
                     showWorkDetailsDialog(
                         clickedWorkMap,
-                        {toAddMap->
-                            sampleData[sampleData.indexOf(clickedWorkMap)] = toAddMap
+                        {toUpdateMap->
+                            sampleData[sampleData.indexOf(clickedWorkMap)] = toUpdateMap
                             onViewCreated(view, savedInstanceState)
                         },
                         {toRemoveMap->
@@ -112,8 +112,8 @@ class WorkFragment : Fragment() {
             vBinding.mkWorkTypeBtn.setOnClickListener {
                 showWorkDetailsDialog(
                     null,
-                    { resultMap->
-                        sampleData.add(resultMap)
+                    { toUpdateMap->
+                        sampleData.add(toUpdateMap)
                         onViewCreated(view, savedInstanceState)
                     },{}
                 )
@@ -223,12 +223,12 @@ class WorkFragment : Fragment() {
 
                 //저장버튼
                 this.findViewById<Button>(R.id.saveWorkBtn).setOnClickListener {
-                    val resultMap = hashMapOf<String, Any>(
+                    val selectedMap = hashMapOf<String, Any>(
                         "workName" to this.findViewById<EditText>(R.id.inputWorkName).text.toString(),
                         "typeList" to copiedTypeMapList,
                         "shiftList" to copiedShiftMapList
                     )
-                    updateMap(resultMap)
+                    updateMap(selectedMap)
                     dismiss()
                 }
 
