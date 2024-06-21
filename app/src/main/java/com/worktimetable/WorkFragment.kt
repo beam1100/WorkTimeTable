@@ -37,10 +37,11 @@ class WorkFragment : Fragment() {
         hashMapOf(
             "workName" to "주간근무",
             "typeList" to arrayListOf<HashMap<String, Any>>(
-                hashMapOf("type" to "주간상황","isPatrol" to false, "isConcurrent" to false),
+                hashMapOf("type" to "상황","isPatrol" to false, "isConcurrent" to false),
                 hashMapOf("type" to "1구역","isPatrol" to true, "isConcurrent" to false),
                 hashMapOf("type" to "2구역","isPatrol" to true, "isConcurrent" to false),
                 hashMapOf("type" to "3구역","isPatrol" to true, "isConcurrent" to false),
+                hashMapOf("type" to "4구역","isPatrol" to true, "isConcurrent" to false),
                 hashMapOf("type" to "도보","isPatrol" to false, "isConcurrent" to false),
             ),
             "shiftList" to arrayListOf<HashMap<String, Any>>(
@@ -54,10 +55,12 @@ class WorkFragment : Fragment() {
         hashMapOf(
             "workName" to "야간근무",
             "typeList" to arrayListOf<HashMap<String, Any>>(
-                hashMapOf("type" to "야간상황","isPatrol" to false, "isConcurrent" to false),
+                hashMapOf("type" to "상황","isPatrol" to false, "isConcurrent" to false),
                 hashMapOf("type" to "1구역","isPatrol" to true, "isConcurrent" to false),
                 hashMapOf("type" to "2구역","isPatrol" to true, "isConcurrent" to false),
                 hashMapOf("type" to "3구역","isPatrol" to true, "isConcurrent" to false),
+                hashMapOf("type" to "4구역","isPatrol" to true, "isConcurrent" to false),
+                hashMapOf("type" to "도보","isPatrol" to false, "isConcurrent" to false),
                 hashMapOf("type" to "대기","isPatrol" to false, "isConcurrent" to false),
             ),
             "shiftList" to arrayListOf<HashMap<String, Any>>(
