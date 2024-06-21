@@ -3,7 +3,6 @@ package com.worktimetable
 import android.app.Dialog
 import android.content.Context
 import android.os.Bundle
-import android.provider.Settings.Global
 import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -19,7 +18,6 @@ import android.widget.RadioGroup
 import android.widget.TextView
 import androidx.core.view.isGone
 import com.worktimetable.databinding.FragmentWorkBinding
-import java.io.Serializable
 
 
 class WorkFragment : Fragment() {
@@ -94,18 +92,28 @@ class WorkFragment : Fragment() {
             sampleData.forEach { workMap ->
                 val holder = inflater.inflate(R.layout.holder_set_work, null) as LinearLayout
                 mkHolder(sampleData, holderLayout, holder, hashMapOf("workName" to workMap["workName"] as String)){ clickedWorkMap->
-                    showWorkDetailsDialog(clickedWorkMap){ resultMap->
-                        sampleData[sampleData.indexOf(clickedWorkMap)] = resultMap
-                        onViewCreated(view, savedInstanceState)
-                    }
+                    showWorkDetailsDialog(
+                        clickedWorkMap,
+                        {toAddMap->
+                            sampleData[sampleData.indexOf(clickedWorkMap)] = toAddMap
+                            onViewCreated(view, savedInstanceState)
+                        },
+                        {toRemoveMap->
+                            sampleData.remove(toRemoveMap)
+                            onViewCreated(view, savedInstanceState)
+                        }
+                    )
                 }
             }
 
             vBinding.mkWorkTypeBtn.setOnClickListener {
-                showWorkDetailsDialog{ resultMap->
-                    sampleData.add(resultMap)
-                    onViewCreated(view, savedInstanceState)
-                }
+                showWorkDetailsDialog(
+                    null,
+                    { resultMap->
+                        sampleData.add(resultMap)
+                        onViewCreated(view, savedInstanceState)
+                    },{}
+                )
             }
 
             vBinding.workTestBtn.setOnClickListener {
@@ -120,21 +128,21 @@ class WorkFragment : Fragment() {
         }
     }
 
-
-
-    private fun showWorkDetailsDialog(clickedMap:HashMap<String, Any>?=null, callback: (HashMap<String, Any>) -> Unit){
+    private fun showWorkDetailsDialog(
+        clickedMap:HashMap<String, Any>?=null,
+        updateMap: (HashMap<String, Any>) -> Unit,
+        deleteMap: (HashMap<String, Any>) -> Unit){
 
         try{
             val selectedWorkMap = clickedMap?: hashMapOf(
-                    "workName" to "",
-                    "typeList" to arrayListOf<HashMap<String, Any>>(),
-                    "shiftList" to arrayListOf<HashMap<String, Any>>(),
-                )
+                "workName" to "",
+                "typeList" to arrayListOf<HashMap<String, Any>>(),
+                "shiftList" to arrayListOf<HashMap<String, Any>>(),
+            )
             val exTypeMapList = (selectedWorkMap["typeList"] as ArrayList<*>)
             val copiedTypeMapList = ArrayList(exTypeMapList.map{deepCopy(it) as HashMap<String, Any>})
             val exShiftMapList = (selectedWorkMap["shiftList"] as ArrayList<*>)
             val copiedShiftMapList = ArrayList(exShiftMapList.map{deepCopy(it) as HashMap<String, Any>})
-
 
             Dialog(requireContext()).apply {
                 setContentView(R.layout.dialog_set_work)
@@ -145,6 +153,10 @@ class WorkFragment : Fragment() {
                 layoutParams?.height = (viewHeight * 0.9).toInt()
                 window?.attributes = layoutParams
 
+                if(clickedMap==null){
+                    this.findViewById<Button>(R.id.deleteWorkBtn).isGone=true
+                }
+
                 // 근무이름 출력
                 clickedMap?.get("workName")?.let{
                     this.findViewById<EditText>(R.id.inputWorkName).setText(it as String)
@@ -152,8 +164,6 @@ class WorkFragment : Fragment() {
 
                 val holderLayout = this.findViewById<LinearLayout>(R.id.workTypeLayout)
                 holderLayout.removeAllViews()
-
-
 
                 //기존 근무유형 홀더에 담기
                 copiedTypeMapList.forEach { typeMap ->
@@ -163,7 +173,7 @@ class WorkFragment : Fragment() {
 
                     mkHolder(copiedTypeMapList, holderLayout, holder, hashMapOf("type" to existingType)){ clickedTypeMap ->
                         mkEditWorkDialog(copiedTypeMapList, clickedTypeMap, holderLayout, holder){
-                            newType, newIsPatrol, newIsConcurrent ->
+                                newType, newIsPatrol, newIsConcurrent ->
                             holder.findViewById<TextView>(R.id.holderWorkName).text = newType
                             clickedTypeMap["type"] = newType
                             clickedTypeMap["isPatrol"] = newIsPatrol
@@ -171,7 +181,6 @@ class WorkFragment : Fragment() {
                         }
                     }
                 }
-
 
                 //근무 추가하기 버튼 누르면 출력
                 this.findViewById<ImageButton>(R.id.mkAddWorkDialogBtn).setOnClickListener { _ ->
@@ -184,7 +193,7 @@ class WorkFragment : Fragment() {
                         val holder = inflater.inflate(R.layout.holder_set_work, null) as LinearLayout
                         mkHolder(copiedTypeMapList, holderLayout, holder, hashMapOf("type" to addedType)){ clickedTypeMap->
                             mkEditWorkDialog(copiedTypeMapList, clickedTypeMap, holderLayout, holder){
-                                newType, newIsPatrol, newIsConcurrent ->
+                                    newType, newIsPatrol, newIsConcurrent ->
                                 holder.findViewById<TextView>(R.id.holderWorkName).text = newType
                                 clickedTypeMap["type"] = newType
                                 clickedTypeMap["isPatrol"] = newIsPatrol
@@ -210,13 +219,19 @@ class WorkFragment : Fragment() {
                 }
 
                 //저장버튼
-                this.findViewById<Button>(R.id.workSaveBtn).setOnClickListener {
+                this.findViewById<Button>(R.id.saveWorkBtn).setOnClickListener {
                     val resultMap = hashMapOf<String, Any>(
                         "workName" to this.findViewById<EditText>(R.id.inputWorkName).text.toString(),
                         "typeList" to copiedTypeMapList,
                         "shiftList" to copiedShiftMapList
                     )
-                    callback(resultMap)
+                    updateMap(resultMap)
+                    dismiss()
+                }
+
+                //삭제버튼
+                this.findViewById<Button>(R.id.deleteWorkBtn).setOnClickListener {
+                    clickedMap?.let { it1 -> deleteMap(it1) }
                     dismiss()
                 }
 
@@ -242,8 +257,8 @@ class WorkFragment : Fragment() {
                     text = condition.entries.first().value as String
                     setOnLongClickListener {_ ->
                         callback(map)
-						return@setOnLongClickListener true
-					}
+                        return@setOnLongClickListener true
+                    }
                 }
 
                 //홀더: 근무이동(위로)
@@ -356,5 +371,6 @@ class WorkFragment : Fragment() {
             else -> obj
         }
     }
+
 
 } // class WorkFragment : Fragment() End

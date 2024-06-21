@@ -109,13 +109,29 @@
         </LinearLayout>
     </FrameLayout>
 
-    <Button
-        android:id="@+id/workSaveBtn"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:fontFamily="@font/ongulip"
-        android:text="저장"
-        android:textSize="30sp" />
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/saveWorkBtn"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:fontFamily="@font/ongulip"
+            android:text="저장"
+            android:textSize="30sp" />
+
+        <Button
+            android:id="@+id/deleteWorkBtn"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:fontFamily="@font/ongulip"
+            android:text="삭제"
+            android:textSize="30sp" />
+    </LinearLayout>
 
 </LinearLayout>
