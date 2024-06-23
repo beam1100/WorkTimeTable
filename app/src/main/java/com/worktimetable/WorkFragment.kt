@@ -23,10 +23,7 @@ import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import com.worktimetable.databinding.FragmentWorkBinding
 
-
 class WorkFragment : Fragment() {
-
-
     companion object { }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -166,9 +163,9 @@ class WorkFragment : Fragment() {
 
                 val workHolderLayout = this.findViewById<LinearLayout>(R.id.workTypeLayout)
                 val shiftHolderLayout = this.findViewById<LinearLayout>(R.id.workShiftLayout)
+
                 workHolderLayout.removeAllViews()
                 shiftHolderLayout.removeAllViews()
-
 
                 //기존 근무 유형 홀더에 담아서 레이아웃에 넣기
                 copiedTypeMapList.forEach { typeMap ->
@@ -275,7 +272,6 @@ class WorkFragment : Fragment() {
             Log.d("test", err.stackTraceToString())
         }
     } // private fun mkSetWorkDialog() End
-
 
     private fun mkHolder(
         data:ArrayList<HashMap<String, Any>>,
@@ -484,6 +480,5 @@ class WorkFragment : Fragment() {
         val minuet = String.format("%02d", divided24 % 60 )
         return "${hour}:${minuet}"
     }
-
 
 } // class WorkFragment : Fragment() End
