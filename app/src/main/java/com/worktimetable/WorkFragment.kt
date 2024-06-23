@@ -209,7 +209,6 @@ class WorkFragment : Fragment() {
 
                 //기존 근무시간 홀더에 담아서 레이아웃에 넣기
                 copiedShiftMapList.forEach { shiftMap ->
-                    Log.d("test", shiftMap.toString())
                     val inflater = LayoutInflater.from(requireContext())
                     val holder = inflater.inflate(R.layout.holder, null) as LinearLayout
                     holder.findViewById<ImageButton>(R.id.holderMoveItemUp).isGone=true
