@@ -55,7 +55,8 @@
             android:id="@+id/setShiftLayout"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:visibility="gone">
 
             <ScrollView
                 android:layout_width="match_parent"
@@ -64,6 +65,7 @@
                 tools:ignore="SpeakableTextPresentCheck">
 
                 <LinearLayout
+                    android:id="@+id/workShiftLayout"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:orientation="vertical"></LinearLayout>

@@ -97,7 +97,7 @@ class WorkFragment : Fragment() {
             val holderLayout = vBinding.workTypeLayout
             holderLayout.removeAllViews()
             sampleData.forEach { workMap ->
-                val holder = inflater.inflate(R.layout.holder_set_work, null) as LinearLayout
+                val holder = inflater.inflate(R.layout.holder, null) as LinearLayout
                 mkHolder(sampleData, holderLayout, holder, hashMapOf("workName" to workMap["workName"] as String)){ clickedWorkMap->
                     showWorkDetailsDialog(
                         clickedWorkMap,
@@ -149,7 +149,7 @@ class WorkFragment : Fragment() {
             val exTypeMapList = (selectedWorkMap["typeList"] as ArrayList<*>)
             val copiedTypeMapList = ArrayList(exTypeMapList.map{deepCopy(it) as HashMap<String, Any>})
             val exShiftMapList = (selectedWorkMap["shiftList"] as ArrayList<*>)
-            val copiedShiftMapList = ArrayList(exShiftMapList.map{deepCopy(it) as HashMap<String, Any>})
+            var copiedShiftMapList = ArrayList(exShiftMapList.map{deepCopy(it) as HashMap<String, Any>})
 
             Dialog(requireContext()).apply {
                 setContentView(R.layout.dialog_set_work)
@@ -164,17 +164,20 @@ class WorkFragment : Fragment() {
                     this.findViewById<EditText>(R.id.inputWorkName).setText(it as String)
                 }
 
-                val holderLayout = this.findViewById<LinearLayout>(R.id.workTypeLayout)
-                holderLayout.removeAllViews()
+                val workHolderLayout = this.findViewById<LinearLayout>(R.id.workTypeLayout)
+                val shiftHolderLayout = this.findViewById<LinearLayout>(R.id.workShiftLayout)
+                workHolderLayout.removeAllViews()
+                shiftHolderLayout.removeAllViews()
 
-                //기존 근무유형 홀더에 담기
+
+                //기존 근무 유형 홀더에 담아서 레이아웃에 넣기
                 copiedTypeMapList.forEach { typeMap ->
                     val inflater = LayoutInflater.from(requireContext())
-                    val holder = inflater.inflate(R.layout.holder_set_work, null) as LinearLayout
-                    val existingType = typeMap["type"] as String
+                    val holder = inflater.inflate(R.layout.holder, null) as LinearLayout
+                    val exType = typeMap["type"] as String
 
-                    mkHolder(copiedTypeMapList, holderLayout, holder, hashMapOf("type" to existingType)){ clickedTypeMap ->
-                        mkEditWorkDialog(copiedTypeMapList, clickedTypeMap, holderLayout, holder){
+                    mkHolder(copiedTypeMapList, workHolderLayout, holder, hashMapOf("type" to exType)){ clickedTypeMap ->
+                        mkEditWorkDialog(copiedTypeMapList, clickedTypeMap, workHolderLayout, holder){
                                 newType, newIsPatrol, newIsConcurrent ->
                             holder.findViewById<TextView>(R.id.holderWorkName).text = newType
                             clickedTypeMap["type"] = newType
@@ -192,10 +195,9 @@ class WorkFragment : Fragment() {
                             hashMapOf("type" to addedType,"isPatrol" to addedIsPatrol, "isConcurrent" to addedIsConcurrent)
                         )
                         val inflater = LayoutInflater.from(requireContext())
-                        val holder = inflater.inflate(R.layout.holder_set_work, null) as LinearLayout
-                        mkHolder(copiedTypeMapList, holderLayout, holder, hashMapOf("type" to addedType)){ clickedTypeMap->
-                            mkEditWorkDialog(copiedTypeMapList, clickedTypeMap, holderLayout, holder){
-                                    newType, newIsPatrol, newIsConcurrent ->
+                        val holder = inflater.inflate(R.layout.holder, null) as LinearLayout
+                        mkHolder(copiedTypeMapList, workHolderLayout, holder, hashMapOf("type" to addedType)){ clickedTypeMap->
+                            mkEditWorkDialog(copiedTypeMapList, clickedTypeMap, workHolderLayout, holder){ newType, newIsPatrol, newIsConcurrent ->
                                 holder.findViewById<TextView>(R.id.holderWorkName).text = newType
                                 clickedTypeMap["type"] = newType
                                 clickedTypeMap["isPatrol"] = newIsPatrol
@@ -205,19 +207,35 @@ class WorkFragment : Fragment() {
                     } // mkAddWorkDialog End
                 } // this.findViewById<Button>(R.id.mkAddWorkDialogBtn).setOnClickListener End
 
-                //근무시간 설정 버튼 누르면 실행
+                //기존 근무시간 홀더에 담아서 레이아웃에 넣기
+                copiedShiftMapList.forEach { shiftMap ->
+                    Log.d("test", shiftMap.toString())
+                    val inflater = LayoutInflater.from(requireContext())
+                    val holder = inflater.inflate(R.layout.holder, null) as LinearLayout
+                    holder.findViewById<ImageButton>(R.id.holderMoveItemUp).isGone=true
+                    holder.findViewById<ImageButton>(R.id.holderMoveItemDown).isGone=true
+                    val exShift = shiftMap["shift"] as String
+                    mkHolder(copiedShiftMapList, shiftHolderLayout, holder, hashMapOf("shift" to exShift)){ clickedShiftMap ->
+                        Log.d("test", clickedShiftMap.toString())
+                    }
+                }
+
+                //근무시간 설정 버튼 클릭
                 this.findViewById<ImageButton>(R.id.mkSetShiftDialogBtn).setOnClickListener {
-                    mkSetShiftDialog{ startHour, startMinuet, intervalMinuet, shiftNum ->
-                        for(i:Int in 0..shiftNum){
-                            if(i<shiftNum){
-                                val time = startHour*60 + startMinuet + i*intervalMinuet
-                                val nextTime = startHour*60 + startMinuet + (i+1)*intervalMinuet
-                                Log.d("test", "${minuetToTimeStr(time)}~${nextTime}")
+                    shiftHolderLayout.removeAllViews()
+                    mkSetShiftDialog{shiftMapList->
+                        copiedShiftMapList = shiftMapList
+                        shiftMapList.forEach {shiftMap->
+                            val inflater = LayoutInflater.from(requireContext())
+                            val holder = inflater.inflate(R.layout.holder, null) as LinearLayout
+                            holder.findViewById<ImageButton>(R.id.holderMoveItemUp).isGone = true
+                            holder.findViewById<ImageButton>(R.id.holderMoveItemDown).isGone = true
+                            mkHolder(shiftMapList, shiftHolderLayout, holder, hashMapOf("shift" to shiftMap["shift"] as String)){ clickedTypeMap->
+                                Log.d("test", clickedTypeMap.toString())
                             }
                         }
                     }
                 }
-
 
                 //근무유형, 근무시간 설정
                 this.findViewById<RadioGroup>(R.id.setWorkRadioGroup).setOnCheckedChangeListener { _, id ->
@@ -315,7 +333,7 @@ class WorkFragment : Fragment() {
     }
 
     private fun mkSetShiftDialog(
-        callback: (startHour:Int, startMinuet:Int, intervalMinuet:Int, shiftNum:Int) -> Unit
+        callback: (shiftMapList:ArrayList<HashMap<String, Any>>) -> Unit
     ) {
         try{
             Dialog(requireContext()).apply {
@@ -353,8 +371,23 @@ class WorkFragment : Fragment() {
                     val intervalMinuet = intervalMinuetEt.text.toString().toIntOrNull()
                     val shiftNum = shiftNumEt.text.toString().toIntOrNull()
                     if(startHour!=null && startMinuet!=null && intervalMinuet != null && shiftNum!=null){
-                        callback(startHour, startMinuet, intervalMinuet, shiftNum)
-//                        dismiss()
+                        val resultMapList = arrayListOf<HashMap<String, Any>>()
+                        for(i:Int in 0..shiftNum){
+                            if(i<shiftNum){
+                                val fromTime = startHour*60 + startMinuet + i*intervalMinuet
+                                val toTime = startHour*60 + startMinuet + (i+1)*intervalMinuet
+                                resultMapList.add(
+                                    hashMapOf(
+                                        "shift" to "${minuetToTimeStr(fromTime)} ~ ${minuetToTimeStr(toTime)}",
+                                        "fromTime" to fromTime,
+                                        "toTime" to toTime,
+                                        "minuet" to toTime-fromTime
+                                    )
+                                )
+                            }
+                        }
+                        callback(resultMapList)
+                        dismiss()
                     }else{
                         Toast.makeText(requireContext(), "다시 입력하세요", Toast.LENGTH_SHORT).show()
                     }
