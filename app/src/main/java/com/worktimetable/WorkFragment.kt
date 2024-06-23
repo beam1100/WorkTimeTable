@@ -16,7 +16,11 @@ import android.widget.LinearLayout
 import android.widget.RadioButton
 import android.widget.RadioGroup
 import android.widget.TextView
+import android.widget.Toast
 import androidx.core.view.isGone
+import androidx.core.widget.addTextChangedListener
+import com.google.android.material.textfield.TextInputEditText
+import com.google.android.material.textfield.TextInputLayout
 import com.worktimetable.databinding.FragmentWorkBinding
 
 
@@ -149,12 +153,7 @@ class WorkFragment : Fragment() {
 
             Dialog(requireContext()).apply {
                 setContentView(R.layout.dialog_set_work)
-                val layoutParams = window?.attributes
-                val viewWidth = vBinding.workDialogLayout.width
-                val viewHeight = vBinding.workDialogLayout.height
-                layoutParams?.width = (viewWidth * 0.95).toInt()
-                layoutParams?.height = (viewHeight * 0.9).toInt()
-                window?.attributes = layoutParams
+                setDialogSize(this, 0.9f, 0.8f)
 
                 if(clickedMap==null){
                     this.findViewById<Button>(R.id.deleteWorkBtn).isGone=true
@@ -185,7 +184,7 @@ class WorkFragment : Fragment() {
                     }
                 }
 
-                //근무 추가하기 버튼 누르면 출력
+                //근무 추가하기 버튼 클릭
                 this.findViewById<ImageButton>(R.id.mkAddWorkDialogBtn).setOnClickListener { _ ->
                     //다이얼로그에서 새로운 근무유형 홀더에 담기
                     mkAddWorkDialog { addedType, addedIsPatrol, addedIsConcurrent ->
@@ -206,17 +205,30 @@ class WorkFragment : Fragment() {
                     } // mkAddWorkDialog End
                 } // this.findViewById<Button>(R.id.mkAddWorkDialogBtn).setOnClickListener End
 
+                //근무시간 설정 버튼 누르면 실행
+                this.findViewById<ImageButton>(R.id.mkSetShiftDialogBtn).setOnClickListener {
+                    mkSetShiftDialog{ startHour, startMinuet, intervalMinuet, shiftNum ->
+                        for(i:Int in 0..shiftNum){
+                            if(i<shiftNum){
+                                val time = startHour*60 + startMinuet + i*intervalMinuet
+                                val nextTime = startHour*60 + startMinuet + (i+1)*intervalMinuet
+                                Log.d("test", "${minuetToTimeStr(time)}~${nextTime}")
+                            }
+                        }
+                    }
+                }
+
 
                 //근무유형, 근무시간 설정
                 this.findViewById<RadioGroup>(R.id.setWorkRadioGroup).setOnCheckedChangeListener { _, id ->
                     when(id){
                         this.findViewById<RadioButton>(R.id.setTypeRadio).id -> {
                             this.findViewById<LinearLayout>(R.id.setTypeLayout).isGone = false
-                            this.findViewById<LinearLayout>(R.id.setTimeLayout).isGone = true
+                            this.findViewById<LinearLayout>(R.id.setShiftLayout).isGone = true
                         }
                         this.findViewById<RadioButton>(R.id.setTimeRadio).id -> {
                             this.findViewById<LinearLayout>(R.id.setTypeLayout).isGone = true
-                            this.findViewById<LinearLayout>(R.id.setTimeLayout).isGone = false
+                            this.findViewById<LinearLayout>(R.id.setShiftLayout).isGone = false
                         }
                     }
                 }
@@ -245,6 +257,8 @@ class WorkFragment : Fragment() {
             Log.d("test", err.stackTraceToString())
         }
     } // private fun showWorkDetailsDialog() End
+
+
 
 
     private fun mkHolder(
@@ -298,6 +312,61 @@ class WorkFragment : Fragment() {
             Log.d("test", err.toString())
             Log.d("test", err.stackTraceToString())
         }
+    }
+
+    private fun mkSetShiftDialog(
+        callback: (startHour:Int, startMinuet:Int, intervalMinuet:Int, shiftNum:Int) -> Unit
+    ) {
+        try{
+            Dialog(requireContext()).apply {
+                setContentView(R.layout.dialog_set_time)
+                setDialogSize(this, 0.85f, null)
+
+                val startHourEt = findViewById<TextInputEditText>(R.id.startHourEt)
+                val startMinuetEt = findViewById<TextInputEditText>(R.id.startMinuetEt)
+                val intervalMinuetEt = findViewById<TextInputEditText>(R.id.interverMinuetEt)
+                val shiftNumEt = findViewById<TextInputEditText>(R.id.shiftNumEt)
+
+                startHourEt.addTextChangedListener { text ->
+                    val number = text.toString().toIntOrNull()
+                    val errorMessage = if (number == null || number < 0 || number >= 24) {
+                        "0~23"
+                    } else {
+                        null
+                    }
+                findViewById<TextInputLayout>(R.id.startHourLayout).error = errorMessage
+                }
+
+                startMinuetEt.addTextChangedListener { text ->
+                    val number = text.toString().toIntOrNull()
+                    val errorMessage = if (number == null || number < 0 || number >= 60) {
+                        "0~59"
+                    } else {
+                        null
+                    }
+                    findViewById<TextInputLayout>(R.id.startMinuetLayout).error = errorMessage
+                }
+
+                findViewById<Button>(R.id.setTimeBtn).setOnClickListener {
+                    val startHour = startHourEt.text.toString().toIntOrNull()
+                    val startMinuet = startMinuetEt.text.toString().toIntOrNull()
+                    val intervalMinuet = intervalMinuetEt.text.toString().toIntOrNull()
+                    val shiftNum = shiftNumEt.text.toString().toIntOrNull()
+                    if(startHour!=null && startMinuet!=null && intervalMinuet != null && shiftNum!=null){
+                        callback(startHour, startMinuet, intervalMinuet, shiftNum)
+//                        dismiss()
+                    }else{
+                        Toast.makeText(requireContext(), "다시 입력하세요", Toast.LENGTH_SHORT).show()
+                    }
+                }
+
+                show()
+            }
+        }catch(err:Exception){
+            Log.d("test", err.toString())
+            Log.d("test", err.stackTraceToString())
+        }
+
     }
 
 
@@ -373,6 +442,26 @@ class WorkFragment : Fragment() {
             }
             else -> obj
         }
+    }
+
+    private fun setDialogSize(dialog: Dialog, width:Float?, height:Float?){
+        val layoutParams = dialog.window?.attributes
+        val viewWidth = vBinding.workDialogLayout.width
+        val viewHeight = vBinding.workDialogLayout.height
+        width?.let{
+            layoutParams?.width = (viewWidth * width).toInt()
+        }
+        height?.let{
+            layoutParams?.height = (viewHeight * height).toInt()
+        }
+        dialog.window?.attributes = layoutParams
+    }
+
+    private fun minuetToTimeStr(minuet:Int):String{
+        val divided24 = minuet%(24*60)
+        val hour = String.format("%02d", (divided24 / 60))
+        val minuet = String.format("%02d", divided24 % 60 )
+        return "${hour}:${minuet}"
     }
 
 
