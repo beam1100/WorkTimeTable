@@ -227,8 +227,8 @@ class WorkFragment : Fragment() {
                             val holder = inflater.inflate(R.layout.holder, null) as LinearLayout
                             holder.findViewById<ImageButton>(R.id.holderMoveItemUp).isGone = true
                             holder.findViewById<ImageButton>(R.id.holderMoveItemDown).isGone = true
-                            mkHolder(shiftMapList, shiftHolderLayout, holder, hashMapOf("shift" to shiftMap["shift"] as String)){ clickedTypeMap->
-                                Log.d("test", clickedTypeMap.toString())
+                            mkHolder(shiftMapList, shiftHolderLayout, holder, hashMapOf("shift" to shiftMap["shift"] as String)){ clickedShiftMap->
+                                Log.d("test", clickedShiftMap.toString())
                             }
                         }
                     }

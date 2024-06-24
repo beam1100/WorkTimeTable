@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -12,153 +11,163 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal">
 
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_gravity="center"
-            android:layout_weight="10"
-            android:fontFamily="@font/ongulip"
-            android:gravity="center"
-            android:text="시작시간"
-            android:textSize="30sp" />
-
         <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/startHourLayout"
+            android:id="@+id/updateFromHourLayout"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_gravity="center"
             android:layout_weight="10"
             android:gravity="center"
-            android:hint="시간"
+            android:hint=""
             app:hintTextAppearance="@style/TextAppearance.AppCompat.Large">
 
             <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/startHourEt"
+                android:id="@+id/updateFromHourEt"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:fontFamily="@font/ongulip"
                 android:gravity="center"
                 android:inputType="number"
-                android:maxLength="2"
-                android:textSize="30sp" />
+                android:maxLength="3"
+                android:textSize="30sp"
+                tools:ignore="SpeakableTextPresentCheck" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <TextView
+            android:id="@+id/textView"
             android:layout_width="0dp"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:layout_weight="1"
             android:gravity="center"
             android:text=":"
-            android:textSize="30sp" />
+            android:textSize="30sp"
+            tools:ignore="DuplicateIds" />
 
         <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/startMinuetLayout"
+            android:id="@+id/updateFromMinuetLayout"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_gravity="center"
             android:layout_weight="10"
             android:gravity="center"
-            android:hint="분"
+            android:hint=""
             app:hintTextAppearance="@style/TextAppearance.AppCompat.Large">
 
             <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/startMinuetEt"
+                android:id="@+id/updateFromMinuetEt"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:fontFamily="@font/ongulip"
                 android:gravity="center"
                 android:inputType="number"
-                android:maxLength="2"
-                android:textSize="30sp" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:fontFamily="@font/ongulip"
-            android:gravity="center"
-            android:text="근무간격(분)"
-            android:textSize="30sp" />
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/intervalMinuetLayout"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_gravity="center"
-            android:layout_weight="2"
-            android:gravity="center"
-            android:hint="분"
-            app:hintTextAppearance="@style/TextAppearance.AppCompat.Large">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/interverMinuetEt"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:fontFamily="@font/ongulip"
-                android:gravity="center"
-                android:inputType="number"
                 android:maxLength="3"
-                android:textSize="30sp" />
+                android:textSize="30sp"
+                tools:ignore="SpeakableTextPresentCheck" />
         </com.google.android.material.textfield.TextInputLayout>
 
     </LinearLayout>
 
-    <LinearLayout
+    <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_gravity="center"
-            android:layout_weight="1"
-            android:fontFamily="@font/ongulip"
-            android:gravity="center"
-            android:text="몇개?"
-            android:textSize="30sp" />
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/shiftNumLayout"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="2"
-            android:gravity="center"
-            android:hint="개"
-            app:hintTextAppearance="@style/TextAppearance.AppCompat.Large">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/shiftNumEt"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:fontFamily="@font/ongulip"
-                android:gravity="center"
-                android:inputType="number"
-                android:maxLength="3"
-                android:textSize="30sp" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-    </LinearLayout>
-
-
-    <Button
-        android:id="@+id/setTimeBtn"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:fontFamily="@font/ongulip"
-        android:text="설정"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:text="~"
         android:textSize="30sp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/updateToHourLayout"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:layout_weight="10"
+            android:gravity="center"
+            android:hint=""
+            app:hintTextAppearance="@style/TextAppearance.AppCompat.Large">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/updateToHourEt"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:fontFamily="@font/ongulip"
+                android:gravity="center"
+                android:inputType="number"
+                android:maxLength="3"
+                android:textSize="30sp"
+                tools:ignore="SpeakableTextPresentCheck" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <TextView
+            android:id="@+id/textView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text=":"
+            android:textSize="30sp"
+            tools:ignore="DuplicateIds" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/updateToMinuetLayout"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:layout_weight="10"
+            android:gravity="center"
+            android:hint=""
+            app:hintTextAppearance="@style/TextAppearance.AppCompat.Large">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/updateToMinuetEt"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:fontFamily="@font/ongulip"
+                android:gravity="center"
+                android:inputType="number"
+                android:maxLength="3"
+                android:textSize="30sp"
+                tools:ignore="SpeakableTextPresentCheck" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/updateShiftBtn"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:layout_weight="1"
+            android:fontFamily="@font/ongulip"
+            android:gravity="center"
+            android:text="수정"
+            android:textSize="30sp" />
+
+        <Button
+            android:id="@+id/deleteShiftBtn"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:layout_weight="1"
+            android:fontFamily="@font/ongulip"
+            android:gravity="center"
+            android:text="삭제"
+            android:textSize="30sp" />
+    </LinearLayout>
+
 </LinearLayout>
