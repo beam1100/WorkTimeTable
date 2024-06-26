@@ -435,8 +435,8 @@ class WorkFragment : Fragment() {
             Dialog(requireContext()).apply {
                 setContentView(R.layout.dialog_update_shift)
                 setDialogSize(this, 0.9f, null)
-                Log.d("test", clickedShiftMap.toString())
-                findViewById<TextInputEditText>(R.id.updateFromHourEt).setText("12")
+
+                findViewById<TextInputEditText>(R.id.updateFromHourEt).setText("")
                 show()
             }
         }catch(err:Exception){
@@ -495,6 +495,10 @@ class WorkFragment : Fragment() {
         val hour = String.format("%02d", (divided24 / 60))
         val minuet = String.format("%02d", divided24 % 60 )
         return "${hour}:${minuet}"
+    }
+
+    private fun minuetToHourMinuetPair(minuet:Int):Pair<String,String>{
+        return Pair((minuet/60).toString(),(minuet%60).toString())
     }
 
 } // class WorkFragment : Fragment() End
