@@ -132,6 +132,59 @@ class WorkFragment : Fragment() {
         }
     }
 
+    private fun mkHolder(
+        data:ArrayList<HashMap<String, Any>>,
+        holderLayout:LinearLayout,
+        holder:LinearLayout,
+        condition:HashMap<String,Any>,
+        callback: (HashMap<String,Any>) -> Unit){
+        try{
+            getMapByCondition(data, condition)?.let{map ->
+                //홀더 근무이름 텍스트뷰
+                holder.findViewById<TextView>(R.id.holderWorkName).apply{
+                    text = condition.entries.first().value as String
+                    setOnLongClickListener {_ ->
+                        callback(map)
+                        return@setOnLongClickListener true
+                    }
+                }
+
+                //홀더: 근무이동(위로)
+                holder.findViewById<ImageButton>(R.id.holderMoveItemUp).setOnClickListener {
+                    val holderIndex = holderLayout.indexOfChild(holder)
+                    if(holderIndex > 0 && holderLayout.childCount>=2){
+                        holderLayout.removeView(holder)
+                        holderLayout.addView(holder, holderIndex-1)
+                    }
+                    val mapIndex = data.indexOf(map)
+                    if(mapIndex > 0){
+                        data[mapIndex] = data[mapIndex-1]
+                        data[mapIndex-1] = map
+                    }
+                }
+
+                //홀더: 근무이동(아래로)
+                holder.findViewById<ImageButton>(R.id.holderMoveItemDown).setOnClickListener {
+                    val holderIndex = holderLayout.indexOfChild(holder)
+                    if(holderIndex < holderLayout.childCount-1 && holderLayout.childCount>=2){
+                        holderLayout.removeView(holder)
+                        holderLayout.addView(holder, holderIndex+1)
+                    }
+
+                    val mapIndex = data.indexOf(map)
+                    if(mapIndex < data.size-1){
+                        data[mapIndex] = data[mapIndex+1]
+                        data[mapIndex+1] = map
+                    }
+                }
+                holderLayout.addView(holder)
+            }
+        }catch(err:Exception){
+            Log.d("test", err.toString())
+            Log.d("test", err.stackTraceToString())
+        }
+    }
+
     private fun mkSetWorkDialog(
         clickedMap:HashMap<String, Any>?=null,
         updateMap: (HashMap<String, Any>) -> Unit,
@@ -213,14 +266,14 @@ class WorkFragment : Fragment() {
                     holder.findViewById<ImageButton>(R.id.holderMoveItemDown).isGone=true
                     val exShift = shiftMap["shift"] as String
                     mkHolder(copiedShiftMapList, shiftHolderLayout, holder, hashMapOf("shift" to exShift)){ clickedShiftMap ->
-                        Log.d("test", clickedShiftMap.toString())
+                        mkUpdateShiftDialog(clickedShiftMap)
                     }
                 }
 
                 //근무시간 설정 버튼 클릭
-                this.findViewById<ImageButton>(R.id.mkSetShiftDialogBtn).setOnClickListener {
+                this.findViewById<ImageButton>(R.id.mkSetShiftDialogAtOnceBtn).setOnClickListener {
                     shiftHolderLayout.removeAllViews()
-                    mkSetShiftDialog{shiftMapList->
+                    mkSetShiftDialogAtOnce{ shiftMapList->
                         copiedShiftMapList = shiftMapList
                         shiftMapList.forEach {shiftMap->
                             val inflater = LayoutInflater.from(requireContext())
@@ -228,7 +281,7 @@ class WorkFragment : Fragment() {
                             holder.findViewById<ImageButton>(R.id.holderMoveItemUp).isGone = true
                             holder.findViewById<ImageButton>(R.id.holderMoveItemDown).isGone = true
                             mkHolder(shiftMapList, shiftHolderLayout, holder, hashMapOf("shift" to shiftMap["shift"] as String)){ clickedShiftMap->
-                                Log.d("test", clickedShiftMap.toString())
+                                mkUpdateShiftDialog(clickedShiftMap)
                             }
                         }
                     }
@@ -273,65 +326,14 @@ class WorkFragment : Fragment() {
         }
     } // private fun mkSetWorkDialog() End
 
-    private fun mkHolder(
-        data:ArrayList<HashMap<String, Any>>,
-        holderLayout:LinearLayout,
-        holder:LinearLayout,
-        condition:HashMap<String,Any>,
-        callback: (HashMap<String,Any>) -> Unit){
-        try{
-            getMapByCondition(data, condition)?.let{map ->
-                //홀더 근무이름 텍스트뷰
-                holder.findViewById<TextView>(R.id.holderWorkName).apply{
-                    text = condition.entries.first().value as String
-                    setOnLongClickListener {_ ->
-                        callback(map)
-                        return@setOnLongClickListener true
-                    }
-                }
 
-                //홀더: 근무이동(위로)
-                holder.findViewById<ImageButton>(R.id.holderMoveItemUp).setOnClickListener {
-                    val holderIndex = holderLayout.indexOfChild(holder)
-                    if(holderIndex > 0 && holderLayout.childCount>=2){
-                        holderLayout.removeView(holder)
-                        holderLayout.addView(holder, holderIndex-1)
-                    }
-                    val mapIndex = data.indexOf(map)
-                    if(mapIndex > 0){
-                        data[mapIndex] = data[mapIndex-1]
-                        data[mapIndex-1] = map
-                    }
-                }
 
-                //홀더: 근무이동(아래로)
-                holder.findViewById<ImageButton>(R.id.holderMoveItemDown).setOnClickListener {
-                    val holderIndex = holderLayout.indexOfChild(holder)
-                    if(holderIndex < holderLayout.childCount-1 && holderLayout.childCount>=2){
-                        holderLayout.removeView(holder)
-                        holderLayout.addView(holder, holderIndex+1)
-                    }
-
-                    val mapIndex = data.indexOf(map)
-                    if(mapIndex < data.size-1){
-                        data[mapIndex] = data[mapIndex+1]
-                        data[mapIndex+1] = map
-                    }
-                }
-                holderLayout.addView(holder)
-            }
-        }catch(err:Exception){
-            Log.d("test", err.toString())
-            Log.d("test", err.stackTraceToString())
-        }
-    }
-
-    private fun mkSetShiftDialog(
+    private fun mkSetShiftDialogAtOnce(
         callback: (shiftMapList:ArrayList<HashMap<String, Any>>) -> Unit
     ) {
         try{
             Dialog(requireContext()).apply {
-                setContentView(R.layout.dialog_set_time)
+                setContentView(R.layout.dialog_set_shift_at_once)
                 setDialogSize(this, 0.85f, null)
 
                 val startHourEt = findViewById<TextInputEditText>(R.id.startHourEt)
@@ -360,22 +362,22 @@ class WorkFragment : Fragment() {
                 }
 
                 findViewById<Button>(R.id.setTimeBtn).setOnClickListener {
-                    val startHour = startHourEt.text.toString().toIntOrNull()
-                    val startMinuet = startMinuetEt.text.toString().toIntOrNull()
+                    val fromHour = startHourEt.text.toString().toIntOrNull()
+                    val fromMinuet = startMinuetEt.text.toString().toIntOrNull()
                     val intervalMinuet = intervalMinuetEt.text.toString().toIntOrNull()
                     val shiftNum = shiftNumEt.text.toString().toIntOrNull()
-                    if(startHour!=null && startMinuet!=null && intervalMinuet != null && shiftNum!=null){
+                    if(fromHour!=null && fromMinuet!=null && intervalMinuet != null && shiftNum!=null){
                         val resultMapList = arrayListOf<HashMap<String, Any>>()
                         for(i:Int in 0..shiftNum){
                             if(i<shiftNum){
-                                val fromTime = startHour*60 + startMinuet + i*intervalMinuet
-                                val toTime = startHour*60 + startMinuet + (i+1)*intervalMinuet
+                                val fromTime = fromHour*60 + fromMinuet + i*intervalMinuet
+                                val toTime = fromHour*60 + fromMinuet + (i+1)*intervalMinuet
                                 resultMapList.add(
                                     hashMapOf(
                                         "shift" to "${minuetToTimeStr(fromTime)} ~ ${minuetToTimeStr(toTime)}",
                                         "fromTime" to fromTime,
                                         "toTime" to toTime,
-                                        "minuet" to toTime-fromTime
+                                        "minuet" to intervalMinuet
                                     )
                                 )
                             }
@@ -426,7 +428,21 @@ class WorkFragment : Fragment() {
             Log.d("test", err.toString())
             Log.d("test", err.stackTraceToString())
         }
+    }
 
+    private fun mkUpdateShiftDialog(clickedShiftMap:HashMap<String, Any>){
+        try{
+            Dialog(requireContext()).apply {
+                setContentView(R.layout.dialog_update_shift)
+                setDialogSize(this, 0.9f, null)
+                Log.d("test", clickedShiftMap.toString())
+                findViewById<TextInputEditText>(R.id.updateFromHourEt).setText("12")
+                show()
+            }
+        }catch(err:Exception){
+            Log.d("test", err.toString())
+            Log.d("test", err.stackTraceToString())
+        }
     }
 
     private fun getMapByCondition(
