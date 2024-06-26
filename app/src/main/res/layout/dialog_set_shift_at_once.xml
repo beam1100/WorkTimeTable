@@ -30,7 +30,7 @@
             android:layout_gravity="center"
             android:layout_weight="10"
             android:gravity="center"
-            android:hint="시간"
+            android:hint="시"
             app:hintTextAppearance="@style/TextAppearance.AppCompat.Large">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -42,6 +42,7 @@
                 android:gravity="center"
                 android:inputType="number"
                 android:maxLength="2"
+                android:text="07"
                 android:textSize="30sp" />
         </com.google.android.material.textfield.TextInputLayout>
 
@@ -73,6 +74,7 @@
                 android:gravity="center"
                 android:inputType="number"
                 android:maxLength="2"
+                android:text="30"
                 android:textSize="30sp" />
         </com.google.android.material.textfield.TextInputLayout>
 
@@ -111,6 +113,7 @@
                 android:gravity="center"
                 android:inputType="number"
                 android:maxLength="3"
+                android:text="60"
                 android:textSize="30sp" />
         </com.google.android.material.textfield.TextInputLayout>
 
@@ -148,6 +151,7 @@
                 android:gravity="center"
                 android:inputType="number"
                 android:maxLength="3"
+                android:text="13"
                 android:textSize="30sp" />
         </com.google.android.material.textfield.TextInputLayout>
 

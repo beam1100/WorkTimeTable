@@ -341,23 +341,15 @@ class WorkFragment : Fragment() {
                 val intervalMinuetEt = findViewById<TextInputEditText>(R.id.interverMinuetEt)
                 val shiftNumEt = findViewById<TextInputEditText>(R.id.shiftNumEt)
 
-                startHourEt.addTextChangedListener { text ->
-                    val number = text.toString().toIntOrNull()
-                    val errorMessage = if (number == null || number < 0 || number >= 24) {
-                        "0~23"
-                    } else {
-                        null
-                    }
+                startHourEt.addTextChangedListener { et ->
+                    val number = et.toString().toIntOrNull()
+                    val errorMessage = if (number == null || number < 0 || number > 23) {"0~23"} else {null}
                 findViewById<TextInputLayout>(R.id.startHourLayout).error = errorMessage
                 }
 
-                startMinuetEt.addTextChangedListener { text ->
-                    val number = text.toString().toIntOrNull()
-                    val errorMessage = if (number == null || number < 0 || number >= 60) {
-                        "0~59"
-                    } else {
-                        null
-                    }
+                startMinuetEt.addTextChangedListener { et ->
+                    val number = et.toString().toIntOrNull()
+                    val errorMessage = if (number == null || number < 0 || number > 59) {"0~59"} else {null}
                     findViewById<TextInputLayout>(R.id.startMinuetLayout).error = errorMessage
                 }
 
@@ -432,11 +424,58 @@ class WorkFragment : Fragment() {
 
     private fun mkUpdateShiftDialog(clickedShiftMap:HashMap<String, Any>){
         try{
-            Dialog(requireContext()).apply {
+            Dialog(requireContext()).apply outerApply@{
                 setContentView(R.layout.dialog_update_shift)
                 setDialogSize(this, 0.9f, null)
 
-                findViewById<TextInputEditText>(R.id.updateFromHourEt).setText("")
+                val periodSplit = splitPeriod(clickedShiftMap["shift"] as String)
+                val updateFromHourEt = findViewById<TextInputEditText>(R.id.updateFromHourEt).apply {
+                    setText(periodSplit[0])
+                    addTextChangedListener { et->
+                        val number = et.toString().toIntOrNull()
+                        val errorMessage = if (number == null || number < 0 || number > 23) {
+                            "0~23"
+                        } else {
+                            null
+                        }
+                        if(errorMessage == null){
+                            this@outerApply.findViewById<TextInputLayout>(R.id.updateFromHourLayout).isErrorEnabled = false
+                        }else{
+                            this@outerApply.findViewById<TextInputLayout>(R.id.updateFromHourLayout).isErrorEnabled = true
+                            this@outerApply.findViewById<TextInputLayout>(R.id.updateFromHourLayout).error = errorMessage
+                        }
+
+
+                    }
+                }
+                val updateFromMinuetEt = findViewById<TextInputEditText>(R.id.updateFromMinuetEt).apply {
+                    setText(periodSplit[1])
+                    addTextChangedListener { et->
+                        val number = et.toString().toIntOrNull()
+                        val errorMessage = if (number == null || number < 0 || number > 59) {"0~59"} else { null }
+                        this@outerApply.findViewById<TextInputLayout>(R.id.updateFromMinuetLayout).error = errorMessage
+                    }
+                }
+                val updateToHourEt = findViewById<TextInputEditText>(R.id.updateToHourEt).apply {
+                    setText(periodSplit[2])
+                    addTextChangedListener { et->
+                        val number = et.toString().toIntOrNull()
+                        val errorMessage = if (number == null || number < 0 || number > 23) {"0~23"} else { null }
+                        this@outerApply.findViewById<TextInputLayout>(R.id.updateToHourLayout).error = errorMessage
+                    }
+                }
+                val updateToMinuetEt = findViewById<TextInputEditText>(R.id.updateToMinuetEt).apply {
+                    setText(periodSplit[3])
+                    addTextChangedListener { et->
+                        val number = et.toString().toIntOrNull()
+                        val errorMessage = if (number == null || number < 0 || number > 59) {"0~59"} else { null }
+                        this@outerApply.findViewById<TextInputLayout>(R.id.updateToMinuetLayout).error = errorMessage
+                    }
+                }
+
+
+
+
                 show()
             }
         }catch(err:Exception){
@@ -497,8 +536,13 @@ class WorkFragment : Fragment() {
         return "${hour}:${minuet}"
     }
 
-    private fun minuetToHourMinuetPair(minuet:Int):Pair<String,String>{
-        return Pair((minuet/60).toString(),(minuet%60).toString())
+    private fun splitPeriod(timeStr:String):List<String>{
+        val whitespaceRemovied = timeStr.trim()
+        val splitByTild = whitespaceRemovied.split("~")
+        val fromTimeSplitByColon = splitByTild[0].split(":").map{ it.trim() }
+        val toTimeSplitByColon = splitByTild[1].split(":").map{ it.trim() }
+        return fromTimeSplitByColon + toTimeSplitByColon
     }
+
 
 } // class WorkFragment : Fragment() End
