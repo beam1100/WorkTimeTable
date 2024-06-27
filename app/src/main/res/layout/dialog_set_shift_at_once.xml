@@ -34,7 +34,7 @@
             app:hintTextAppearance="@style/TextAppearance.AppCompat.Large">
 
             <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/startHourEt"
+                android:id="@+id/fromHourAtOnceEt"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
@@ -66,7 +66,7 @@
             app:hintTextAppearance="@style/TextAppearance.AppCompat.Large">
 
             <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/startMinuetEt"
+                android:id="@+id/fromMinuetAtOnceEt"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
@@ -74,7 +74,7 @@
                 android:gravity="center"
                 android:inputType="number"
                 android:maxLength="2"
-                android:text="30"
+                android:text="00"
                 android:textSize="30sp" />
         </com.google.android.material.textfield.TextInputLayout>
 

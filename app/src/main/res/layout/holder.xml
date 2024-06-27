@@ -14,7 +14,7 @@
         tools:src="@android:drawable/arrow_up_float" />
 
     <TextView
-        android:id="@+id/holderWorkName"
+        android:id="@+id/holderTV"
         android:layout_width="0dp"
         android:layout_height="80dp"
         android:layout_weight="5"

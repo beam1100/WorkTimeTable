@@ -1,5 +1,6 @@
 package com.worktimetable
 
+import android.annotation.SuppressLint
 import android.app.Dialog
 import android.content.Context
 import android.os.Bundle
@@ -46,11 +47,11 @@ class WorkFragment : Fragment() {
                 hashMapOf("type" to "도보","isPatrol" to false, "isConcurrent" to false),
             ),
             "shiftList" to arrayListOf<HashMap<String, Any>>(
-                hashMapOf("shift" to "07:00~07:30", "minuet" to 30),
-                hashMapOf("shift" to "07:30~11:00", "minuet" to 210),
-                hashMapOf("shift" to "11:00~14:00", "minuet" to 180),
-                hashMapOf("shift" to "14:00~17:00", "minuet" to 180),
-                hashMapOf("shift" to "17:00~19:30", "minuet" to 150),
+                hashMapOf("shift" to "07:00 ~ 07:30", "interval" to 30),
+                hashMapOf("shift" to "07:30 ~ 11:00", "interval" to 210),
+                hashMapOf("shift" to "11:00 ~ 14:00", "interval" to 180),
+                hashMapOf("shift" to "14:00 ~ 17:00", "interval" to 180),
+                hashMapOf("shift" to "17:00 ~ 19:30", "interval" to 150),
             )
         ),
         hashMapOf(
@@ -65,11 +66,11 @@ class WorkFragment : Fragment() {
                 hashMapOf("type" to "대기","isPatrol" to false, "isConcurrent" to false),
             ),
             "shiftList" to arrayListOf<HashMap<String, Any>>(
-                hashMapOf("shift" to "19:30~20:00", "minuet" to 30),
-                hashMapOf("shift" to "20:00~00:00", "minuet" to 240),
-                hashMapOf("shift" to "00:00~03:30", "minuet" to 180),
-                hashMapOf("shift" to "03:30~07:00", "minuet" to 210),
-                hashMapOf("shift" to "07:00~07:30", "minuet" to 30),
+                hashMapOf("shift" to "19:30 ~ 20:00", "interval" to 30),
+                hashMapOf("shift" to "20:00 ~ 00:00", "interval" to 240),
+                hashMapOf("shift" to "00:00 ~ 03:30", "interval" to 180),
+                hashMapOf("shift" to "03:30 ~ 07:00", "interval" to 210),
+                hashMapOf("shift" to "07:00 ~ 07:30", "interval" to 30),
             )
         )
     )
@@ -96,7 +97,7 @@ class WorkFragment : Fragment() {
             sampleData.forEach { workMap ->
                 val holder = inflater.inflate(R.layout.holder, null) as LinearLayout
                 mkHolder(sampleData, holderLayout, holder, hashMapOf("workName" to workMap["workName"] as String)){ clickedWorkMap->
-                    mkSetWorkDialog(
+                    setWorkDialog(
                         clickedWorkMap,
                         {toUpdateMap->
                             sampleData[sampleData.indexOf(clickedWorkMap)] = toUpdateMap
@@ -111,7 +112,7 @@ class WorkFragment : Fragment() {
             }
 
             vBinding.mkWorkTypeBtn.setOnClickListener {
-                mkSetWorkDialog(
+                setWorkDialog(
                     null,
                     { toUpdateMap->
                         sampleData.add(toUpdateMap)
@@ -141,7 +142,7 @@ class WorkFragment : Fragment() {
         try{
             getMapByCondition(data, condition)?.let{map ->
                 //홀더 근무이름 텍스트뷰
-                holder.findViewById<TextView>(R.id.holderWorkName).apply{
+                holder.findViewById<TextView>(R.id.holderTV).apply{
                     text = condition.entries.first().value as String
                     setOnLongClickListener {_ ->
                         callback(map)
@@ -185,11 +186,10 @@ class WorkFragment : Fragment() {
         }
     }
 
-    private fun mkSetWorkDialog(
+    private fun setWorkDialog(
         clickedMap:HashMap<String, Any>?=null,
         updateMap: (HashMap<String, Any>) -> Unit,
         deleteMap: (HashMap<String, Any>) -> Unit){
-
         try{
             val selectedWorkMap = clickedMap?: hashMapOf(
                 "workName" to "",
@@ -227,9 +227,8 @@ class WorkFragment : Fragment() {
                     val exType = typeMap["type"] as String
 
                     mkHolder(copiedTypeMapList, workHolderLayout, holder, hashMapOf("type" to exType)){ clickedTypeMap ->
-                        mkSetTypeDialog(copiedTypeMapList, clickedTypeMap, workHolderLayout, holder){
-                                newType, newIsPatrol, newIsConcurrent ->
-                            holder.findViewById<TextView>(R.id.holderWorkName).text = newType
+                        addOrUpdateTypeDialog(copiedTypeMapList, clickedTypeMap, workHolderLayout, holder){newType, newIsPatrol, newIsConcurrent ->
+                            holder.findViewById<TextView>(R.id.holderTV).text = newType
                             clickedTypeMap["type"] = newType
                             clickedTypeMap["isPatrol"] = newIsPatrol
                             clickedTypeMap["isConcurrent"] = newIsConcurrent
@@ -240,21 +239,21 @@ class WorkFragment : Fragment() {
                 //근무 추가하기 버튼 클릭
                 this.findViewById<ImageButton>(R.id.mkAddWorkDialogBtn).setOnClickListener { _ ->
                     //다이얼로그에서 새로운 근무유형 홀더에 담기
-                    mkSetTypeDialog { addedType, addedIsPatrol, addedIsConcurrent ->
+                    addOrUpdateTypeDialog { addedType, addedIsPatrol, addedIsConcurrent ->
                         copiedTypeMapList.add(
                             hashMapOf("type" to addedType,"isPatrol" to addedIsPatrol, "isConcurrent" to addedIsConcurrent)
                         )
                         val inflater = LayoutInflater.from(requireContext())
                         val holder = inflater.inflate(R.layout.holder, null) as LinearLayout
                         mkHolder(copiedTypeMapList, workHolderLayout, holder, hashMapOf("type" to addedType)){ clickedTypeMap->
-                            mkSetTypeDialog(copiedTypeMapList, clickedTypeMap, workHolderLayout, holder){ newType, newIsPatrol, newIsConcurrent ->
-                                holder.findViewById<TextView>(R.id.holderWorkName).text = newType
+                            addOrUpdateTypeDialog(copiedTypeMapList, clickedTypeMap, workHolderLayout, holder){ newType, newIsPatrol, newIsConcurrent ->
+                                holder.findViewById<TextView>(R.id.holderTV).text = newType
                                 clickedTypeMap["type"] = newType
                                 clickedTypeMap["isPatrol"] = newIsPatrol
                                 clickedTypeMap["isConcurrent"] =newIsConcurrent
                             }
                         }
-                    } // mkSetTypeDialog End
+                    } // addOrUpdateTypeDialog End
 
                 } // this.findViewById<Button>(R.id.mkAddWorkDialogBtn).setOnClickListener End
 
@@ -266,14 +265,28 @@ class WorkFragment : Fragment() {
                     holder.findViewById<ImageButton>(R.id.holderMoveItemDown).isGone=true
                     val exShift = shiftMap["shift"] as String
                     mkHolder(copiedShiftMapList, shiftHolderLayout, holder, hashMapOf("shift" to exShift)){ clickedShiftMap ->
-                        mkUpdateShiftDialog(clickedShiftMap)
+                        updateShiftDialog(clickedShiftMap,
+                            {fh, fm, th, tm ->
+                                val newShift = "${minuetToTimeStr(fh*60+fm)} ~ ${minuetToTimeStr(th*60+tm)}"
+                                clickedShiftMap["shift"] = newShift
+                                clickedShiftMap["fromShift"] = fh*60+fm
+                                clickedShiftMap["toShift"] = th*60+tm
+                                clickedShiftMap["interval"] = th*60+tm-th*60+tm
+                                holder.findViewById<TextView>(R.id.holderTV).text = newShift
+                            },
+                            {toDeleteMap->
+                                shiftHolderLayout.removeView(holder)
+                                copiedShiftMapList.remove(toDeleteMap)
+                            }
+
+                        )
                     }
                 }
 
                 //근무시간 설정 버튼 클릭
                 this.findViewById<ImageButton>(R.id.mkSetShiftDialogAtOnceBtn).setOnClickListener {
                     shiftHolderLayout.removeAllViews()
-                    mkSetShiftDialogAtOnce{ shiftMapList->
+                    setShiftAtOnceDialog{ shiftMapList->
                         copiedShiftMapList = shiftMapList
                         shiftMapList.forEach {shiftMap->
                             val inflater = LayoutInflater.from(requireContext())
@@ -281,7 +294,20 @@ class WorkFragment : Fragment() {
                             holder.findViewById<ImageButton>(R.id.holderMoveItemUp).isGone = true
                             holder.findViewById<ImageButton>(R.id.holderMoveItemDown).isGone = true
                             mkHolder(shiftMapList, shiftHolderLayout, holder, hashMapOf("shift" to shiftMap["shift"] as String)){ clickedShiftMap->
-                                mkUpdateShiftDialog(clickedShiftMap)
+                                updateShiftDialog(clickedShiftMap,
+                                    {fh, fm, th, tm ->
+                                        val newShift = "${minuetToTimeStr(fh*60+fm)} ~ ${minuetToTimeStr(th*60+tm)}"
+                                        clickedShiftMap["shift"] = newShift
+                                        clickedShiftMap["fromTime"] = fh*60+fm
+                                        clickedShiftMap["toTime"] = th*60+tm
+                                        clickedShiftMap["interval"] = th*60+tm-th*60+tm
+                                        holder.findViewById<TextView>(R.id.holderTV).text = newShift
+                                    },
+                                    {toDeleteMap ->
+                                        shiftHolderLayout.removeView(holder)
+                                        copiedShiftMapList.remove(toDeleteMap)
+                                    }
+                                )
                             }
                         }
                     }
@@ -324,38 +350,39 @@ class WorkFragment : Fragment() {
             Log.d("test", err.toString())
             Log.d("test", err.stackTraceToString())
         }
-    } // private fun mkSetWorkDialog() End
+    } // private fun setWorkDialog() End
 
 
 
-    private fun mkSetShiftDialogAtOnce(
-        callback: (shiftMapList:ArrayList<HashMap<String, Any>>) -> Unit
-    ) {
+    @SuppressLint("MissingInflatedId")
+    private fun setShiftAtOnceDialog(callback: (shiftMapList:ArrayList<HashMap<String, Any>>) -> Unit ) {
         try{
-            Dialog(requireContext()).apply {
+            Dialog(requireContext()).apply dialog@{
                 setContentView(R.layout.dialog_set_shift_at_once)
                 setDialogSize(this, 0.85f, null)
 
-                val startHourEt = findViewById<TextInputEditText>(R.id.startHourEt)
-                val startMinuetEt = findViewById<TextInputEditText>(R.id.startMinuetEt)
                 val intervalMinuetEt = findViewById<TextInputEditText>(R.id.interverMinuetEt)
                 val shiftNumEt = findViewById<TextInputEditText>(R.id.shiftNumEt)
 
-                startHourEt.addTextChangedListener { et ->
-                    val number = et.toString().toIntOrNull()
-                    val errorMessage = if (number == null || number < 0 || number > 23) {"0~23"} else {null}
-                findViewById<TextInputLayout>(R.id.startHourLayout).error = errorMessage
+                val fromHourEt = findViewById<TextInputEditText>(R.id.fromHourAtOnceEt).apply {
+                    addTextChangedListener {et->
+                        val number = et.toString().toIntOrNull()
+                        val errCondition = number == null || number < 0 || number > 23
+                        validateTimeForm(this@dialog.findViewById(R.id.startHourLayout), errCondition, "0~23")
+                    }
                 }
 
-                startMinuetEt.addTextChangedListener { et ->
-                    val number = et.toString().toIntOrNull()
-                    val errorMessage = if (number == null || number < 0 || number > 59) {"0~59"} else {null}
-                    findViewById<TextInputLayout>(R.id.startMinuetLayout).error = errorMessage
+                val fromMinuetEt = findViewById<TextInputEditText>(R.id.fromMinuetAtOnceEt).apply {
+                    addTextChangedListener { et ->
+                        val number = et.toString().toIntOrNull()
+                        val errCondition = number == null || number < 0 || number > 59
+                        validateTimeForm(this@dialog.findViewById(R.id.startMinuetLayout), errCondition, "0~59")
+                    }
                 }
 
                 findViewById<Button>(R.id.setTimeBtn).setOnClickListener {
-                    val fromHour = startHourEt.text.toString().toIntOrNull()
-                    val fromMinuet = startMinuetEt.text.toString().toIntOrNull()
+                    val fromHour = fromHourEt.text.toString().toIntOrNull()
+                    val fromMinuet = fromMinuetEt.text.toString().toIntOrNull()
                     val intervalMinuet = intervalMinuetEt.text.toString().toIntOrNull()
                     val shiftNum = shiftNumEt.text.toString().toIntOrNull()
                     if(fromHour!=null && fromMinuet!=null && intervalMinuet != null && shiftNum!=null){
@@ -369,7 +396,7 @@ class WorkFragment : Fragment() {
                                         "shift" to "${minuetToTimeStr(fromTime)} ~ ${minuetToTimeStr(toTime)}",
                                         "fromTime" to fromTime,
                                         "toTime" to toTime,
-                                        "minuet" to intervalMinuet
+                                        "interval" to intervalMinuet
                                     )
                                 )
                             }
@@ -387,10 +414,9 @@ class WorkFragment : Fragment() {
             Log.d("test", err.toString())
             Log.d("test", err.stackTraceToString())
         }
-
     }
 
-    private fun mkSetTypeDialog(
+    private fun addOrUpdateTypeDialog(
         typeMapList:ArrayList<HashMap<String, Any>>?=null,
         typeMap:HashMap<String, Any>?=null,
         holderLayout:LinearLayout?=null,
@@ -422,59 +448,63 @@ class WorkFragment : Fragment() {
         }
     }
 
-    private fun mkUpdateShiftDialog(clickedShiftMap:HashMap<String, Any>){
+    private fun updateShiftDialog(
+        clickedShiftMap:HashMap<String, Any>,
+        addShift:(fromHour:Int, fromMinuet:Int, toHour:Int, toMinuet:Int) -> Unit,
+        deleteShift:(clickedMap:HashMap<String, Any>) -> Unit
+    ){
         try{
-            Dialog(requireContext()).apply outerApply@{
+            Dialog(requireContext()).apply dialog@{
                 setContentView(R.layout.dialog_update_shift)
                 setDialogSize(this, 0.9f, null)
-
                 val periodSplit = splitPeriod(clickedShiftMap["shift"] as String)
                 val updateFromHourEt = findViewById<TextInputEditText>(R.id.updateFromHourEt).apply {
                     setText(periodSplit[0])
-                    addTextChangedListener { et->
-                        val number = et.toString().toIntOrNull()
-                        val errorMessage = if (number == null || number < 0 || number > 23) {
-                            "0~23"
-                        } else {
-                            null
-                        }
-                        if(errorMessage == null){
-                            this@outerApply.findViewById<TextInputLayout>(R.id.updateFromHourLayout).isErrorEnabled = false
-                        }else{
-                            this@outerApply.findViewById<TextInputLayout>(R.id.updateFromHourLayout).isErrorEnabled = true
-                            this@outerApply.findViewById<TextInputLayout>(R.id.updateFromHourLayout).error = errorMessage
-                        }
-
-
+                    this.addTextChangedListener{
+                        val num:Int? = this.text.toString().toIntOrNull()
+                        val errCondition = num == null ||  num>23 || num<0
+                        validateTimeForm( this@dialog.findViewById<TextInputLayout>(R.id.updateFromHourLayout), errCondition,  "0~23 입렵바람")
                     }
                 }
                 val updateFromMinuetEt = findViewById<TextInputEditText>(R.id.updateFromMinuetEt).apply {
                     setText(periodSplit[1])
-                    addTextChangedListener { et->
-                        val number = et.toString().toIntOrNull()
-                        val errorMessage = if (number == null || number < 0 || number > 59) {"0~59"} else { null }
-                        this@outerApply.findViewById<TextInputLayout>(R.id.updateFromMinuetLayout).error = errorMessage
+                    addTextChangedListener {
+                        val num:Int? = this.text.toString().toIntOrNull()
+                        val errCondition = num == null ||  num>59 || num<0
+                        validateTimeForm( this@dialog.findViewById<TextInputLayout>(R.id.updateFromMinuetLayout), errCondition,  "0~59 입렵바람")
                     }
                 }
                 val updateToHourEt = findViewById<TextInputEditText>(R.id.updateToHourEt).apply {
                     setText(periodSplit[2])
-                    addTextChangedListener { et->
-                        val number = et.toString().toIntOrNull()
-                        val errorMessage = if (number == null || number < 0 || number > 23) {"0~23"} else { null }
-                        this@outerApply.findViewById<TextInputLayout>(R.id.updateToHourLayout).error = errorMessage
+                    addTextChangedListener {
+                        val num:Int? = this.text.toString().toIntOrNull()
+                        val errCondition = num == null ||  num>23 || num<0
+                        validateTimeForm( this@dialog.findViewById<TextInputLayout>(R.id.updateToHourLayout), errCondition,  "0~23 입렵바람")
                     }
                 }
                 val updateToMinuetEt = findViewById<TextInputEditText>(R.id.updateToMinuetEt).apply {
                     setText(periodSplit[3])
-                    addTextChangedListener { et->
-                        val number = et.toString().toIntOrNull()
-                        val errorMessage = if (number == null || number < 0 || number > 59) {"0~59"} else { null }
-                        this@outerApply.findViewById<TextInputLayout>(R.id.updateToMinuetLayout).error = errorMessage
+                    addTextChangedListener {
+                        val num:Int? = this.text.toString().toIntOrNull()
+                        val errCondition = num == null ||  num>59 || num<0
+                        validateTimeForm( this@dialog.findViewById<TextInputLayout>(R.id.updateToMinuetLayout), errCondition,  "0~59 입렵바람")
+                    }
+                }
+                findViewById<Button>(R.id.updateShiftBtn).setOnClickListener {
+                    val fromHour = updateFromHourEt.text.toString().toIntOrNull()
+                    val fromMinuet = updateFromMinuetEt.text.toString().toIntOrNull()
+                    val toHour = updateToHourEt.text.toString().toIntOrNull()
+                    val toMinuet = updateToMinuetEt.text.toString().toIntOrNull()
+                    if(fromHour != null && fromMinuet != null && toHour != null && toMinuet != null){
+                        addShift(fromHour, fromMinuet, toHour, toMinuet)
+                        dismiss()
                     }
                 }
 
-
-
+                findViewById<Button>(R.id.deleteShiftBtn).setOnClickListener {
+                    deleteShift(clickedShiftMap)
+                    this.dismiss()
+                }
 
                 show()
             }
@@ -483,6 +513,7 @@ class WorkFragment : Fragment() {
             Log.d("test", err.stackTraceToString())
         }
     }
+
 
     private fun getMapByCondition(
         mapList:ArrayList<HashMap<String, Any>,>,
@@ -542,6 +573,20 @@ class WorkFragment : Fragment() {
         val fromTimeSplitByColon = splitByTild[0].split(":").map{ it.trim() }
         val toTimeSplitByColon = splitByTild[1].split(":").map{ it.trim() }
         return fromTimeSplitByColon + toTimeSplitByColon
+    }
+
+    private fun validateTimeForm(textInputLayout: TextInputLayout, errCondition:Boolean, errMessage:String){
+        try{
+            if(errCondition){
+                textInputLayout.isErrorEnabled = true
+                textInputLayout.error = errMessage
+            }else{
+                textInputLayout.isErrorEnabled = false
+            }
+        }catch(err:Exception){
+            Log.d("test", err.toString())
+            Log.d("test", err.stackTraceToString())
+        }
     }
 
 
