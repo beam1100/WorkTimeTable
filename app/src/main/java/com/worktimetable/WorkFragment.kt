@@ -208,15 +208,15 @@ class WorkFragment : Fragment() {
                     val inflater = LayoutInflater.from(requireContext())
                     val holder = inflater.inflate(R.layout.holder, null) as LinearLayout
 
-                    mkHolder(copiedTypeMapList, typeHolderLayout, holder, typeMap, "type"){ clickedTypeMap ->
+                    mkHolder(copiedTypeMapList, typeHolderLayout, holder, typeMap, "type"){ longClickedTypeMap ->
                         addOrUpdateTypeDialog(
-                            clickedTypeMap,
+                            longClickedTypeMap,
                             {
                                 newTypeMap ->
                                 holder.findViewById<TextView>(R.id.holderTV).text = newTypeMap["type"] as String
-                                clickedTypeMap["type"] = newTypeMap["type"] as String
-                                clickedTypeMap["isPatrol"] = newTypeMap["isPatrol"] as Boolean
-                                clickedTypeMap["isConcurrent"] = newTypeMap["isConcurrent"] as Boolean
+                                longClickedTypeMap["type"] = newTypeMap["type"] as String
+                                longClickedTypeMap["isPatrol"] = newTypeMap["isPatrol"] as Boolean
+                                longClickedTypeMap["isConcurrent"] = newTypeMap["isConcurrent"] as Boolean
                             },
                             {
                                 copiedTypeMapList.remove(typeMap)
@@ -226,58 +226,34 @@ class WorkFragment : Fragment() {
                     }
                 }
 
-
-                //근무 추가하기 버튼 클릭 ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+                //★★★★★ 근무 추가하기 버튼 클릭: 디버깅 검토하기 ★★★★★
                 this.findViewById<ImageButton>(R.id.mkAddWorkDialogBtn).setOnClickListener { _ ->
-
                     //다이얼로그에서 새로운 근무유형 홀더에 담기
-                    val firstTypeMap = hashMapOf<String, Any>("type" to "", "isPatrol" to false, "isConcurrent" to false)
                     val inflater = LayoutInflater.from(requireContext())
                     val holder = inflater.inflate(R.layout.holder, null) as LinearLayout
                     addOrUpdateTypeDialog(
-                        firstTypeMap,
-                        {
-                            newTypeMap ->
-                                holder.findViewById<TextView>(R.id.holderTV).text = newTypeMap["type"] as String
-                                firstTypeMap["type"] = newTypeMap["type"] as String
-                                firstTypeMap["isPatrol"] = newTypeMap["isPatrol"] as Boolean
-                                firstTypeMap["isConcurrent"] = newTypeMap["isConcurrent"] as Boolean
-                        },
-                        {
-                            copiedTypeMapList.remove(firstTypeMap)
-                            typeHolderLayout.removeView(holder)
-                        }
-                    )
-
-                }
-
-                /*                //근무 추가하기 버튼 클릭
-                this.findViewById<ImageButton>(R.id.mkAddWorkDialogBtn).setOnClickListener { _ ->
-                    //다이얼로그에서 새로운 근무유형 홀더에 담기
-                    addOrUpdateTypeDialog(
                         null,
-                        { newTypeMap ->
-                            val inflater = LayoutInflater.from(requireContext())
-                            val holder = inflater.inflate(R.layout.holder, null) as LinearLayout
-                            mkHolder(copiedTypeMapList, typeHolderLayout, holder, newTypeMap, "type"){
+                        {toAddTypeMap ->
+                            copiedTypeMapList.add(toAddTypeMap)
+                            mkHolder(copiedTypeMapList, typeHolderLayout, holder, toAddTypeMap, "type"){ longClickedTypeMap ->
                                 addOrUpdateTypeDialog(
-                                    it,
-                                    {callbackParamType->
-                                        holder.findViewById<TextView>(R.id.holderTV).text = callbackParamType["type"] as String
-                                        copiedTypeMapList[copiedTypeMapList.indexOf(newTypeMap)] = callbackParamType
-                                        Log.d("test", newTypeMap.toString())
+                                    longClickedTypeMap,
+                                    { newTypeMap ->
+                                        holder.findViewById<TextView>(R.id.holderTV).text = newTypeMap["type"] as String
+                                        longClickedTypeMap["type"] = newTypeMap["type"] as String
+                                        longClickedTypeMap["isPatrol"] = newTypeMap["isPatrol"] as Boolean
+                                        longClickedTypeMap["isConcurrent"] = newTypeMap["isConcurrent"] as Boolean
                                     },
                                     {
-                                        copiedTypeMapList.remove(it)
+                                        copiedTypeMapList.remove(longClickedTypeMap)
                                         typeHolderLayout.removeView(holder)
                                     }
                                 )
                             }
-                            copiedTypeMapList.add(newTypeMap)
                         },
                         {}
                     )
-                }*/
+                }
 
                 //기존 근무시간 홀더에 담아서 레이아웃에 넣기
                 copiedShiftMapList.forEach { shiftMap ->
@@ -450,11 +426,12 @@ class WorkFragment : Fragment() {
         try{
             Dialog(requireContext()).apply{
                 setContentView(R.layout.dialog_add_type)
+
+                findViewById<Button>(R.id.deleteWorkTypeBtn).isGone = (typeMap==null)
+
                 val workNameEditText = this.findViewById<TextView>(R.id.toAddWorkName)
                 val isWorkPatrolBox = this.findViewById<CheckBox>(R.id.isPatrolCheckBox)
                 val isConcurrentBox = this.findViewById<CheckBox>(R.id.isConcurentCheckBox)
-
-                findViewById<Button>(R.id.deleteWorkTypeBtn).isGone = (typeMap == null)
 
                 workNameEditText.text = typeMap?.get("type")?.let{it as String} ?: ""
                 isWorkPatrolBox.isChecked= typeMap?.get("isPatrol")?.let { it as Boolean } ?: false
