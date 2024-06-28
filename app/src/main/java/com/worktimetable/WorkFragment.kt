@@ -41,17 +41,11 @@ class WorkFragment : Fragment() {
             "typeList" to arrayListOf<HashMap<String, Any>>(
                 hashMapOf("type" to "상황","isPatrol" to false, "isConcurrent" to false),
                 hashMapOf("type" to "1구역","isPatrol" to true, "isConcurrent" to false),
-                hashMapOf("type" to "2구역","isPatrol" to true, "isConcurrent" to false),
-                hashMapOf("type" to "3구역","isPatrol" to true, "isConcurrent" to false),
-                hashMapOf("type" to "4구역","isPatrol" to true, "isConcurrent" to false),
-                hashMapOf("type" to "도보","isPatrol" to false, "isConcurrent" to false),
             ),
             "shiftList" to arrayListOf<HashMap<String, Any>>(
                 hashMapOf("shift" to "07:00 ~ 07:30", "interval" to 30),
                 hashMapOf("shift" to "07:30 ~ 11:00", "interval" to 210),
                 hashMapOf("shift" to "11:00 ~ 14:00", "interval" to 180),
-                hashMapOf("shift" to "14:00 ~ 17:00", "interval" to 180),
-                hashMapOf("shift" to "17:00 ~ 19:30", "interval" to 150),
             )
         ),
         hashMapOf(
@@ -60,17 +54,10 @@ class WorkFragment : Fragment() {
                 hashMapOf("type" to "상황","isPatrol" to false, "isConcurrent" to false),
                 hashMapOf("type" to "1구역","isPatrol" to true, "isConcurrent" to false),
                 hashMapOf("type" to "2구역","isPatrol" to true, "isConcurrent" to false),
-                hashMapOf("type" to "3구역","isPatrol" to true, "isConcurrent" to false),
-                hashMapOf("type" to "4구역","isPatrol" to true, "isConcurrent" to false),
-                hashMapOf("type" to "도보","isPatrol" to false, "isConcurrent" to false),
-                hashMapOf("type" to "대기","isPatrol" to false, "isConcurrent" to false),
             ),
             "shiftList" to arrayListOf<HashMap<String, Any>>(
                 hashMapOf("shift" to "19:30 ~ 20:00", "interval" to 30),
                 hashMapOf("shift" to "20:00 ~ 00:00", "interval" to 240),
-                hashMapOf("shift" to "00:00 ~ 03:30", "interval" to 180),
-                hashMapOf("shift" to "03:30 ~ 07:00", "interval" to 210),
-                hashMapOf("shift" to "07:00 ~ 07:30", "interval" to 30),
             )
         )
     )
@@ -96,15 +83,15 @@ class WorkFragment : Fragment() {
             holderLayout.removeAllViews()
             sampleData.forEach { workMap ->
                 val holder = inflater.inflate(R.layout.holder, null) as LinearLayout
-                mkHolder(sampleData, holderLayout, holder, hashMapOf("workName" to workMap["workName"] as String)){ clickedWorkMap->
+                mkHolder(sampleData, holderLayout, holder, workMap, "workName"){ clickedWorkMap->
                     setWorkDialog(
                         clickedWorkMap,
                         {toUpdateMap->
                             sampleData[sampleData.indexOf(clickedWorkMap)] = toUpdateMap
                             onViewCreated(view, savedInstanceState)
                         },
-                        {toRemoveMap->
-                            sampleData.remove(toRemoveMap)
+                        {
+                            sampleData.remove(clickedWorkMap)
                             onViewCreated(view, savedInstanceState)
                         }
                     )
@@ -137,15 +124,15 @@ class WorkFragment : Fragment() {
         data:ArrayList<HashMap<String, Any>>,
         holderLayout:LinearLayout,
         holder:LinearLayout,
-        condition:HashMap<String,Any>,
-        callback: (HashMap<String,Any>) -> Unit){
+        mapItem:HashMap<String,Any>,
+        toPrintKey:String,
+        longClickCallback: (HashMap<String,Any>) -> Unit){
         try{
-            getMapByCondition(data, condition)?.let{map ->
                 //홀더 근무이름 텍스트뷰
                 holder.findViewById<TextView>(R.id.holderTV).apply{
-                    text = condition.entries.first().value as String
+                    text = mapItem[toPrintKey] as String
                     setOnLongClickListener {_ ->
-                        callback(map)
+                        longClickCallback(mapItem)
                         return@setOnLongClickListener true
                     }
                 }
@@ -157,10 +144,10 @@ class WorkFragment : Fragment() {
                         holderLayout.removeView(holder)
                         holderLayout.addView(holder, holderIndex-1)
                     }
-                    val mapIndex = data.indexOf(map)
+                    val mapIndex = data.indexOf(mapItem)
                     if(mapIndex > 0){
                         data[mapIndex] = data[mapIndex-1]
-                        data[mapIndex-1] = map
+                        data[mapIndex-1] = mapItem
                     }
                 }
 
@@ -172,14 +159,13 @@ class WorkFragment : Fragment() {
                         holderLayout.addView(holder, holderIndex+1)
                     }
 
-                    val mapIndex = data.indexOf(map)
+                    val mapIndex = data.indexOf(mapItem)
                     if(mapIndex < data.size-1){
                         data[mapIndex] = data[mapIndex+1]
-                        data[mapIndex+1] = map
+                        data[mapIndex+1] = mapItem
                     }
                 }
                 holderLayout.addView(holder)
-            }
         }catch(err:Exception){
             Log.d("test", err.toString())
             Log.d("test", err.stackTraceToString())
@@ -189,7 +175,7 @@ class WorkFragment : Fragment() {
     private fun setWorkDialog(
         clickedMap:HashMap<String, Any>?=null,
         updateMap: (HashMap<String, Any>) -> Unit,
-        deleteMap: (HashMap<String, Any>) -> Unit){
+        deleteMap: () -> Unit){
         try{
             val selectedWorkMap = clickedMap?: hashMapOf(
                 "workName" to "",
@@ -214,48 +200,84 @@ class WorkFragment : Fragment() {
                     this.findViewById<EditText>(R.id.inputWorkName).setText(it as String)
                 }
 
-                val workHolderLayout = this.findViewById<LinearLayout>(R.id.workTypeLayout)
-                val shiftHolderLayout = this.findViewById<LinearLayout>(R.id.workShiftLayout)
-
-                workHolderLayout.removeAllViews()
-                shiftHolderLayout.removeAllViews()
+                val typeHolderLayout = this.findViewById<LinearLayout>(R.id.workTypeLayout).apply { removeAllViews() }
+                val shiftHolderLayout = this.findViewById<LinearLayout>(R.id.workShiftLayout).apply { removeAllViews() }
 
                 //기존 근무 유형 홀더에 담아서 레이아웃에 넣기
                 copiedTypeMapList.forEach { typeMap ->
                     val inflater = LayoutInflater.from(requireContext())
                     val holder = inflater.inflate(R.layout.holder, null) as LinearLayout
-                    val exType = typeMap["type"] as String
 
-                    mkHolder(copiedTypeMapList, workHolderLayout, holder, hashMapOf("type" to exType)){ clickedTypeMap ->
-                        addOrUpdateTypeDialog(copiedTypeMapList, clickedTypeMap, workHolderLayout, holder){newType, newIsPatrol, newIsConcurrent ->
-                            holder.findViewById<TextView>(R.id.holderTV).text = newType
-                            clickedTypeMap["type"] = newType
-                            clickedTypeMap["isPatrol"] = newIsPatrol
-                            clickedTypeMap["isConcurrent"] = newIsConcurrent
-                        }
+                    mkHolder(copiedTypeMapList, typeHolderLayout, holder, typeMap, "type"){ clickedTypeMap ->
+                        addOrUpdateTypeDialog(
+                            clickedTypeMap,
+                            {
+                                newTypeMap ->
+                                holder.findViewById<TextView>(R.id.holderTV).text = newTypeMap["type"] as String
+                                clickedTypeMap["type"] = newTypeMap["type"] as String
+                                clickedTypeMap["isPatrol"] = newTypeMap["isPatrol"] as Boolean
+                                clickedTypeMap["isConcurrent"] = newTypeMap["isConcurrent"] as Boolean
+                            },
+                            {
+                                copiedTypeMapList.remove(typeMap)
+                                typeHolderLayout.removeView(holder)
+                            }
+                        )
                     }
                 }
 
-                //근무 추가하기 버튼 클릭
+
+                //근무 추가하기 버튼 클릭 ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+                this.findViewById<ImageButton>(R.id.mkAddWorkDialogBtn).setOnClickListener { _ ->
+
+                    //다이얼로그에서 새로운 근무유형 홀더에 담기
+                    val firstTypeMap = hashMapOf<String, Any>("type" to "", "isPatrol" to false, "isConcurrent" to false)
+                    val inflater = LayoutInflater.from(requireContext())
+                    val holder = inflater.inflate(R.layout.holder, null) as LinearLayout
+                    addOrUpdateTypeDialog(
+                        firstTypeMap,
+                        {
+                            newTypeMap ->
+                                holder.findViewById<TextView>(R.id.holderTV).text = newTypeMap["type"] as String
+                                firstTypeMap["type"] = newTypeMap["type"] as String
+                                firstTypeMap["isPatrol"] = newTypeMap["isPatrol"] as Boolean
+                                firstTypeMap["isConcurrent"] = newTypeMap["isConcurrent"] as Boolean
+                        },
+                        {
+                            copiedTypeMapList.remove(firstTypeMap)
+                            typeHolderLayout.removeView(holder)
+                        }
+                    )
+
+                }
+
+                /*                //근무 추가하기 버튼 클릭
                 this.findViewById<ImageButton>(R.id.mkAddWorkDialogBtn).setOnClickListener { _ ->
                     //다이얼로그에서 새로운 근무유형 홀더에 담기
-                    addOrUpdateTypeDialog { addedType, addedIsPatrol, addedIsConcurrent ->
-                        copiedTypeMapList.add(
-                            hashMapOf("type" to addedType,"isPatrol" to addedIsPatrol, "isConcurrent" to addedIsConcurrent)
-                        )
-                        val inflater = LayoutInflater.from(requireContext())
-                        val holder = inflater.inflate(R.layout.holder, null) as LinearLayout
-                        mkHolder(copiedTypeMapList, workHolderLayout, holder, hashMapOf("type" to addedType)){ clickedTypeMap->
-                            addOrUpdateTypeDialog(copiedTypeMapList, clickedTypeMap, workHolderLayout, holder){ newType, newIsPatrol, newIsConcurrent ->
-                                holder.findViewById<TextView>(R.id.holderTV).text = newType
-                                clickedTypeMap["type"] = newType
-                                clickedTypeMap["isPatrol"] = newIsPatrol
-                                clickedTypeMap["isConcurrent"] =newIsConcurrent
+                    addOrUpdateTypeDialog(
+                        null,
+                        { newTypeMap ->
+                            val inflater = LayoutInflater.from(requireContext())
+                            val holder = inflater.inflate(R.layout.holder, null) as LinearLayout
+                            mkHolder(copiedTypeMapList, typeHolderLayout, holder, newTypeMap, "type"){
+                                addOrUpdateTypeDialog(
+                                    it,
+                                    {callbackParamType->
+                                        holder.findViewById<TextView>(R.id.holderTV).text = callbackParamType["type"] as String
+                                        copiedTypeMapList[copiedTypeMapList.indexOf(newTypeMap)] = callbackParamType
+                                        Log.d("test", newTypeMap.toString())
+                                    },
+                                    {
+                                        copiedTypeMapList.remove(it)
+                                        typeHolderLayout.removeView(holder)
+                                    }
+                                )
                             }
-                        }
-                    } // addOrUpdateTypeDialog End
-
-                } // this.findViewById<Button>(R.id.mkAddWorkDialogBtn).setOnClickListener End
+                            copiedTypeMapList.add(newTypeMap)
+                        },
+                        {}
+                    )
+                }*/
 
                 //기존 근무시간 홀더에 담아서 레이아웃에 넣기
                 copiedShiftMapList.forEach { shiftMap ->
@@ -263,8 +285,7 @@ class WorkFragment : Fragment() {
                     val holder = inflater.inflate(R.layout.holder, null) as LinearLayout
                     holder.findViewById<ImageButton>(R.id.holderMoveItemUp).isGone=true
                     holder.findViewById<ImageButton>(R.id.holderMoveItemDown).isGone=true
-                    val exShift = shiftMap["shift"] as String
-                    mkHolder(copiedShiftMapList, shiftHolderLayout, holder, hashMapOf("shift" to exShift)){ clickedShiftMap ->
+                    mkHolder(copiedShiftMapList, shiftHolderLayout, holder, shiftMap, "shift"){ clickedShiftMap ->
                         updateShiftDialog(clickedShiftMap,
                             {fh, fm, th, tm ->
                                 val newShift = "${minuetToTimeStr(fh*60+fm)} ~ ${minuetToTimeStr(th*60+tm)}"
@@ -274,11 +295,10 @@ class WorkFragment : Fragment() {
                                 clickedShiftMap["interval"] = th*60+tm-th*60+tm
                                 holder.findViewById<TextView>(R.id.holderTV).text = newShift
                             },
-                            {toDeleteMap->
+                            {
+                                copiedShiftMapList.remove(clickedShiftMap)
                                 shiftHolderLayout.removeView(holder)
-                                copiedShiftMapList.remove(toDeleteMap)
                             }
-
                         )
                     }
                 }
@@ -293,7 +313,7 @@ class WorkFragment : Fragment() {
                             val holder = inflater.inflate(R.layout.holder, null) as LinearLayout
                             holder.findViewById<ImageButton>(R.id.holderMoveItemUp).isGone = true
                             holder.findViewById<ImageButton>(R.id.holderMoveItemDown).isGone = true
-                            mkHolder(shiftMapList, shiftHolderLayout, holder, hashMapOf("shift" to shiftMap["shift"] as String)){ clickedShiftMap->
+                            mkHolder(shiftMapList, shiftHolderLayout, holder, shiftMap, "shift"){ clickedShiftMap->
                                 updateShiftDialog(clickedShiftMap,
                                     {fh, fm, th, tm ->
                                         val newShift = "${minuetToTimeStr(fh*60+fm)} ~ ${minuetToTimeStr(th*60+tm)}"
@@ -303,9 +323,9 @@ class WorkFragment : Fragment() {
                                         clickedShiftMap["interval"] = th*60+tm-th*60+tm
                                         holder.findViewById<TextView>(R.id.holderTV).text = newShift
                                     },
-                                    {toDeleteMap ->
+                                    {
+                                        copiedShiftMapList.remove(clickedShiftMap)
                                         shiftHolderLayout.removeView(holder)
-                                        copiedShiftMapList.remove(toDeleteMap)
                                     }
                                 )
                             }
@@ -329,19 +349,26 @@ class WorkFragment : Fragment() {
 
                 //저장버튼
                 this.findViewById<Button>(R.id.saveWorkBtn).setOnClickListener {
-                    val selectedMap = hashMapOf<String, Any>(
+                    val toSaveWorkMap = hashMapOf<String, Any>(
                         "workName" to this.findViewById<EditText>(R.id.inputWorkName).text.toString(),
                         "typeList" to copiedTypeMapList,
                         "shiftList" to copiedShiftMapList
                     )
-                    updateMap(selectedMap)
+                    updateMap(toSaveWorkMap)
                     dismiss()
                 }
 
                 //삭제버튼
                 this.findViewById<Button>(R.id.deleteWorkBtn).setOnClickListener {
-                    clickedMap?.let { it1 -> deleteMap(it1) }
+                    deleteMap()
                     dismiss()
+                }
+
+                this.findViewById<Button>(R.id.workTestBtn2).setOnClickListener {
+                    Log.d("test", """
+                        copiedTypeMapList: $copiedTypeMapList
+                        copiedShiftMapList : $copiedShiftMapList
+                    """.trimIndent())
                 }
 
                 show()
@@ -417,27 +444,36 @@ class WorkFragment : Fragment() {
     }
 
     private fun addOrUpdateTypeDialog(
-        typeMapList:ArrayList<HashMap<String, Any>>?=null,
         typeMap:HashMap<String, Any>?=null,
-        holderLayout:LinearLayout?=null,
-        holder:LinearLayout?=null,
-        callback:(String, Boolean, Boolean)->Unit){
+        addTypeCallback:(HashMap<String, Any>)->Unit,
+        deleteTypeCallback: () -> Unit){
         try{
             Dialog(requireContext()).apply{
                 setContentView(R.layout.dialog_add_type)
                 val workNameEditText = this.findViewById<TextView>(R.id.toAddWorkName)
                 val isWorkPatrolBox = this.findViewById<CheckBox>(R.id.isPatrolCheckBox)
                 val isConcurrentBox = this.findViewById<CheckBox>(R.id.isConcurentCheckBox)
+
+                findViewById<Button>(R.id.deleteWorkTypeBtn).isGone = (typeMap == null)
+
                 workNameEditText.text = typeMap?.get("type")?.let{it as String} ?: ""
                 isWorkPatrolBox.isChecked= typeMap?.get("isPatrol")?.let { it as Boolean } ?: false
                 isConcurrentBox.isChecked= typeMap?.get("isConcurrent")?.let { it as Boolean } ?: false
-                this.findViewById<Button>(R.id.addWorkBtn).setOnClickListener {
-                    callback(workNameEditText.text.toString(), isWorkPatrolBox.isChecked, isConcurrentBox.isChecked)
+
+                //저장버튼 클릭
+                this.findViewById<Button>(R.id.saveTypeBtn).setOnClickListener {
+                    val toSaveTypeMap = hashMapOf<String, Any>(
+                        "type" to workNameEditText.text.toString(),
+                        "isPatrol" to isWorkPatrolBox.isChecked,
+                        "isConcurrent" to isConcurrentBox.isChecked
+                    )
+                    addTypeCallback(toSaveTypeMap)
                     this.dismiss()
                 }
+
+                //삭제버튼 클릭
                 this.findViewById<Button>(R.id.deleteWorkTypeBtn).setOnClickListener {
-                    typeMapList?.remove(typeMap)
-                    holderLayout?.removeView(holder)
+                    deleteTypeCallback()
                     this.dismiss()
                 }
                 show()
@@ -451,7 +487,7 @@ class WorkFragment : Fragment() {
     private fun updateShiftDialog(
         clickedShiftMap:HashMap<String, Any>,
         addShift:(fromHour:Int, fromMinuet:Int, toHour:Int, toMinuet:Int) -> Unit,
-        deleteShift:(clickedMap:HashMap<String, Any>) -> Unit
+        deleteShift:() -> Unit
     ){
         try{
             Dialog(requireContext()).apply dialog@{
@@ -502,7 +538,7 @@ class WorkFragment : Fragment() {
                 }
 
                 findViewById<Button>(R.id.deleteShiftBtn).setOnClickListener {
-                    deleteShift(clickedShiftMap)
+                    deleteShift()
                     this.dismiss()
                 }
 
