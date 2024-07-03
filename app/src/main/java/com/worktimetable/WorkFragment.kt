@@ -264,11 +264,13 @@ class WorkFragment : Fragment() {
                     mkHolder(copiedShiftMapList, shiftHolderLayout, holder, shiftMap, "shift"){ clickedShiftMap ->
                         updateShiftDialog(clickedShiftMap,
                             {fh, fm, th, tm ->
-                                val newShift = "${minuetToTimeStr(fh*60+fm)} ~ ${minuetToTimeStr(th*60+tm)}"
+                                val fromTime = fh*60+fm
+                                val toTime = th*60+tm
+                                val newShift = "${minuetToTimeStr(fromTime)} ~ ${minuetToTimeStr(toTime)}"
                                 clickedShiftMap["shift"] = newShift
-                                clickedShiftMap["fromShift"] = fh*60+fm
-                                clickedShiftMap["toShift"] = th*60+tm
-                                clickedShiftMap["interval"] = th*60+tm-th*60+tm
+                                clickedShiftMap["fromTime"] = fromTime
+                                clickedShiftMap["toTime"] = toTime
+                                clickedShiftMap["interval"] = if(toTime>fromTime){toTime - fromTime }else{24-fromTime + toTime}
                                 holder.findViewById<TextView>(R.id.holderTV).text = newShift
                             },
                             {
@@ -292,11 +294,13 @@ class WorkFragment : Fragment() {
                             mkHolder(shiftMapList, shiftHolderLayout, holder, shiftMap, "shift"){ clickedShiftMap->
                                 updateShiftDialog(clickedShiftMap,
                                     {fh, fm, th, tm ->
-                                        val newShift = "${minuetToTimeStr(fh*60+fm)} ~ ${minuetToTimeStr(th*60+tm)}"
+                                        val fromTime = fh*60+fm
+                                        val toTime = th*60+tm
+                                        val newShift = "${minuetToTimeStr(fromTime)} ~ ${minuetToTimeStr(toTime)}"
                                         clickedShiftMap["shift"] = newShift
-                                        clickedShiftMap["fromTime"] = fh*60+fm
-                                        clickedShiftMap["toTime"] = th*60+tm
-                                        clickedShiftMap["interval"] = th*60+tm-th*60+tm
+                                        clickedShiftMap["fromTime"] = fromTime
+                                        clickedShiftMap["toTime"] = toTime
+                                        clickedShiftMap["interval"] = if(toTime>fromTime){toTime - fromTime }else{24-fromTime + toTime}
                                         holder.findViewById<TextView>(R.id.holderTV).text = newShift
                                     },
                                     {
