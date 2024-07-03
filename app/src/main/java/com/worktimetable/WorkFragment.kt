@@ -35,6 +35,8 @@ class WorkFragment : Fragment() {
     private val vBinding get() = _vBinding!!
     private lateinit var mainActivity:MainActivity
 
+
+
     private val sampleData = arrayListOf<HashMap<String,Any>>(
         hashMapOf(
             "workName" to "주간근무",
@@ -98,20 +100,34 @@ class WorkFragment : Fragment() {
                 }
             }
 
-            vBinding.mkWorkTypeBtn.setOnClickListener {
+            vBinding.mkWorkBtn.setOnClickListener {
                 setWorkDialog(
                     null,
-                    { toUpdateMap->
-                        sampleData.add(toUpdateMap)
+                    { toAddWorkMap->
+                        sampleData.add(toAddWorkMap)
                         onViewCreated(view, savedInstanceState)
-                    },{}
+                        mainActivity.helper.insert("WorkTable", hashMapOf("work" to toAddWorkMap))
+                    },
+                    {}
                 )
             }
 
+            vBinding.dropWorkTableBtn.setOnClickListener {
+                mainActivity.helper.dropTable(("WorkTable"))
+            }
+
             vBinding.workTestBtn.setOnClickListener {
-                sampleData.forEach {
-                    Log.d("test", it.toString())
+                try{
+                    val selectAll = mainActivity.helper.selectAll("WorkTable")
+                    Log.d("test", selectAll.toString())
+
+                }catch(err:Exception){
+                    Log.d("test", err.toString())
+                    Log.d("test", err.stackTraceToString())
                 }
+                /*sampleData.forEach {
+                    Log.d("test", it.toString())
+                }*/
             }
 
         }catch(err:Exception){
