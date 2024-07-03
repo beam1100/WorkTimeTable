@@ -144,6 +144,7 @@
             android:fontFamily="@font/ongulip"
             android:text="TEST"
             android:textSize="30sp" />
+
     </LinearLayout>
 
 </LinearLayout>
