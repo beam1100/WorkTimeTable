@@ -23,6 +23,11 @@ import androidx.core.widget.addTextChangedListener
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import com.worktimetable.databinding.FragmentWorkBinding
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.yield
 
 class WorkFragment : Fragment() {
     companion object { }
@@ -37,7 +42,7 @@ class WorkFragment : Fragment() {
 
 
 
-    private val sampleData = arrayListOf<HashMap<String,Any>>(
+    /*private var sampleData = arrayListOf<HashMap<String,Any>>(
         hashMapOf(
             "workName" to "주간근무",
             "typeList" to arrayListOf<HashMap<String, Any>>(
@@ -62,7 +67,9 @@ class WorkFragment : Fragment() {
                 hashMapOf("shift" to "20:00 ~ 00:00", "interval" to 240),
             )
         )
-    )
+    )*/
+
+
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _vBinding = FragmentWorkBinding.inflate(inflater, container, false)
@@ -83,30 +90,38 @@ class WorkFragment : Fragment() {
             val inflater = LayoutInflater.from(requireContext())
             val holderLayout = vBinding.workTypeLayout
             holderLayout.removeAllViews()
-            sampleData.forEach { workMap ->
-                val holder = inflater.inflate(R.layout.holder, null) as LinearLayout
-                mkHolder(sampleData, holderLayout, holder, workMap, "workName"){ clickedWorkMap->
-                    setWorkDialog(
-                        clickedWorkMap,
-                        {toUpdateMap->
-                            sampleData[sampleData.indexOf(clickedWorkMap)] = toUpdateMap
-                            onViewCreated(view, savedInstanceState)
-                        },
-                        {
-                            sampleData.remove(clickedWorkMap)
-                            onViewCreated(view, savedInstanceState)
-                        }
-                    )
+
+
+            mainActivity.helper.selectAll("WorkTable"){ selectedWorkMapList->
+                selectedWorkMapList.forEach { workMap ->
+                    val holder = inflater.inflate(R.layout.holder, null) as LinearLayout
+                    mkHolder(selectedWorkMapList, holderLayout, holder, workMap["work"] as HashMap<String, Any>, "workName"){ clickedWorkMap->
+                        setWorkDialog(
+                            clickedWorkMap,
+                            {toUpdateMap->
+                                selectedWorkMapList[selectedWorkMapList.indexOf(clickedWorkMap)] = toUpdateMap
+                                onViewCreated(view, savedInstanceState)
+                            },
+                            {
+                                selectedWorkMapList.remove(clickedWorkMap)
+                                onViewCreated(view, savedInstanceState)
+                            }
+                        )
+                    }
                 }
             }
+
+
+
+
 
             vBinding.mkWorkBtn.setOnClickListener {
                 setWorkDialog(
                     null,
                     { toAddWorkMap->
-                        sampleData.add(toAddWorkMap)
-                        onViewCreated(view, savedInstanceState)
+//                        sampleData.add(toAddWorkMap)
                         mainActivity.helper.insert("WorkTable", hashMapOf("work" to toAddWorkMap))
+                        onViewCreated(view, savedInstanceState)
                     },
                     {}
                 )
@@ -118,9 +133,9 @@ class WorkFragment : Fragment() {
 
             vBinding.workTestBtn.setOnClickListener {
                 try{
-                    val selectAll = mainActivity.helper.selectAll("WorkTable")
-                    Log.d("test", selectAll.toString())
-
+                    mainActivity.helper.selectAll("WorkTable"){
+                        Log.d("test", it.toString())
+                    }
                 }catch(err:Exception){
                     Log.d("test", err.toString())
                     Log.d("test", err.stackTraceToString())
@@ -136,7 +151,7 @@ class WorkFragment : Fragment() {
         }
     }
 
-    private fun mkHolder(
+    private  fun mkHolder(
         data:ArrayList<HashMap<String, Any>>,
         holderLayout:LinearLayout,
         holder:LinearLayout,

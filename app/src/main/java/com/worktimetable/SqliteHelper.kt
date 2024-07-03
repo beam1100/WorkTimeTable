@@ -10,6 +10,7 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
+import javax.security.auth.callback.Callback
 
 class SqliteHelper(context:Context?, name:String, version: Int):SQLiteOpenHelper(context, name, null, version) {
 
@@ -72,8 +73,7 @@ class SqliteHelper(context:Context?, name:String, version: Int):SQLiteOpenHelper
 	}
 
 
-	fun selectAll(tableName:String):ArrayList<HashMap<String,Any>>{
-		Log.d("test", "selectAll 실행")
+	fun selectAll(tableName:String, callback: (ArrayList<HashMap<String,Any>>)->Unit){
 		val resultMapArrayList = arrayListOf<HashMap<String,Any>>()
 		val sql = "SELECT * FROM $tableName"
 		val rd = readableDatabase
@@ -100,7 +100,7 @@ class SqliteHelper(context:Context?, name:String, version: Int):SQLiteOpenHelper
 			resultMapArrayList.add(tempHashMap)
 		}
 		rd.close()
-		return resultMapArrayList
+		callback(resultMapArrayList)
 	}
 
 	fun dropTable(tableName:String){
