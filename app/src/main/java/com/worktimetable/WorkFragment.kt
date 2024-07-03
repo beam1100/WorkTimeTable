@@ -270,7 +270,7 @@ class WorkFragment : Fragment() {
                                 clickedShiftMap["shift"] = newShift
                                 clickedShiftMap["fromTime"] = fromTime
                                 clickedShiftMap["toTime"] = toTime
-                                clickedShiftMap["interval"] = if(toTime>fromTime){toTime - fromTime }else{24-fromTime + toTime}
+                                clickedShiftMap["interval"] = if(toTime>fromTime){toTime - fromTime }else{24*60-fromTime + toTime}
                                 holder.findViewById<TextView>(R.id.holderTV).text = newShift
                             },
                             {
@@ -300,7 +300,7 @@ class WorkFragment : Fragment() {
                                         clickedShiftMap["shift"] = newShift
                                         clickedShiftMap["fromTime"] = fromTime
                                         clickedShiftMap["toTime"] = toTime
-                                        clickedShiftMap["interval"] = if(toTime>fromTime){toTime - fromTime }else{24-fromTime + toTime}
+                                        clickedShiftMap["interval"] = if(toTime>fromTime){toTime - fromTime }else{24*60-fromTime + toTime}
                                         holder.findViewById<TextView>(R.id.holderTV).text = newShift
                                     },
                                     {
