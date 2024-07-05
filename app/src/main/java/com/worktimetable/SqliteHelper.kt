@@ -50,6 +50,8 @@ class SqliteHelper(context:Context?, name:String, version: Int):SQLiteOpenHelper
 						objectOutputStream.flush()
 						val dateBytes = byteArrayOutPutStream.toByteArray()
 						values.put(key, dateBytes)
+						objectOutputStream.close()
+						byteArrayOutPutStream.close()
 					}
 					is Map<*, *> -> {
 						val byteArrayOutputStream = ByteArrayOutputStream()
@@ -103,6 +105,17 @@ class SqliteHelper(context:Context?, name:String, version: Int):SQLiteOpenHelper
 		callback(resultMapArrayList)
 	}
 
+	// 조건에 맞는 데이터 삭제
+	fun deleteByCondition(tableName:String, whereCondition:HashMap<String,*>){
+		val condition = whereCondition.map{
+			"${it.key}='${it.value}'"
+		}.joinToString (" AND ")
+		val sql = "DELETE FROM $tableName WHERE $condition"
+		val wd = writableDatabase
+		wd.execSQL(sql)
+		wd.close()
+	}
+
 	fun dropTable(tableName:String){
 		val wd = writableDatabase
 		wd.execSQL("DROP TABLE IF EXISTS $tableName")
@@ -110,6 +123,52 @@ class SqliteHelper(context:Context?, name:String, version: Int):SQLiteOpenHelper
 		wd.close()
 	}
 
+
+	fun updateByCondition(
+		tableName: String,
+		updateMap: HashMap<String, Any>,
+		conditionMap: HashMap<String, Any>? = null
+	): Int {
+		val wd = writableDatabase
+		val values = ContentValues()
+
+		updateMap.forEach { (key, value) ->
+			when (value) {
+				is String -> values.put(key, value)
+				is Int -> values.put(key, value)
+				is Boolean -> values.put(key, if (value) 1 else 0)
+				is ByteArray -> values.put(key, value)
+				is Collection<*> -> {
+					val byteArrayOutputStream = ByteArrayOutputStream()
+					val objectOutputStream = ObjectOutputStream(byteArrayOutputStream)
+					objectOutputStream.writeObject(value)
+					objectOutputStream.flush()
+					val dataBytes = byteArrayOutputStream.toByteArray()
+					values.put(key, dataBytes)
+					objectOutputStream.close()
+					byteArrayOutputStream.close()
+				}
+				is Map<*, *> -> {
+					val byteArrayOutputStream = ByteArrayOutputStream()
+					val objectOutputStream = ObjectOutputStream(byteArrayOutputStream)
+					objectOutputStream.writeObject(value)
+					objectOutputStream.flush()
+					val dataBytes = byteArrayOutputStream.toByteArray()
+					values.put(key, dataBytes)
+					objectOutputStream.close()
+					byteArrayOutputStream.close()
+				}
+				else -> throw IllegalArgumentException("Unsupported value type")
+			}
+		}
+
+		val whereClause = conditionMap?.map { "${it.key} = ?" }?.joinToString(" AND ")
+		val whereArgs = conditionMap?.values?.map { it.toString() }?.toTypedArray()
+
+		val rowsUpdated = wd.update(tableName, values, whereClause, whereArgs)
+		wd.close()
+		return rowsUpdated
+	}
 
 
 
@@ -160,122 +219,6 @@ class SqliteHelper(context: Context?, name:String, version:Int):
 			val sql = "ALTER TABLE LogTable ADD addedColumn INTEGER DEFAULT 0"
 			p0.execSQL(sql)
 		}
-	}
-
-	fun insert(tableName:String, columnAndValue: HashMap<String, Any>){
-		try{
-			val wd:SQLiteDatabase=writableDatabase
-			val values = ContentValues()
-			columnAndValue.forEach { (key, value) ->
-				when(value){
-					is String -> values.put(key, value)
-					is Int -> values.put(key, value)
-					is Collection<*> -> {
-						val byteArrayOutPutStream = ByteArrayOutputStream()
-						val objectOutputStream = ObjectOutputStream(byteArrayOutPutStream)
-						objectOutputStream.writeObject(value)
-						objectOutputStream.flush()
-						val dateBytes = byteArrayOutPutStream.toByteArray()
-						values.put(key, dateBytes)
-					}
-				}
-			}
-			wd.insert(tableName, null, values)
-			wd.close()
-		}catch (err:Exception){
-			Log.d("test", err.toString())
-			Log.d("test", err.stackTraceToString())
-		}
-	}
-
-
-	fun selectByCondition(
-		tableName:String,
-		distinctColumn:String? = null,
-		conditionMap:HashMap<String, Any>? = null,
-		toOrderColumn:String? = null
-	):ArrayList<HashMap<String,Any>>{
-		val resultMapArrayList = arrayListOf<HashMap<String,Any>>()
-		val toSelectColumn = if(distinctColumn == null) "*" else "DISTINCT $distinctColumn"
-		val orderBy = if(toOrderColumn == null) "" else "ORDER BY $toOrderColumn"
-		val whereClause = if(conditionMap == null) "" else "WHERE" + conditionMap.map {" ${it.key} = '${it.value}' "}.joinToString("AND")
-		val sql = "SELECT $toSelectColumn FROM $tableName $whereClause $orderBy "
-		val rd = readableDatabase
-		val cursor = rd.rawQuery(sql, null)
-
-		while(cursor.moveToNext()){
-			val tempHashMap = hashMapOf<String, Any>()
-			cursor.columnNames.forEach { columnName ->
-				val columnIndex = cursor.getColumnIndex(columnName)
-				val value = when(cursor.getType(columnIndex)){
-					Cursor.FIELD_TYPE_INTEGER -> cursor.getInt(columnIndex)
-					Cursor.FIELD_TYPE_STRING -> cursor.getString(columnIndex)
-					Cursor.FIELD_TYPE_BLOB -> {
-						val dataBytes = cursor.getBlob(columnIndex)
-						val byteArrayInputStream = ByteArrayInputStream(dataBytes)
-						val objectInputStream = ObjectInputStream(byteArrayInputStream)
-						objectInputStream.readObject()
-					}
-					else -> cursor.getString(columnIndex)
-				}
-				value?.let{
-					tempHashMap[columnName] = value
-				}
-			}
-			resultMapArrayList.add(tempHashMap)
-		}
-		rd.close()
-		return resultMapArrayList
-	}
-
-
-	fun selectAll(tableName:String):ArrayList<HashMap<String,Any>>{
-		val resultMapArrayList = arrayListOf<HashMap<String,Any>>()
-		val sql = "SELECT * FROM $tableName"
-		val rd = readableDatabase
-		val cursor = rd.rawQuery(sql, null)
-		while(cursor.moveToNext()){
-			val tempHashMap = hashMapOf<String, Any>()
-			cursor.columnNames.forEach { columnName ->
-				val columnIndex = cursor.getColumnIndex(columnName)
-				val value = when(cursor.getType(columnIndex)){
-					Cursor.FIELD_TYPE_INTEGER -> cursor.getInt(columnIndex)
-					Cursor.FIELD_TYPE_STRING -> cursor.getString(columnIndex)
-					Cursor.FIELD_TYPE_BLOB -> {
-						val dataBytes = cursor.getBlob(columnIndex)
-						val byteArrayInputStream = ByteArrayInputStream(dataBytes)
-						val objectInputStream = ObjectInputStream(byteArrayInputStream)
-						objectInputStream.readObject()
-					}
-					else -> cursor.getString(columnIndex)
-				}
-				value?.let{
-					tempHashMap[columnName] = value
-				}
-			}
-			resultMapArrayList.add(tempHashMap)
-		}
-		rd.close()
-		return resultMapArrayList
-	}
-
-
-	fun dropTable(tableName:String){
-		val wd = writableDatabase
-		wd.execSQL("DROP TABLE IF EXISTS $tableName")
-		onCreate(wd)
-		wd.close()
-	}
-
-	// 조건에 맞는 데이터 삭제
-	fun deleteByCondition(tableName:String, whereCondition:HashMap<String,*>){
-		val wc = whereCondition.map{
-			"${it.key}='${it.value}'"
-		}.joinToString (" AND ")
-		val sql = "DELETE FROM $tableName WHERE $wc"
-		val wd = writableDatabase
-		wd.execSQL(sql)
-		wd.close()
 	}
 
 

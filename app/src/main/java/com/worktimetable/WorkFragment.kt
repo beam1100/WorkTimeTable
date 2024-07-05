@@ -41,36 +41,6 @@ class WorkFragment : Fragment() {
     private lateinit var mainActivity:MainActivity
 
 
-
-    /*private var sampleData = arrayListOf<HashMap<String,Any>>(
-        hashMapOf(
-            "workName" to "주간근무",
-            "typeList" to arrayListOf<HashMap<String, Any>>(
-                hashMapOf("type" to "상황","isPatrol" to false, "isConcurrent" to false),
-                hashMapOf("type" to "1구역","isPatrol" to true, "isConcurrent" to false),
-            ),
-            "shiftList" to arrayListOf<HashMap<String, Any>>(
-                hashMapOf("shift" to "07:00 ~ 07:30", "interval" to 30),
-                hashMapOf("shift" to "07:30 ~ 11:00", "interval" to 210),
-                hashMapOf("shift" to "11:00 ~ 14:00", "interval" to 180),
-            )
-        ),
-        hashMapOf(
-            "workName" to "야간근무",
-            "typeList" to arrayListOf<HashMap<String, Any>>(
-                hashMapOf("type" to "상황","isPatrol" to false, "isConcurrent" to false),
-                hashMapOf("type" to "1구역","isPatrol" to true, "isConcurrent" to false),
-                hashMapOf("type" to "2구역","isPatrol" to true, "isConcurrent" to false),
-            ),
-            "shiftList" to arrayListOf<HashMap<String, Any>>(
-                hashMapOf("shift" to "19:30 ~ 20:00", "interval" to 30),
-                hashMapOf("shift" to "20:00 ~ 00:00", "interval" to 240),
-            )
-        )
-    )*/
-
-
-
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _vBinding = FragmentWorkBinding.inflate(inflater, container, false)
         return vBinding.root
@@ -91,11 +61,12 @@ class WorkFragment : Fragment() {
             val holderLayout = vBinding.workTypeLayout
             holderLayout.removeAllViews()
 
-
             mainActivity.helper.selectAll("WorkTable"){ selectedWorkMapList->
                 selectedWorkMapList.forEach { workMap ->
+                    val workDetails = workMap["work"] as HashMap<String, Any>
+                    val workMapAddedId = workDetails.apply { put("id", workMap["id"] as Int) }
                     val holder = inflater.inflate(R.layout.holder, null) as LinearLayout
-                    mkHolder(selectedWorkMapList, holderLayout, holder, workMap["work"] as HashMap<String, Any>, "workName"){ clickedWorkMap->
+                    mkHolder(selectedWorkMapList, holderLayout, holder, workMapAddedId, "workName"){ clickedWorkMap->
                         setWorkDialog(
                             clickedWorkMap,
                             {toUpdateMap->
@@ -103,17 +74,13 @@ class WorkFragment : Fragment() {
                                 onViewCreated(view, savedInstanceState)
                             },
                             {
-                                selectedWorkMapList.remove(clickedWorkMap)
+                                mainActivity.helper.deleteByCondition("WorkTable", hashMapOf("id" to clickedWorkMap["id"]))
                                 onViewCreated(view, savedInstanceState)
                             }
                         )
                     }
                 }
             }
-
-
-
-
 
             vBinding.mkWorkBtn.setOnClickListener {
                 setWorkDialog(
@@ -140,9 +107,6 @@ class WorkFragment : Fragment() {
                     Log.d("test", err.toString())
                     Log.d("test", err.stackTraceToString())
                 }
-                /*sampleData.forEach {
-                    Log.d("test", it.toString())
-                }*/
             }
 
         }catch(err:Exception){
@@ -358,7 +322,7 @@ class WorkFragment : Fragment() {
                     }
                 }
 
-                //저장버튼
+                //★★★★★ 저장버튼 ★★★★★★
                 this.findViewById<Button>(R.id.saveWorkBtn).setOnClickListener {
                     val toSaveWorkMap = hashMapOf<String, Any>(
                         "workName" to this.findViewById<EditText>(R.id.inputWorkName).text.toString(),
@@ -369,12 +333,13 @@ class WorkFragment : Fragment() {
                     dismiss()
                 }
 
-                //삭제버튼
+                //★★★★★ 삭제버튼 ★★★★★
                 this.findViewById<Button>(R.id.deleteWorkBtn).setOnClickListener {
                     deleteMap()
                     dismiss()
                 }
 
+                // ★★★★★ 테스트 버튼 ★★★★★
                 this.findViewById<Button>(R.id.workTestBtn2).setOnClickListener {
                     Log.d("test", """
                         copiedTypeMapList: $copiedTypeMapList
