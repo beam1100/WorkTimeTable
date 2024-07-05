@@ -23,11 +23,6 @@ import androidx.core.widget.addTextChangedListener
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import com.worktimetable.databinding.FragmentWorkBinding
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.yield
 
 class WorkFragment : Fragment() {
     companion object { }
@@ -41,7 +36,10 @@ class WorkFragment : Fragment() {
     private lateinit var mainActivity:MainActivity
 
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?): View {
         _vBinding = FragmentWorkBinding.inflate(inflater, container, false)
         return vBinding.root
     }
@@ -61,16 +59,24 @@ class WorkFragment : Fragment() {
             val holderLayout = vBinding.workTypeLayout
             holderLayout.removeAllViews()
 
-            mainActivity.helper.selectAll("WorkTable"){ selectedWorkMapList->
-                selectedWorkMapList.forEach { workMap ->
-                    val workDetails = workMap["work"] as HashMap<String, Any>
-                    val workMapAddedId = workDetails.apply { put("id", workMap["id"] as Int) }
+            mainActivity.helper.selectAll("WorkTable"){ workMapList->
+                workMapList.forEach { workMap ->
                     val holder = inflater.inflate(R.layout.holder, null) as LinearLayout
-                    mkHolder(selectedWorkMapList, holderLayout, holder, workMapAddedId, "workName"){ clickedWorkMap->
+                    holder.findViewById<ImageButton>(R.id.holderMoveItemDown).isGone = true
+                    holder.findViewById<ImageButton>(R.id.holderMoveItemUp).isGone = true
+                    mkHolder(workMapList, holderLayout, holder, workMap, "workName"){ clickedWorkMap->
                         setWorkDialog(
                             clickedWorkMap,
-                            {toUpdateMap->
-                                selectedWorkMapList[selectedWorkMapList.indexOf(clickedWorkMap)] = toUpdateMap
+                            {id, workName, typeList, shiftList->
+                                mainActivity.helper.updateByCondition(
+                                    "WorkTable",
+                                    hashMapOf("id" to id as Any),
+                                    hashMapOf(
+                                        "workName" to workName,
+                                        "typeList" to typeList,
+                                        "shiftList" to shiftList
+                                    )
+                                )
                                 onViewCreated(view, savedInstanceState)
                             },
                             {
@@ -85,9 +91,8 @@ class WorkFragment : Fragment() {
             vBinding.mkWorkBtn.setOnClickListener {
                 setWorkDialog(
                     null,
-                    { toAddWorkMap->
-//                        sampleData.add(toAddWorkMap)
-                        mainActivity.helper.insert("WorkTable", hashMapOf("work" to toAddWorkMap))
+                    { _, workName, typeList, shiftList->
+                        mainActivity.helper.insert("WorkTable", hashMapOf("workName" to workName, "typeList" to typeList, "shiftList" to shiftList))
                         onViewCreated(view, savedInstanceState)
                     },
                     {}
@@ -123,6 +128,7 @@ class WorkFragment : Fragment() {
         toPrintKey:String,
         longClickCallback: (HashMap<String,Any>) -> Unit){
         try{
+
                 //홀더 근무이름 텍스트뷰
                 holder.findViewById<TextView>(R.id.holderTV).apply{
                     text = mapItem[toPrintKey] as String
@@ -169,17 +175,18 @@ class WorkFragment : Fragment() {
 
     private fun setWorkDialog(
         clickedMap:HashMap<String, Any>?=null,
-        updateMap: (HashMap<String, Any>) -> Unit,
+        updateMap: (id:Int?, workName:String, typeList:ArrayList<HashMap<String, Any>>, shiftList:ArrayList<HashMap<String, Any>>) -> Unit,
         deleteMap: () -> Unit){
         try{
             val selectedWorkMap = clickedMap?: hashMapOf(
+                "id" to null,
                 "workName" to "",
                 "typeList" to arrayListOf<HashMap<String, Any>>(),
                 "shiftList" to arrayListOf<HashMap<String, Any>>(),
             )
             val exTypeMapList = (selectedWorkMap["typeList"] as ArrayList<*>)
-            val copiedTypeMapList = ArrayList(exTypeMapList.map{deepCopy(it) as HashMap<String, Any>})
             val exShiftMapList = (selectedWorkMap["shiftList"] as ArrayList<*>)
+            val copiedTypeMapList = ArrayList(exTypeMapList.map{deepCopy(it) as HashMap<String, Any>})
             var copiedShiftMapList = ArrayList(exShiftMapList.map{deepCopy(it) as HashMap<String, Any>})
 
             Dialog(requireContext()).apply {
@@ -208,10 +215,10 @@ class WorkFragment : Fragment() {
                             longClickedTypeMap,
                             {
                                 newTypeMap ->
-                                holder.findViewById<TextView>(R.id.holderTV).text = newTypeMap["type"] as String
-                                longClickedTypeMap["type"] = newTypeMap["type"] as String
-                                longClickedTypeMap["isPatrol"] = newTypeMap["isPatrol"] as Boolean
-                                longClickedTypeMap["isConcurrent"] = newTypeMap["isConcurrent"] as Boolean
+                                    holder.findViewById<TextView>(R.id.holderTV).text = newTypeMap["type"] as String
+                                    longClickedTypeMap["type"] = newTypeMap["type"] as String
+                                    longClickedTypeMap["isPatrol"] = newTypeMap["isPatrol"] as Boolean
+                                    longClickedTypeMap["isConcurrent"] = newTypeMap["isConcurrent"] as Boolean
                             },
                             {
                                 copiedTypeMapList.remove(typeMap)
@@ -324,12 +331,11 @@ class WorkFragment : Fragment() {
 
                 //★★★★★ 저장버튼 ★★★★★★
                 this.findViewById<Button>(R.id.saveWorkBtn).setOnClickListener {
-                    val toSaveWorkMap = hashMapOf<String, Any>(
-                        "workName" to this.findViewById<EditText>(R.id.inputWorkName).text.toString(),
-                        "typeList" to copiedTypeMapList,
-                        "shiftList" to copiedShiftMapList
-                    )
-                    updateMap(toSaveWorkMap)
+                    updateMap(
+                        selectedWorkMap["id"] as? Int,
+                        findViewById<EditText>(R.id.inputWorkName).text.toString(),
+                        copiedTypeMapList,
+                        copiedShiftMapList)
                     dismiss()
                 }
 

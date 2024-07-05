@@ -10,14 +10,12 @@ class MainActivity : FragmentActivity() {
     private lateinit var vBinding:ActivityMainBinding
 
     private val tableFragment = TableFragment()
-    private val personnelFragment = PersonnelFragment()
+    private val memberFragment = MemberFragment()
     private val workFragment = WorkFragment()
     val helper = SqliteHelper(this, "WorkTable.db", 1)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         try{
-
-
 
             vBinding = ActivityMainBinding.inflate(layoutInflater)
             super.onCreate(savedInstanceState)
@@ -29,9 +27,9 @@ class MainActivity : FragmentActivity() {
                     .commit()
             }
 
-            vBinding.personnelFragmentBtn.setOnClickListener {
+            vBinding.memberFragmentBtn.setOnClickListener {
                 supportFragmentManager.beginTransaction()
-                    .replace(vBinding.fragmentContainerView.id, personnelFragment)
+                    .replace(vBinding.fragmentContainerView.id, memberFragment)
                     .commit()
             }
 

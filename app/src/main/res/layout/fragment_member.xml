@@ -1,13 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/workDialogLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".WorkFragment">
+    tools:context=".MemberFragment">
 
     <!-- TODO: Update blank fragment layout -->
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -16,11 +14,9 @@
         <ScrollView
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="9"
-            tools:ignore="SpeakableTextPresentCheck">
+            android:layout_weight="9">
 
             <LinearLayout
-                android:id="@+id/workTypeLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"></LinearLayout>
@@ -33,34 +29,23 @@
             android:orientation="horizontal">
 
             <Button
-                android:id="@+id/mkWorkBtn"
-                android:layout_width="0dp"
+                android:id="@+id/button"
+                android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:fontFamily="@font/ongulip"
-                android:text="근무 생성"
+                android:text="인원추가"
                 android:textSize="30sp" />
 
             <Button
-                android:id="@+id/workTestBtn"
-                android:layout_width="0dp"
+                android:id="@+id/button2"
+                android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:fontFamily="@font/ongulip"
-                android:text="근무 출력"
+                android:text="인원 드랍"
                 android:textSize="30sp" />
-
-            <Button
-                android:id="@+id/dropWorkTableBtn"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:fontFamily="@font/ongulip"
-                android:text="근무 드랍"
-                android:textSize="30sp" />
-
         </LinearLayout>
-
     </LinearLayout>
 
 </FrameLayout>

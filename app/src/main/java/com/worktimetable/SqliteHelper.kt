@@ -18,7 +18,9 @@ class SqliteHelper(context:Context?, name:String, version: Int):SQLiteOpenHelper
 		CREATE TABLE IF NOT EXISTS WorkTable
 			(
 				id INTEGER PRIMARY KEY AUTOINCREMENT,
-				work BLOB
+				workName TEXT,
+				typeList BLOB,
+				shiftList BLOB
 			)
 	""".trimIndent()
 
@@ -126,8 +128,8 @@ class SqliteHelper(context:Context?, name:String, version: Int):SQLiteOpenHelper
 
 	fun updateByCondition(
 		tableName: String,
-		updateMap: HashMap<String, Any>,
-		conditionMap: HashMap<String, Any>? = null
+		conditionMap: HashMap<String, Any>? = null,
+		updateMap: HashMap<String, Any>
 	): Int {
 		val wd = writableDatabase
 		val values = ContentValues()
@@ -170,71 +172,4 @@ class SqliteHelper(context:Context?, name:String, version: Int):SQLiteOpenHelper
 		return rowsUpdated
 	}
 
-
-
 }
-
-/*package com.jym.examplesqlite
-
-import android.content.ContentValues
-import android.content.Context
-import android.database.Cursor
-import android.database.sqlite.SQLiteDatabase
-import android.database.sqlite.SQLiteOpenHelper
-import android.util.Log
-import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
-import java.io.ObjectInputStream
-import java.io.ObjectOutputStream
-
-
-class SqliteHelper(context: Context?, name:String, version:Int):
-	SQLiteOpenHelper(context, name, null, version) {
-
-	private val mkTable = """
-		CREATE TABLE IF NOT EXISTS LogTable
-			(
-				id INTEGER PRIMARY KEY AUTOINCREMENT,
-				name TEXT,
-				memo TEXT,
-				collection BLOB,
-				time TEXT
-			)
-	""".trimIndent()
-
-	// 테이블 생성
-	override fun onCreate(p0: SQLiteDatabase) {
-		try{
-			p0.execSQL(mkTable)
-
-		}catch(err:Exception){
-			Log.d("test", err.toString())
-			Log.d("test", err.stackTraceToString())
-		}
-	}
-
-	// 업그래이드
-	override fun onUpgrade(p0: SQLiteDatabase, p1: Int, p2: Int) {
-		if(false){
-			val sql = "ALTER TABLE LogTable ADD addedColumn INTEGER DEFAULT 0"
-			p0.execSQL(sql)
-		}
-	}
-
-
-	// 컬럼 목록 가져오기
-	fun getColumnNames(tableName: String): List<String>? {
-		val db = readableDatabase
-		val cursor: Cursor = db.rawQuery("SELECT * FROM $tableName", null)
-		val columnNames = arrayListOf<String>()
-		cursor.use {
-			for (columnName in cursor.columnNames) {
-				columnNames.add(columnName)
-			}
-		}
-		db.close()
-		return columnNames
-	}
-
-
-}*/
