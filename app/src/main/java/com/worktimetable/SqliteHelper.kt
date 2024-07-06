@@ -20,7 +20,8 @@ class SqliteHelper(context:Context?, name:String, version: Int):SQLiteOpenHelper
 				id INTEGER PRIMARY KEY AUTOINCREMENT,
 				workName TEXT,
 				typeList BLOB,
-				shiftList BLOB
+				shiftList BLOB,
+				workOrder INTEGER
 			)
 	""".trimIndent()
 
@@ -77,7 +78,7 @@ class SqliteHelper(context:Context?, name:String, version: Int):SQLiteOpenHelper
 	}
 
 
-	fun selectAll(tableName:String, callback: (ArrayList<HashMap<String,Any>>)->Unit){
+	fun selectAll(tableName:String):ArrayList<HashMap<String,Any>>{
 		val resultMapArrayList = arrayListOf<HashMap<String,Any>>()
 		val sql = "SELECT * FROM $tableName"
 		val rd = readableDatabase
@@ -104,7 +105,7 @@ class SqliteHelper(context:Context?, name:String, version: Int):SQLiteOpenHelper
 			resultMapArrayList.add(tempHashMap)
 		}
 		rd.close()
-		callback(resultMapArrayList)
+		return resultMapArrayList
 	}
 
 	// 조건에 맞는 데이터 삭제
@@ -117,14 +118,6 @@ class SqliteHelper(context:Context?, name:String, version: Int):SQLiteOpenHelper
 		wd.execSQL(sql)
 		wd.close()
 	}
-
-	fun dropTable(tableName:String){
-		val wd = writableDatabase
-		wd.execSQL("DROP TABLE IF EXISTS $tableName")
-		onCreate(wd)
-		wd.close()
-	}
-
 
 	fun updateByCondition(
 		tableName: String,
@@ -171,5 +164,14 @@ class SqliteHelper(context:Context?, name:String, version: Int):SQLiteOpenHelper
 		wd.close()
 		return rowsUpdated
 	}
+
+
+	fun dropTable(tableName:String){
+		val wd = writableDatabase
+		wd.execSQL("DROP TABLE IF EXISTS $tableName")
+		onCreate(wd)
+		wd.close()
+	}
+
 
 }

@@ -24,6 +24,7 @@ import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import com.worktimetable.databinding.FragmentWorkBinding
 
+
 class WorkFragment : Fragment() {
     companion object { }
 
@@ -52,121 +53,86 @@ class WorkFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-
         try{
             super.onViewCreated(view, savedInstanceState)
             val inflater = LayoutInflater.from(requireContext())
             val holderLayout = vBinding.workTypeLayout
             holderLayout.removeAllViews()
 
-            mainActivity.helper.selectAll("WorkTable"){ workMapList->
-                workMapList.forEach { workMap ->
-                    val holder = inflater.inflate(R.layout.holder, null) as LinearLayout
-                    holder.findViewById<ImageButton>(R.id.holderMoveItemDown).isGone = true
-                    holder.findViewById<ImageButton>(R.id.holderMoveItemUp).isGone = true
-                    mkHolder(workMapList, holderLayout, holder, workMap, "workName"){ clickedWorkMap->
-                        setWorkDialog(
-                            clickedWorkMap,
-                            {id, workName, typeList, shiftList->
-                                mainActivity.helper.updateByCondition(
-                                    "WorkTable",
-                                    hashMapOf("id" to id as Any),
-                                    hashMapOf(
-                                        "workName" to workName,
-                                        "typeList" to typeList,
-                                        "shiftList" to shiftList
-                                    )
+            // 기존 근무 홀더에 담아서 출력
+            val workMapList = mainActivity.helper.selectAll("WorkTable")
+            workMapList.forEach { workMap ->
+                val holder = inflater.inflate(R.layout.holder, null) as LinearLayout
+                mainActivity.mkHolderFromDB(workMapList, holderLayout, holder, workMap, "workName"){ clickedWorkMap->
+                    setWorkDialog(
+                        clickedWorkMap,
+                        {id, workName, typeList, shiftList->
+                            mainActivity.helper.updateByCondition(
+                                "WorkTable",
+                                hashMapOf("id" to id as Any),
+                                hashMapOf(
+                                    "workName" to workName,
+                                    "typeList" to typeList,
+                                    "shiftList" to shiftList
                                 )
-                                onViewCreated(view, savedInstanceState)
-                            },
-                            {
-                                mainActivity.helper.deleteByCondition("WorkTable", hashMapOf("id" to clickedWorkMap["id"]))
-                                onViewCreated(view, savedInstanceState)
-                            }
-                        )
-                    }
+                            )
+                            onViewCreated(view, savedInstanceState)
+                        },
+                        {
+                            mainActivity.helper.deleteByCondition("WorkTable", hashMapOf("id" to clickedWorkMap["id"]))
+                            onViewCreated(view, savedInstanceState)
+                        }
+                    )
                 }
             }
 
+            /*새 근무 생성*/
             vBinding.mkWorkBtn.setOnClickListener {
                 setWorkDialog(
                     null,
                     { _, workName, typeList, shiftList->
-                        mainActivity.helper.insert("WorkTable", hashMapOf("workName" to workName, "typeList" to typeList, "shiftList" to shiftList))
+                        mainActivity.helper.insert(
+                            "WorkTable",
+                            hashMapOf(
+                                "workName" to workName,
+                                "typeList" to typeList,
+                                "shiftList" to shiftList
+                            )
+                        )
                         onViewCreated(view, savedInstanceState)
                     },
                     {}
                 )
             }
 
-            vBinding.dropWorkTableBtn.setOnClickListener {
-                mainActivity.helper.dropTable(("WorkTable"))
-            }
-
+            /*테이블 출력*/
             vBinding.workTestBtn.setOnClickListener {
                 try{
-                    mainActivity.helper.selectAll("WorkTable"){
-                        Log.d("test", it.toString())
+
+                    val workMapList = mainActivity.helper.selectAll("WorkTable")
+
+
+                    workMapList.forEachIndexed { outerIndex, outerMap ->
+                        Log.d("test", "■index: $outerIndex")
+                        outerMap.forEach { (key, value) ->
+                            Log.d("test", "▣key: $key, ▣value: $value")
+                        }
+                        Log.d("test", "\n\n")
                     }
+
                 }catch(err:Exception){
                     Log.d("test", err.toString())
                     Log.d("test", err.stackTraceToString())
                 }
             }
 
-        }catch(err:Exception){
-            Log.d("test", err.toString())
-            Log.d("test", err.stackTraceToString())
-        }
-    }
+            /*드랍 테이블*/
+            vBinding.dropWorkTableBtn.setOnClickListener {
+                mainActivity.helper.dropTable(("WorkTable"))
+                onViewCreated(view, savedInstanceState)
+            }
 
-    private  fun mkHolder(
-        data:ArrayList<HashMap<String, Any>>,
-        holderLayout:LinearLayout,
-        holder:LinearLayout,
-        mapItem:HashMap<String,Any>,
-        toPrintKey:String,
-        longClickCallback: (HashMap<String,Any>) -> Unit){
-        try{
 
-                //홀더 근무이름 텍스트뷰
-                holder.findViewById<TextView>(R.id.holderTV).apply{
-                    text = mapItem[toPrintKey] as String
-                    setOnLongClickListener {_ ->
-                        longClickCallback(mapItem)
-                        return@setOnLongClickListener true
-                    }
-                }
-
-                //홀더: 근무이동(위로)
-                holder.findViewById<ImageButton>(R.id.holderMoveItemUp).setOnClickListener {
-                    val holderIndex = holderLayout.indexOfChild(holder)
-                    if(holderIndex > 0 && holderLayout.childCount>=2){
-                        holderLayout.removeView(holder)
-                        holderLayout.addView(holder, holderIndex-1)
-                    }
-                    val mapIndex = data.indexOf(mapItem)
-                    if(mapIndex > 0){
-                        data[mapIndex] = data[mapIndex-1]
-                        data[mapIndex-1] = mapItem
-                    }
-                }
-
-                //홀더: 근무이동(아래로)
-                holder.findViewById<ImageButton>(R.id.holderMoveItemDown).setOnClickListener {
-                    val holderIndex = holderLayout.indexOfChild(holder)
-                    if(holderIndex < holderLayout.childCount-1 && holderLayout.childCount>=2){
-                        holderLayout.removeView(holder)
-                        holderLayout.addView(holder, holderIndex+1)
-                    }
-
-                    val mapIndex = data.indexOf(mapItem)
-                    if(mapIndex < data.size-1){
-                        data[mapIndex] = data[mapIndex+1]
-                        data[mapIndex+1] = mapItem
-                    }
-                }
-                holderLayout.addView(holder)
         }catch(err:Exception){
             Log.d("test", err.toString())
             Log.d("test", err.stackTraceToString())
@@ -209,8 +175,7 @@ class WorkFragment : Fragment() {
                 copiedTypeMapList.forEach { typeMap ->
                     val inflater = LayoutInflater.from(requireContext())
                     val holder = inflater.inflate(R.layout.holder, null) as LinearLayout
-
-                    mkHolder(copiedTypeMapList, typeHolderLayout, holder, typeMap, "type"){ longClickedTypeMap ->
+                    mainActivity.mkHolderFromMap(copiedTypeMapList, typeHolderLayout, holder, typeMap, "type"){ longClickedTypeMap ->
                         addOrUpdateTypeDialog(
                             longClickedTypeMap,
                             {
@@ -237,7 +202,7 @@ class WorkFragment : Fragment() {
                         null,
                         {toAddTypeMap ->
                             copiedTypeMapList.add(toAddTypeMap)
-                            mkHolder(copiedTypeMapList, typeHolderLayout, holder, toAddTypeMap, "type"){ longClickedTypeMap ->
+                            mainActivity.mkHolderFromMap(copiedTypeMapList, typeHolderLayout, holder, toAddTypeMap, "type"){ longClickedTypeMap ->
                                 addOrUpdateTypeDialog(
                                     longClickedTypeMap,
                                     { newTypeMap ->
@@ -263,7 +228,7 @@ class WorkFragment : Fragment() {
                     val holder = inflater.inflate(R.layout.holder, null) as LinearLayout
                     holder.findViewById<ImageButton>(R.id.holderMoveItemUp).isGone=true
                     holder.findViewById<ImageButton>(R.id.holderMoveItemDown).isGone=true
-                    mkHolder(copiedShiftMapList, shiftHolderLayout, holder, shiftMap, "shift"){ clickedShiftMap ->
+                    mainActivity.mkHolderFromMap(copiedShiftMapList, shiftHolderLayout, holder, shiftMap, "shift"){ clickedShiftMap ->
                         updateShiftDialog(clickedShiftMap,
                             {fh, fm, th, tm ->
                                 val fromTime = fh*60+fm
@@ -293,7 +258,7 @@ class WorkFragment : Fragment() {
                             val holder = inflater.inflate(R.layout.holder, null) as LinearLayout
                             holder.findViewById<ImageButton>(R.id.holderMoveItemUp).isGone = true
                             holder.findViewById<ImageButton>(R.id.holderMoveItemDown).isGone = true
-                            mkHolder(shiftMapList, shiftHolderLayout, holder, shiftMap, "shift"){ clickedShiftMap->
+                            mainActivity.mkHolderFromMap(shiftMapList, shiftHolderLayout, holder, shiftMap, "shift"){ clickedShiftMap->
                                 updateShiftDialog(clickedShiftMap,
                                     {fh, fm, th, tm ->
                                         val fromTime = fh*60+fm

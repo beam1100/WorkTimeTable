@@ -7,7 +7,7 @@
     <ImageButton
         android:id="@+id/holderMoveItemUp"
         android:layout_width="0dp"
-        android:layout_height="80dp"
+        android:layout_height="match_parent"
         android:layout_weight="1"
         android:src="@android:drawable/arrow_up_float"
         tools:ignore="SpeakableTextPresentCheck"
@@ -25,7 +25,7 @@
     <ImageButton
         android:id="@+id/holderMoveItemDown"
         android:layout_width="0dp"
-        android:layout_height="80dp"
+        android:layout_height="match_parent"
         android:layout_weight="1"
         android:src="@android:drawable/arrow_down_float"
         tools:ignore="SpeakableTextPresentCheck"

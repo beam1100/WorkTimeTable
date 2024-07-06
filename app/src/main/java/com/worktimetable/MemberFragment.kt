@@ -40,6 +40,9 @@ class MemberFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         try{
             super.onViewCreated(view, savedInstanceState)
+            val inflater = LayoutInflater.from(requireContext())
+            val holderLayout = vBinding.memberLayout
+            holderLayout.removeAllViews()
         }catch(err:Exception){
             Log.d("test", err.toString())
             Log.d("test", err.stackTraceToString())
