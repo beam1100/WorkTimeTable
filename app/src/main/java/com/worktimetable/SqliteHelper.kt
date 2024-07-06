@@ -14,14 +14,23 @@ import javax.security.auth.callback.Callback
 
 class SqliteHelper(context:Context?, name:String, version: Int):SQLiteOpenHelper(context, name, null, version) {
 
-	private val mkTable = """
+	private val mkWorkTable = """
 		CREATE TABLE IF NOT EXISTS WorkTable
 			(
 				id INTEGER PRIMARY KEY AUTOINCREMENT,
 				workName TEXT,
 				typeList BLOB,
 				shiftList BLOB,
-				workOrder INTEGER
+				sortIndex INTEGER
+			)
+	""".trimIndent()
+
+	private val mkMemberTable = """
+		CREATE TABLE IF NOT EXISTS MemberTable
+			(
+				id INTEGER PRIMARY KEY AUTOINCREMENT,
+				memberName TEXT,
+				sortIndex INTEGER
 			)
 	""".trimIndent()
 
@@ -29,7 +38,9 @@ class SqliteHelper(context:Context?, name:String, version: Int):SQLiteOpenHelper
 	override fun onCreate(p0: SQLiteDatabase) {
 		try{
 			Log.d("test", "helper OnCreate 실행")
-			p0.execSQL(mkTable)
+			listOf(mkWorkTable, mkMemberTable).forEach {
+				p0.execSQL(it)
+			}
 		}catch(err:Exception){
 			Log.d("test", err.toString())
 			Log.d("test", err.stackTraceToString())
@@ -78,9 +89,15 @@ class SqliteHelper(context:Context?, name:String, version: Int):SQLiteOpenHelper
 	}
 
 
-	fun selectAll(tableName:String):ArrayList<HashMap<String,Any>>{
+	fun select(
+		tableName:String,
+		toSortColumn:String? = null,
+		where:HashMap<String, Any>? = null,
+	):ArrayList<HashMap<String,Any>>{
 		val resultMapArrayList = arrayListOf<HashMap<String,Any>>()
-		val sql = "SELECT * FROM $tableName"
+		val orderBy = if(toSortColumn == null) "" else "ORDER BY $toSortColumn"
+		val whereClause = if(where == null) "" else "WHERE" + where.map {" ${it.key} = '${it.value}' "}.joinToString("AND")
+		val sql = "SELECT * FROM $tableName $whereClause $orderBy"
 		val rd = readableDatabase
 		val cursor = rd.rawQuery(sql, null)
 		while(cursor.moveToNext()){
@@ -121,7 +138,7 @@ class SqliteHelper(context:Context?, name:String, version: Int):SQLiteOpenHelper
 
 	fun updateByCondition(
 		tableName: String,
-		conditionMap: HashMap<String, Any>? = null,
+		where: HashMap<String, Any>? = null,
 		updateMap: HashMap<String, Any>
 	): Int {
 		val wd = writableDatabase
@@ -157,8 +174,8 @@ class SqliteHelper(context:Context?, name:String, version: Int):SQLiteOpenHelper
 			}
 		}
 
-		val whereClause = conditionMap?.map { "${it.key} = ?" }?.joinToString(" AND ")
-		val whereArgs = conditionMap?.values?.map { it.toString() }?.toTypedArray()
+		val whereClause = where?.map { "${it.key} = ?" }?.joinToString(" AND ")
+		val whereArgs = where?.values?.map { it.toString() }?.toTypedArray()
 
 		val rowsUpdated = wd.update(tableName, values, whereClause, whereArgs)
 		wd.close()

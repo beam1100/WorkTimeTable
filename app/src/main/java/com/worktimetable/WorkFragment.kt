@@ -59,31 +59,35 @@ class WorkFragment : Fragment() {
             val holderLayout = vBinding.workTypeLayout
             holderLayout.removeAllViews()
 
-            // 기존 근무 홀더에 담아서 출력
-            val workMapList = mainActivity.helper.selectAll("WorkTable")
+            /*db에 저장된 근무 홀더에 담아서 출력*/
+            val workMapList = mainActivity.helper.select(tableName = "WorkTable", toSortColumn = "sortIndex")
             workMapList.forEach { workMap ->
-                val holder = inflater.inflate(R.layout.holder, null) as LinearLayout
-                mainActivity.mkHolderFromDB(workMapList, holderLayout, holder, workMap, "workName"){ clickedWorkMap->
-                    setWorkDialog(
-                        clickedWorkMap,
-                        {id, workName, typeList, shiftList->
-                            mainActivity.helper.updateByCondition(
-                                "WorkTable",
-                                hashMapOf("id" to id as Any),
-                                hashMapOf(
-                                    "workName" to workName,
-                                    "typeList" to typeList,
-                                    "shiftList" to shiftList
-                                )
+                    val holder = inflater.inflate(R.layout.holder, null) as LinearLayout
+                    mainActivity.mkHolderFromDB("WorkTable", holderLayout, holder, workMap, "workName",
+                        { clickedWorkMap->
+                            setWorkDialog(
+                                clickedWorkMap,
+                                {id, workName, typeList, shiftList->
+                                    mainActivity.helper.updateByCondition(
+                                        "WorkTable",
+                                        hashMapOf("id" to id as Any),
+                                        hashMapOf(
+                                            "workName" to workName,
+                                            "typeList" to typeList,
+                                            "shiftList" to shiftList,
+                                            "sortIndex" to workMap["sortIndex"] as Int
+                                        )
+                                    )
+                                    onViewCreated(view, savedInstanceState)
+                                },
+                                {
+                                    mainActivity.helper.deleteByCondition("WorkTable", hashMapOf("id" to clickedWorkMap["id"]))
+                                    onViewCreated(view, savedInstanceState)
+                                }
                             )
-                            onViewCreated(view, savedInstanceState)
                         },
-                        {
-                            mainActivity.helper.deleteByCondition("WorkTable", hashMapOf("id" to clickedWorkMap["id"]))
-                            onViewCreated(view, savedInstanceState)
-                        }
-                    )
-                }
+                    {onViewCreated(view, savedInstanceState)}
+                )
             }
 
             /*새 근무 생성*/
@@ -91,12 +95,15 @@ class WorkFragment : Fragment() {
                 setWorkDialog(
                     null,
                     { _, workName, typeList, shiftList->
+                        val sortIndexMaxOrNull = mainActivity.helper.select("WorkTable").maxOfOrNull { it["sortIndex"] as Int}
+                        val sortIndex = if(sortIndexMaxOrNull==null){0}else{sortIndexMaxOrNull+1}
                         mainActivity.helper.insert(
                             "WorkTable",
                             hashMapOf(
                                 "workName" to workName,
                                 "typeList" to typeList,
-                                "shiftList" to shiftList
+                                "shiftList" to shiftList,
+                                "sortIndex" to sortIndex
                             )
                         )
                         onViewCreated(view, savedInstanceState)
@@ -108,10 +115,7 @@ class WorkFragment : Fragment() {
             /*테이블 출력*/
             vBinding.workTestBtn.setOnClickListener {
                 try{
-
-                    val workMapList = mainActivity.helper.selectAll("WorkTable")
-
-
+                    val workMapList = mainActivity.helper.select(tableName = "WorkTable", toSortColumn = "sortIndex")
                     workMapList.forEachIndexed { outerIndex, outerMap ->
                         Log.d("test", "■index: $outerIndex")
                         outerMap.forEach { (key, value) ->
@@ -152,18 +156,18 @@ class WorkFragment : Fragment() {
             )
             val exTypeMapList = (selectedWorkMap["typeList"] as ArrayList<*>)
             val exShiftMapList = (selectedWorkMap["shiftList"] as ArrayList<*>)
-            val copiedTypeMapList = ArrayList(exTypeMapList.map{deepCopy(it) as HashMap<String, Any>})
-            var copiedShiftMapList = ArrayList(exShiftMapList.map{deepCopy(it) as HashMap<String, Any>})
+            val copiedTypeMapList = ArrayList(exTypeMapList.map{mainActivity.deepCopy(it) as HashMap<String, Any>})
+            var copiedShiftMapList = ArrayList(exShiftMapList.map{mainActivity.deepCopy(it) as HashMap<String, Any>})
 
             Dialog(requireContext()).apply {
                 setContentView(R.layout.dialog_set_work)
-                setDialogSize(this, 0.9f, 0.8f)
+                mainActivity.setDialogSize(this, vBinding.workFragmentLayout,0.9f, 0.8f)
 
                 if(clickedMap==null){
                     this.findViewById<Button>(R.id.deleteWorkBtn).isGone=true
                 }
 
-                // 근무이름 출력
+                /*근무이름 출력*/
                 clickedMap?.get("workName")?.let{
                     this.findViewById<EditText>(R.id.inputWorkName).setText(it as String)
                 }
@@ -193,7 +197,7 @@ class WorkFragment : Fragment() {
                     }
                 }
 
-                //★★★★★ 근무 추가하기 버튼 클릭: 디버깅 검토하기 ★★★★★
+                /*근무 추가하기*/
                 this.findViewById<ImageButton>(R.id.mkAddWorkDialogBtn).setOnClickListener { _ ->
                     //다이얼로그에서 새로운 근무유형 홀더에 담기
                     val inflater = LayoutInflater.from(requireContext())
@@ -310,14 +314,6 @@ class WorkFragment : Fragment() {
                     dismiss()
                 }
 
-                // ★★★★★ 테스트 버튼 ★★★★★
-                this.findViewById<Button>(R.id.workTestBtn2).setOnClickListener {
-                    Log.d("test", """
-                        copiedTypeMapList: $copiedTypeMapList
-                        copiedShiftMapList : $copiedShiftMapList
-                    """.trimIndent())
-                }
-
                 show()
             } // Dialog(requireContext()).apply End
         }catch(err:Exception){
@@ -333,7 +329,7 @@ class WorkFragment : Fragment() {
         try{
             Dialog(requireContext()).apply dialog@{
                 setContentView(R.layout.dialog_set_shift_at_once)
-                setDialogSize(this, 0.85f, null)
+                mainActivity.setDialogSize(this, vBinding.workFragmentLayout, 0.85f, null)
 
                 val intervalMinuetEt = findViewById<TextInputEditText>(R.id.interverMinuetEt)
                 val shiftNumEt = findViewById<TextInputEditText>(R.id.shiftNumEt)
@@ -396,7 +392,7 @@ class WorkFragment : Fragment() {
         deleteTypeCallback: () -> Unit){
         try{
             Dialog(requireContext()).apply{
-                setContentView(R.layout.dialog_add_type)
+                setContentView(R.layout.dialog_set_type)
 
                 findViewById<Button>(R.id.deleteWorkTypeBtn).isGone = (typeMap==null)
 
@@ -440,7 +436,7 @@ class WorkFragment : Fragment() {
         try{
             Dialog(requireContext()).apply dialog@{
                 setContentView(R.layout.dialog_update_shift)
-                setDialogSize(this, 0.9f, null)
+                mainActivity.setDialogSize(this, vBinding.workFragmentLayout, 0.9f, null)
                 val periodSplit = splitPeriod(clickedShiftMap["shift"] as String)
                 val updateFromHourEt = findViewById<TextInputEditText>(R.id.updateFromHourEt).apply {
                     setText(periodSplit[0])
@@ -496,52 +492,6 @@ class WorkFragment : Fragment() {
             Log.d("test", err.toString())
             Log.d("test", err.stackTraceToString())
         }
-    }
-
-
-    private fun getMapByCondition(
-        mapList:ArrayList<HashMap<String, Any>,>,
-        condition: HashMap<String, Any>
-    ):HashMap<String, Any>?{
-        for(map in mapList){
-            for(key in condition.keys){
-                if(map[key] != condition[key]){
-                    continue
-                }else{
-                    return map
-                }
-            }
-        }
-        return null
-    }
-
-    private fun deepCopy(obj: Any): Any {
-        return when (obj) {
-            is String -> obj
-            is Int -> obj
-            is Double -> obj
-            is Boolean -> obj
-            is Map<*, *> -> obj
-                .mapKeys { it.key}
-                .mapValues {it.value?.let {deepCopy(it)}}
-            is List<*> -> obj.map {
-                it?.let{deepCopy(it)}
-            }
-            else -> obj
-        }
-    }
-
-    private fun setDialogSize(dialog: Dialog, width:Float?, height:Float?){
-        val layoutParams = dialog.window?.attributes
-        val viewWidth = vBinding.workDialogLayout.width
-        val viewHeight = vBinding.workDialogLayout.height
-        width?.let{
-            layoutParams?.width = (viewWidth * width).toInt()
-        }
-        height?.let{
-            layoutParams?.height = (viewHeight * height).toInt()
-        }
-        dialog.window?.attributes = layoutParams
     }
 
     private fun minuetToTimeStr(minuet:Int):String{
