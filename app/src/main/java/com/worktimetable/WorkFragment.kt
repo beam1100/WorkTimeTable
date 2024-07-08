@@ -60,35 +60,35 @@ class WorkFragment : Fragment() {
             holderLayout.removeAllViews()
 
             /*db에 저장된 근무 홀더에 담아서 출력*/
-            val workMapList = mainActivity.helper.select(tableName = "WorkTable", toSortColumn = "sortIndex")
-            workMapList.forEach { workMap ->
-                    val holder = inflater.inflate(R.layout.holder, null) as LinearLayout
-                    mainActivity.mkHolderFromDB("WorkTable", holderLayout, holder, workMap, "workName",
-                        { clickedWorkMap->
-                            setWorkDialog(
-                                clickedWorkMap,
-                                {id, workName, typeList, shiftList->
-                                    mainActivity.helper.updateByCondition(
-                                        "WorkTable",
-                                        hashMapOf("id" to id as Any),
-                                        hashMapOf(
-                                            "workName" to workName,
-                                            "typeList" to typeList,
-                                            "shiftList" to shiftList,
-                                            "sortIndex" to workMap["sortIndex"] as Int
-                                        )
+            mainActivity.helper.select(tableName = "WorkTable", toSortColumn = "sortIndex").onEach { workMap ->
+                val holder = inflater.inflate(R.layout.holder, null) as LinearLayout
+                mainActivity.mkHolderFromDB("WorkTable", holderLayout, holder, workMap, "workName",
+                    { clickedWorkMap->
+                        setWorkDialog(
+                            clickedWorkMap,
+                            {id, workName, typeList, shiftList->
+                                mainActivity.helper.updateByCondition(
+                                    "WorkTable",
+                                    hashMapOf("id" to id as Any),
+                                    hashMapOf(
+                                        "workName" to workName,
+                                        "typeList" to typeList,
+                                        "shiftList" to shiftList,
+                                        "sortIndex" to workMap["sortIndex"] as Int
                                     )
-                                    onViewCreated(view, savedInstanceState)
-                                },
-                                {
-                                    mainActivity.helper.deleteByCondition("WorkTable", hashMapOf("id" to clickedWorkMap["id"]))
-                                    onViewCreated(view, savedInstanceState)
-                                }
-                            )
-                        },
+                                )
+                                onViewCreated(view, savedInstanceState)
+                            },
+                            {
+                                mainActivity.helper.deleteByCondition("WorkTable", hashMapOf("id" to clickedWorkMap["id"]))
+                                onViewCreated(view, savedInstanceState)
+                            }
+                        )
+                    },
                     {onViewCreated(view, savedInstanceState)}
                 )
             }
+
 
             /*새 근무 생성*/
             vBinding.mkWorkBtn.setOnClickListener {
@@ -115,13 +115,14 @@ class WorkFragment : Fragment() {
             /*테이블 출력*/
             vBinding.workTestBtn.setOnClickListener {
                 try{
-                    val workMapList = mainActivity.helper.select(tableName = "WorkTable", toSortColumn = "sortIndex")
-                    workMapList.forEachIndexed { outerIndex, outerMap ->
-                        Log.d("test", "■index: $outerIndex")
-                        outerMap.forEach { (key, value) ->
-                            Log.d("test", "▣key: $key, ▣value: $value")
+                    mainActivity.helper.select(tableName = "WorkTable", toSortColumn = "sortIndex").apply {
+                        forEachIndexed { outerIndex, outerMap ->
+                            Log.d("test", "■index: $outerIndex")
+                            outerMap.forEach { (key, value) ->
+                                Log.d("test", "▣key: $key, ▣value: $value")
+                            }
+                            Log.d("test", "\n\n")
                         }
-                        Log.d("test", "\n\n")
                     }
 
                 }catch(err:Exception){
