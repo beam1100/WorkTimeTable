@@ -104,7 +104,7 @@ class MemberFragment : Fragment() {
 
             /* 인원 출력 버튼 */
             vBinding.selectMemberBtn.setOnClickListener {
-                mainActivity.helper.select("MemberTable").onEach {memberMap->
+                mainActivity.helper.select("MemberTable", toSortColumn = "sortIndex").onEach {memberMap->
                     memberMap.forEach{(key, value)->
                         Log.d("test", "■key:$key,    ■value: $value")
                     }

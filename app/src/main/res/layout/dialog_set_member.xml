@@ -9,18 +9,15 @@
         android:id="@+id/memberNameET"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:ems="10"
         android:fontFamily="@font/ongulip"
-        android:hint="근무자 이름을 입력하세요"
+        android:hint="근무자 이름 입력"
         android:inputType="text"
-        android:textSize="30sp"
+        android:textSize="50sp"
         tools:ignore="SpeakableTextPresentCheck" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
         android:orientation="horizontal">
 
         <Button
