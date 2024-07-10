@@ -115,14 +115,11 @@ class WorkFragment : Fragment() {
             /*테이블 출력*/
             vBinding.workTestBtn.setOnClickListener {
                 try{
-                    mainActivity.helper.select(tableName = "WorkTable", toSortColumn = "sortIndex").apply {
-                        forEachIndexed { outerIndex, outerMap ->
-                            Log.d("test", "■index: $outerIndex")
-                            outerMap.forEach { (key, value) ->
-                                Log.d("test", "▣key: $key, ▣value: $value")
-                            }
-                            Log.d("test", "\n\n")
+                    mainActivity.helper.select(tableName = "WorkTable", toSortColumn = "sortIndex").onEach { workMap->
+                        workMap.forEach { (key, value) ->
+                            Log.d("test", "▣key: $key, ▣value: $value")
                         }
+                        Log.d("test", "=".repeat(150))
                     }
 
                 }catch(err:Exception){
@@ -146,7 +143,7 @@ class WorkFragment : Fragment() {
 
     private fun setWorkDialog(
         clickedMap:HashMap<String, Any>?=null,
-        updateMap: (id:Int?, workName:String, typeList:ArrayList<HashMap<String, Any>>, shiftList:ArrayList<HashMap<String, Any>>) -> Unit,
+        setMap: (id:Int?, workName:String, typeList:ArrayList<HashMap<String, Any>>, shiftList:ArrayList<HashMap<String, Any>>) -> Unit,
         deleteMap: () -> Unit){
         try{
             val selectedWorkMap = clickedMap?: hashMapOf(
@@ -168,7 +165,7 @@ class WorkFragment : Fragment() {
                     this.findViewById<Button>(R.id.deleteWorkBtn).isGone=true
                 }
 
-                /*근무이름 출력*/
+                /*근무 이름 출력*/
                 clickedMap?.get("workName")?.let{
                     this.findViewById<EditText>(R.id.inputWorkName).setText(it as String)
                 }
@@ -301,7 +298,7 @@ class WorkFragment : Fragment() {
 
                 //★★★★★ 저장버튼 ★★★★★★
                 this.findViewById<Button>(R.id.saveWorkBtn).setOnClickListener {
-                    updateMap(
+                    setMap(
                         selectedWorkMap["id"] as? Int,
                         findViewById<EditText>(R.id.inputWorkName).text.toString(),
                         copiedTypeMapList,

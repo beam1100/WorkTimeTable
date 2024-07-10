@@ -32,8 +32,8 @@
             android:orientation="horizontal">
 
             <Button
-                android:id="@+id/addNewMemberBtn"
-                android:layout_width="wrap_content"
+                android:id="@+id/mkSetMemberDialog"
+                android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:fontFamily="@font/ongulip"
@@ -41,8 +41,17 @@
                 android:textSize="30sp" />
 
             <Button
+                android:id="@+id/selectMemberBtn"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:fontFamily="@font/ongulip"
+                android:text="인원 출력"
+                android:textSize="30sp" />
+
+            <Button
                 android:id="@+id/dropMemberBtn"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:fontFamily="@font/ongulip"

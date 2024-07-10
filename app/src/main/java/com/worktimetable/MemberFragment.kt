@@ -1,6 +1,5 @@
 package com.worktimetable
 
-import android.annotation.SuppressLint
 import android.app.Dialog
 import android.content.Context
 import android.os.Bundle
@@ -11,10 +10,10 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
+import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.core.view.isGone
 import com.worktimetable.databinding.FragmentMemberBinding
-import com.worktimetable.databinding.FragmentWorkBinding
 
 
 class MemberFragment : Fragment() {
@@ -51,14 +50,66 @@ class MemberFragment : Fragment() {
             holderLayout.removeAllViews()
 
 
-            vBinding.addNewMemberBtn.setOnClickListener {
-                setMemberDialog()
+            /* db 멤버 홀더에 담기 */
+            mainActivity.helper.select("MemberTable",toSortColumn = "sortIndex").onEach {memberMap->
+                val holder = inflater.inflate(R.layout.holder, null) as LinearLayout
+                mainActivity.mkHolderFromDB("MemberTable", holderLayout, holder, memberMap, "memberName",
+                    {clickedMemberMap->
+                        setMemberDialog(
+                            clickedMemberMap,
+                            {id, memberName->
+                                mainActivity.helper.updateByCondition(
+                                    "MemberTable",
+                                    hashMapOf("id" to id as Any),
+                                    hashMapOf("memberName" to memberName)
+                                )
+                                onViewCreated(view, savedInstanceState)
+                            },
+                            {
+                                mainActivity.helper.deleteByCondition("MemberTable",hashMapOf("id" to clickedMemberMap["id"]))
+                                onViewCreated(view, savedInstanceState)
+                            }
+                        )
+                    },
+                    {onViewCreated(view, savedInstanceState)}
+                )
             }
 
-            /*인원 드랍 버튼*/
+
+            /* 인원 추가 버튼 */
+            vBinding.mkSetMemberDialog.setOnClickListener {
+                setMemberDialog(
+                    null,
+                    { _, memberName ->
+                        val sortIndexMaxOrNull = mainActivity.helper.select("MemberTable").maxOfOrNull { it["sortIndex"] as Int}
+                        val sortIndex = if(sortIndexMaxOrNull==null){0}else{sortIndexMaxOrNull+1}
+                        mainActivity.helper.insert(
+                            "MemberTable",
+                            hashMapOf(
+                                "memberName" to memberName,
+                                "sortIndex" to sortIndex
+                            )
+                        )
+                        onViewCreated(view, savedInstanceState)
+                    },
+                    {}
+                )
+            }
+
+            /* 인원 드랍 버튼 */
             vBinding.dropMemberBtn.setOnClickListener {
                 mainActivity.helper.dropTable(("MemberTable"))
                 onViewCreated(view, savedInstanceState)
+            }
+
+            /* 인원 출력 버튼 */
+            vBinding.selectMemberBtn.setOnClickListener {
+                mainActivity.helper.select("MemberTable").onEach {memberMap->
+                    memberMap.forEach{(key, value)->
+                        Log.d("test", "■key:$key,    ■value: $value")
+                    }
+                    Log.d("test", "=".repeat(150))
+                }
             }
 
         }catch(err:Exception){
@@ -67,16 +118,42 @@ class MemberFragment : Fragment() {
         }
     }
 
-    private fun setMemberDialog() {
+
+    private fun setMemberDialog(
+        clickedMap:HashMap<String, Any>?=null,
+        setMap: (id:Int?, memberName:String) -> Unit,
+        deleteMap: () -> Unit) {
+
+        val selectedMemberMap = clickedMap?: hashMapOf("id" to null,"memberName" to "")
         Dialog(requireContext()).apply {
             setContentView(R.layout.dialog_set_member)
+            mainActivity.setDialogSize(this, vBinding.memberFragmentLayout, 0.9f, null)
+
+
+            if(clickedMap==null){
+                findViewById<Button>(R.id.deleteMemberBtn).isGone = true
+            }
+
+            /* 멤버 이름 출력 */
+            clickedMap?.get("memberName")?.let{
+                this.findViewById<EditText>(R.id.memberNameET).setText(it as String)
+            }
+
+            /* 멤버 저장 */
+            findViewById<Button>(R.id.insertMemberBtn).setOnClickListener {
+                setMap(
+                    selectedMemberMap["id"] as? Int,
+                    findViewById<EditText>(R.id.memberNameET).text.toString()
+                )
+                dismiss()
+            }
 
             /* 멤버 삭제 */
             findViewById<Button>(R.id.deleteMemberBtn).setOnClickListener {
-                Toast.makeText(requireContext(), "삭제", Toast.LENGTH_SHORT).show()
+                deleteMap()
+                dismiss()
             }
 
-            mainActivity.setDialogSize(this, vBinding.memberFragmentLayout, 0.9f, null)
             show()
         }
     }
