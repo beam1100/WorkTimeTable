@@ -61,7 +61,7 @@ class WorkFragment : Fragment() {
 
             /*db에 저장된 근무 홀더에 담아서 출력*/
             mainActivity.helper.select(tableName = "WorkTable", toSortColumn = "sortIndex").onEach { workMap ->
-                val holder = inflater.inflate(R.layout.holder, null) as LinearLayout
+                val holder = inflater.inflate(R.layout.holder_setting, null) as LinearLayout
                 mainActivity.mkHolderFromDB("WorkTable", holderLayout, holder, workMap, "workName",
                     { clickedWorkMap->
                         setWorkDialog(
@@ -176,7 +176,7 @@ class WorkFragment : Fragment() {
                 //기존 근무 유형 홀더에 담아서 레이아웃에 넣기
                 copiedTypeMapList.forEach { typeMap ->
                     val inflater = LayoutInflater.from(requireContext())
-                    val holder = inflater.inflate(R.layout.holder, null) as LinearLayout
+                    val holder = inflater.inflate(R.layout.holder_setting, null) as LinearLayout
                     mainActivity.mkHolderFromMap(copiedTypeMapList, typeHolderLayout, holder, typeMap, "type"){ longClickedTypeMap ->
                         addOrUpdateTypeDialog(
                             longClickedTypeMap,
@@ -199,7 +199,7 @@ class WorkFragment : Fragment() {
                 this.findViewById<ImageButton>(R.id.mkAddWorkDialogBtn).setOnClickListener { _ ->
                     //다이얼로그에서 새로운 근무유형 홀더에 담기
                     val inflater = LayoutInflater.from(requireContext())
-                    val holder = inflater.inflate(R.layout.holder, null) as LinearLayout
+                    val holder = inflater.inflate(R.layout.holder_setting, null) as LinearLayout
                     addOrUpdateTypeDialog(
                         null,
                         {toAddTypeMap ->
@@ -227,7 +227,7 @@ class WorkFragment : Fragment() {
                 //기존 근무시간 홀더에 담아서 레이아웃에 넣기
                 copiedShiftMapList.forEach { shiftMap ->
                     val inflater = LayoutInflater.from(requireContext())
-                    val holder = inflater.inflate(R.layout.holder, null) as LinearLayout
+                    val holder = inflater.inflate(R.layout.holder_setting, null) as LinearLayout
                     holder.findViewById<ImageButton>(R.id.holderMoveItemUp).isGone=true
                     holder.findViewById<ImageButton>(R.id.holderMoveItemDown).isGone=true
                     mainActivity.mkHolderFromMap(copiedShiftMapList, shiftHolderLayout, holder, shiftMap, "shift"){ clickedShiftMap ->
@@ -257,7 +257,7 @@ class WorkFragment : Fragment() {
                         copiedShiftMapList = shiftMapList
                         shiftMapList.forEach {shiftMap->
                             val inflater = LayoutInflater.from(requireContext())
-                            val holder = inflater.inflate(R.layout.holder, null) as LinearLayout
+                            val holder = inflater.inflate(R.layout.holder_setting, null) as LinearLayout
                             holder.findViewById<ImageButton>(R.id.holderMoveItemUp).isGone = true
                             holder.findViewById<ImageButton>(R.id.holderMoveItemDown).isGone = true
                             mainActivity.mkHolderFromMap(shiftMapList, shiftHolderLayout, holder, shiftMap, "shift"){ clickedShiftMap->
