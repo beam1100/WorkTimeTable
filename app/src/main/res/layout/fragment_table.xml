@@ -1,17 +1,213 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/tableFragmentLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".TableFragment">
 
     <!-- TODO: Update blank fragment layout -->
-    <TextView
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:gravity="center"
-        android:textSize="30sp"
-        android:text="표 프레그먼트"
-         />
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="horizontal">
+
+            <ImageButton
+                android:id="@+id/imageButton"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:src="@drawable/double_arrow_left_50"
+                tools:ignore="SpeakableTextPresentCheck" />
+
+            <ImageButton
+                android:id="@+id/imageButton2"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:src="@drawable/arrow_left_50"
+                tools:ignore="SpeakableTextPresentCheck" />
+
+            <TextView
+                android:id="@+id/textView4"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="3" />
+
+            <ImageButton
+                android:id="@+id/imageButton3"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:src="@drawable/arrow_right_50"
+                tools:ignore="SpeakableTextPresentCheck" />
+
+            <ImageButton
+                android:id="@+id/imageButton4"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:src="@drawable/double_arrow_right_50"
+                tools:ignore="SpeakableTextPresentCheck" />
+        </LinearLayout>
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/tableLayout"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_margin="5dp"
+            android:layout_weight="8">
+
+            <ImageButton
+                android:id="@+id/mkCountTableBtn"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:scrollbars="none"
+                android:src="@drawable/check_50"
+                app:layout_constraintBottom_toBottomOf="@id/colSV"
+                app:layout_constraintEnd_toEndOf="@+id/rowSV"
+                app:layout_constraintStart_toStartOf="@id/rowSV"
+                app:layout_constraintTop_toTopOf="@id/colSV"
+                tools:ignore="SpeakableTextPresentCheck" />
+
+            <HorizontalScrollView
+                android:id="@+id/colSV"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:animateLayoutChanges="false"
+                android:fadeScrollbars="false"
+                android:scrollbars="none"
+                app:layout_constraintBottom_toTopOf="@id/mainSV"
+                app:layout_constraintEnd_toEndOf="@id/mainSV"
+                app:layout_constraintStart_toStartOf="@id/mainSV"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <ScrollView
+                android:id="@+id/rowSV"
+                android:layout_width="wrap_content"
+                android:layout_height="0dp"
+                android:animateLayoutChanges="false"
+                android:fadeScrollbars="false"
+                android:scrollbars="none"
+                app:layout_constraintBottom_toBottomOf="@id/mainSV"
+                app:layout_constraintEnd_toStartOf="@id/mainSV"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="@id/mainSV" />
+
+
+            <ScrollView
+                android:id="@+id/mainSV"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:animateLayoutChanges="false"
+                android:fadeScrollbars="false"
+                android:scrollbars="none"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/rowSV"
+                app:layout_constraintTop_toBottomOf="@id/colSV">
+
+                <HorizontalScrollView
+                    android:id="@+id/subSV"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:animateLayoutChanges="false"
+                    android:fadeScrollbars="false"
+                    android:scrollbars="none" />
+            </ScrollView>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/mkWorkSelectDialogBtn"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:fontFamily="@font/ongulip"
+                    android:text="일지작성"
+                    android:textSize="30sp" />
+
+                <Button
+                    android:id="@+id/printLogBtn"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:fontFamily="@font/ongulip"
+                    android:text="출력"
+                    android:textSize="30sp" />
+
+                <Button
+                    android:id="@+id/button3"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:fontFamily="@font/ongulip"
+                    android:text="Button"
+                    android:textSize="30sp" />
+
+                <Button
+                    android:id="@+id/button4"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:fontFamily="@font/ongulip"
+                    android:text="Button"
+                    android:textSize="30sp" />
+
+                <Button
+                    android:id="@+id/button5"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:fontFamily="@font/ongulip"
+                    android:text="Button"
+                    android:textSize="30sp" />
+
+                <Button
+                    android:id="@+id/button6"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:fontFamily="@font/ongulip"
+                    android:text="Button"
+                    android:textSize="30sp" />
+
+                <Button
+                    android:id="@+id/button7"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:fontFamily="@font/ongulip"
+                    android:text="Button"
+                    android:textSize="30sp" />
+
+                <Button
+                    android:id="@+id/button8"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:fontFamily="@font/ongulip"
+                    android:text="Button"
+                    android:textSize="30sp" />
+
+                <Button
+                    android:id="@+id/button9"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:fontFamily="@font/ongulip"
+                    android:text="Button"
+                    android:textSize="30sp" />
+            </LinearLayout>
+        </HorizontalScrollView>
+    </LinearLayout>
 
 </FrameLayout>

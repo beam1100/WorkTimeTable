@@ -34,11 +34,22 @@ class SqliteHelper(context:Context?, name:String, version: Int):SQLiteOpenHelper
 			)
 	""".trimIndent()
 
+	private val mkLogTable = """
+		CREATE TABLE IF NOT EXISTS LogTable
+			(
+				id INTEGER PRIMARY KEY AUTOINCREMENT,
+				date TEXT,
+				type BLOB,
+				member BLOB,
+				log BLOB
+			)
+	""".trimIndent()
+
 	// 테이블 생성
 	override fun onCreate(p0: SQLiteDatabase) {
 		try{
 			Log.d("test", "helper OnCreate 실행")
-			listOf(mkWorkTable, mkMemberTable).forEach {
+			listOf(mkWorkTable, mkMemberTable, mkLogTable).forEach {
 				p0.execSQL(it)
 			}
 		}catch(err:Exception){

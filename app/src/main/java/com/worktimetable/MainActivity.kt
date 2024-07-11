@@ -173,20 +173,21 @@ class MainActivity : FragmentActivity() {
         }
     }
 
+
     fun getMapByCondition(
-        mapList:ArrayList<HashMap<String, Any>,>,
-        condition: HashMap<String, Any>
-    ):HashMap<String, Any>?{
-        for(map in mapList){
-            for(key in condition.keys){
-                if(map[key] != condition[key]){
-                    continue
-                }else{
-                    return map
+        mapList:List<HashMap<String, Any>>,
+        conditionMap:HashMap<String, Any>
+    ): HashMap<String, Any>? {
+        var resultMap:HashMap<String, Any>? = null
+        outer@ for(map in mapList){
+            for((key,value) in conditionMap){
+                if(map[key]!=value){
+                    continue@outer
                 }
             }
+            resultMap = map
         }
-        return null
+        return resultMap
     }
 
     fun deepCopy(obj: Any): Any {
