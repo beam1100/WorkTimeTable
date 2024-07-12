@@ -146,7 +146,7 @@ class TableFragment : Fragment() {
                         this.setOnClickListener {
                             Toast.makeText(requireContext(), "클릭이벤트", Toast.LENGTH_SHORT).show()
                         }
-                        setBtnStyle(this, androidx.appcompat.R.color.material_grey_100, 200, 200)
+                        setBtnStyle(this, androidx.appcompat.R.color.material_grey_300, 200, 200)
 
 
                     }

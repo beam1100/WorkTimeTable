@@ -51,7 +51,7 @@ class MemberFragment : Fragment() {
 
             /* db 멤버 홀더에 담기 */
             mainActivity.helper.select("MemberTable",toSortColumn = "sortIndex").onEach {memberMap->
-                val holder = inflater.inflate(R.layout.holder_setting, null) as LinearLayout
+                val holder = inflater.inflate(R.layout.holder_sortable, null) as LinearLayout
                 mainActivity.mkHolderFromDB("MemberTable", holderLayout, holder, memberMap, "memberName",
                     {clickedMemberMap->
                         setMemberDialog(
