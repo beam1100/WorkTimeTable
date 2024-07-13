@@ -8,6 +8,7 @@ import android.view.Gravity
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
+import android.view.View.OnClickListener
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Button
@@ -20,7 +21,9 @@ import androidx.appcompat.widget.AppCompatButton
 import androidx.core.content.ContextCompat
 import androidx.core.view.children
 import com.worktimetable.databinding.FragmentTableBinding
-
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import kotlin.math.log
 
 
 class TableFragment : Fragment() {
@@ -34,8 +37,18 @@ class TableFragment : Fragment() {
     private var _vBinding: FragmentTableBinding? = null
     private val vBinding get() = _vBinding!!
     private lateinit var mainActivity:MainActivity
+
+    private var typeMapList = arrayListOf<HashMap<String,Any>>()
+    private var shiftMapList = arrayListOf<HashMap<String,Any>>()
     private var logMapList = arrayListOf<HashMap<String,Any>>()
-    private var selectedDate:String
+    private var subMemberList = arrayListOf("지원1", "지원2", "지원3")
+
+    private val mainMemberList by lazy{
+        mainActivity.helper.select("MemberTable", toSortColumn = "sortIndex").map {it["memberName"]}
+    }
+
+    private var calendar: Calendar = Calendar.getInstance()
+    private val formatter = SimpleDateFormat("yyyy-MM-dd")
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -55,6 +68,16 @@ class TableFragment : Fragment() {
         try{
             super.onViewCreated(view, savedInstanceState)
 
+            vBinding.dateTV.text = formatter.format(calendar.time)
+
+            updateTableForNewDate(0)
+
+            // 다음 날로 이동 버튼 클릭 리스터
+            vBinding.nextDateBtn.setOnClickListener{updateTableForNewDate(1)}
+
+            // 전 날로 이동 버튼 클릭 리스터
+            vBinding.beforeDateBtn.setOnClickListener{updateTableForNewDate(-1)}
+
             //스크롤 연동
             arrayOf(vBinding.subSV, vBinding.mainSV, vBinding.colSV, vBinding.rowSV).forEach {
                 it.setOnScrollChangeListener { view, x, y, _, _ ->
@@ -67,21 +90,76 @@ class TableFragment : Fragment() {
                 }
             }
 
+            //일지 작성
             vBinding.mkWorkSelectDialogBtn.setOnClickListener {
                 mkSelectWorkDialog{selectedWorkName->
                     val workMap = mainActivity.helper.select("WorkTable", where= hashMapOf("workName" to selectedWorkName)).first()
-                    val typeList = workMap["typeList"] as ArrayList<HashMap<String, Any>>
-                    val shiftList = workMap["shiftList"] as ArrayList<HashMap<String, Any>>
-
-                    logMapList = mkNewLogList(typeList, shiftList)
-                    mkTable(typeList, shiftList)
+                    typeMapList = workMap["typeList"] as ArrayList<HashMap<String, Any>>
+                    shiftMapList = workMap["shiftList"] as ArrayList<HashMap<String, Any>>
+                    logMapList = mkNewLogList(typeMapList, shiftMapList)
+                    mkTable(typeMapList, shiftMapList)
                 }
             }
 
-            vBinding.printLogBtn.setOnClickListener {
-                logMapList.forEach {
-                    Log.d("test", it.toString())
+            //일지 저장
+            vBinding.saveLogBtn.setOnClickListener {
+                val toSaveLogMapList = logMapList.map {map->
+                    map.filterKeys {key->
+                        key != "btn"
+                    }
                 }
+
+                val isRecord = mainActivity.helper.select("LogTable", where=hashMapOf("logDate" to formatter.format(calendar.time)))
+
+                if(isRecord.isEmpty()){
+                    mainActivity.helper.insert(
+                        "LogTable",
+                        hashMapOf(
+                            "logDate" to formatter.format(calendar.time),
+                            "logMapList" to toSaveLogMapList,
+                            "typeMapList" to typeMapList,
+                            "shiftMapList" to shiftMapList,
+                            "mainMemberList" to mainMemberList,
+                            "subMemberList" to subMemberList
+                        )
+                    )
+                }else{
+                    mainActivity.helper.updateByCondition(
+                        "LogTable",
+                        where = hashMapOf("logDate" to formatter.format(calendar.time)),
+                        updateMap = hashMapOf(
+                            "logMapList" to toSaveLogMapList,
+                            "typeMapList" to typeMapList,
+                            "shiftMapList" to shiftMapList,
+                            "mainMemberList" to mainMemberList,
+                            "subMemberList" to subMemberList
+                        )
+                    )
+                }
+            }
+
+            //일지 삭제
+            vBinding.deleteLogBtn.setOnClickListener {
+                mainActivity.helper.deleteByCondition("LogTable", hashMapOf("logDate" to formatter.format(calendar.time)))
+                clearTable()
+            }
+
+            //출력 테스트
+            vBinding.printLogBtn.setOnClickListener {
+                /*logMapList.forEach {
+                    Log.d("test", it.toString())
+                }*/
+                mainActivity.helper.select("LogTable").forEach {map->
+                    map.forEach { (key, value) ->
+                        Log.d("test", "▣key: $key, ▣value: $value")
+                    }
+                    Log.d("test", "=".repeat(150))
+                }
+            }
+
+            //드랍 LogTable
+            vBinding.dropLogTableBtn.setOnClickListener {
+                mainActivity.helper.dropTable("LogTable")
             }
 
         }catch(err:Exception){
@@ -89,6 +167,22 @@ class TableFragment : Fragment() {
             Log.d("test", err.stackTraceToString())
         }
     }
+
+    private fun updateTableForNewDate(num:Int){
+        calendar.add(Calendar.DAY_OF_MONTH, num)
+        vBinding.dateTV.text = formatter.format(calendar.time)
+        val recorded = mainActivity.helper.select("LogTable", where = hashMapOf("logDate" to formatter.format(calendar.time)))
+        if(recorded.isNotEmpty()){
+            typeMapList = recorded[0]["typeMapList"] as ArrayList<HashMap<String, Any>>
+            shiftMapList = recorded[0]["shiftMapList"] as ArrayList<HashMap<String, Any>>
+            logMapList = recorded[0]["logMapList"] as ArrayList<HashMap<String, Any>>
+            subMemberList = recorded[0]["subMemberList"] as ArrayList<String>
+            mkTable(typeMapList, shiftMapList)
+        }else{
+            clearTable()
+        }
+    }
+
 
     private fun mkNewLogList(typeList: ArrayList<HashMap<String, Any>>, shiftList: ArrayList<HashMap<String, Any>>):ArrayList<HashMap<String,Any>> {
         val resultMapList = arrayListOf<HashMap<String,Any>>()
@@ -143,9 +237,10 @@ class TableFragment : Fragment() {
                 val isConcurrent = typeMap["isConcurrent"] as Boolean
                 for(shiftMap in shiftList){
                     val shift = shiftMap["shift"] as String
-                    AppCompatButton(requireContext()).apply {
+                    AppCompatButton(requireContext()).apply btn@{
                         tableRow.addView(this)
-                        val logMap = mainActivity.getMapByCondition( logMapList, hashMapOf("type" to type, "shift" to shift))?.apply { set("btn", this) }
+                        val logMap = mainActivity.getMapByCondition( logMapList, hashMapOf("type" to type, "shift" to shift))?.apply { set("btn", this@btn) }
+                        text = (logMap?.get("member") as ArrayList<*>).joinToString("\n")
                         this.setOnClickListener {
                             val alreadySelected = logMap?.get("member") as List<String>
                             val otherTimeSelected = if(isConcurrent){
@@ -234,8 +329,8 @@ class TableFragment : Fragment() {
             val mainMemberHolderLayout = findViewById<LinearLayout>(R.id.mainMemberLayout)
             val subMemberHolderLayout = findViewById<LinearLayout>(R.id.subMemberLayout)
             val inflater = LayoutInflater.from(requireContext())
-
-            mainActivity.helper.select("MemberTable", toSortColumn = "sortIndex").map { it["memberName"] }.onEach {memberName->
+            /*mainActivity.helper.select("MemberTable", toSortColumn = "sortIndex").map { it["memberName"] }*/
+            mainMemberList.onEach {memberName->
                 memberName as String
                 val myCheckbox = inflater.inflate(R.layout.custom_checkbox, null) as CheckBox
                 myCheckbox.text = memberName
@@ -248,9 +343,8 @@ class TableFragment : Fragment() {
                 mainMemberHolderLayout.addView(myCheckbox)
             }
 
-            listOf("지원1", "지원2", "지원3").onEach {memberName->
+            subMemberList.onEach {memberName->
                 val myCheckbox = (inflater.inflate(R.layout.custom_checkbox, null) as CheckBox)
-                memberName as String
                 myCheckbox.text = memberName
                 if(memberName in otherTimeSelected){
                     myCheckbox.isEnabled = false
@@ -281,7 +375,5 @@ class TableFragment : Fragment() {
             }
         }
     }
-
-
 
 }

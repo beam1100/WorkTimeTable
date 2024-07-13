@@ -28,7 +28,7 @@
                 tools:ignore="SpeakableTextPresentCheck" />
 
             <ImageButton
-                android:id="@+id/imageButton2"
+                android:id="@+id/beforeDateBtn"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
@@ -39,10 +39,13 @@
                 android:id="@+id/dateTV"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_weight="3" />
+                android:layout_weight="3"
+                android:fontFamily="@font/ongulip"
+                android:gravity="center"
+                android:textSize="40sp" />
 
             <ImageButton
-                android:id="@+id/imageButton3"
+                android:id="@+id/nextDateBtn"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
@@ -152,27 +155,27 @@
                     android:textSize="30sp" />
 
                 <Button
-                    android:id="@+id/button3"
+                    android:id="@+id/saveLogBtn"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:fontFamily="@font/ongulip"
-                    android:text="Button"
+                    android:text="일지저장"
                     android:textSize="30sp" />
 
                 <Button
-                    android:id="@+id/button4"
+                    android:id="@+id/deleteLogBtn"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:fontFamily="@font/ongulip"
-                    android:text="Button"
+                    android:text="일지삭제"
                     android:textSize="30sp" />
 
                 <Button
-                    android:id="@+id/button5"
+                    android:id="@+id/dropLogTableBtn"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:fontFamily="@font/ongulip"
-                    android:text="Button"
+                    android:text="일지드랍(임시)"
                     android:textSize="30sp" />
 
                 <Button

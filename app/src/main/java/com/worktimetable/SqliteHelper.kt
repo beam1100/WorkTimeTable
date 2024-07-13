@@ -38,10 +38,12 @@ class SqliteHelper(context:Context?, name:String, version: Int):SQLiteOpenHelper
 		CREATE TABLE IF NOT EXISTS LogTable
 			(
 				id INTEGER PRIMARY KEY AUTOINCREMENT,
-				date TEXT,
-				type BLOB,
-				member BLOB,
-				log BLOB
+				logDate TEXT,
+				logMapList BLOB,
+				typeMapList BLOB,
+				shiftMapList BLOB,
+				mainMemberList BLOB,
+				subMemberList BLOB
 			)
 	""".trimIndent()
 
