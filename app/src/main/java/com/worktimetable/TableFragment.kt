@@ -44,9 +44,6 @@ class TableFragment : Fragment() {
     private lateinit var mainMemberList:ArrayList<String>
     private var subMemberList = arrayListOf("지원1", "지원2", "지원3")
 
-    /*private val mainMemberList by lazy{
-        mainActivity.helper.select("MemberTable", toSortColumn = "sortIndex").map {it["memberName"]}
-    }*/
 
     private var calendar: Calendar = Calendar.getInstance()
     private val formatter = SimpleDateFormat("yyyy-MM-dd")
