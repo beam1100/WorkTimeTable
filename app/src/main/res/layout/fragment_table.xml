@@ -179,11 +179,11 @@
                     android:textSize="30sp" />
 
                 <Button
-                    android:id="@+id/button6"
+                    android:id="@+id/mkSwitchMemberDialogBtn"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:fontFamily="@font/ongulip"
-                    android:text="Button"
+                    android:text="사고자 설정"
                     android:textSize="30sp" />
 
                 <Button

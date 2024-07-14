@@ -1,4 +1,5 @@
 package com.worktimetable
+import android.annotation.SuppressLint
 import android.app.Dialog
 import android.content.Context
 //import android.os.Build.VERSION_CODES.R
@@ -15,6 +16,7 @@ import android.widget.Button
 import android.widget.CheckBox
 import android.widget.LinearLayout
 import android.widget.Spinner
+import android.widget.Switch
 import android.widget.TableLayout
 import android.widget.TableRow
 import androidx.appcompat.widget.AppCompatButton
@@ -141,6 +143,11 @@ class TableFragment : Fragment() {
                 mainActivity.helper.deleteByCondition("LogTable", hashMapOf("logDate" to formatter.format(calendar.time)))
                 clearTable()
             }
+            
+            //사고자 설정
+            vBinding.mkSwitchMemberDialogBtn.setOnClickListener { 
+                mkSwitchMemberDialog{}
+            }
 
             //출력 테스트
             vBinding.printLogBtn.setOnClickListener {
@@ -169,6 +176,42 @@ class TableFragment : Fragment() {
         }catch(err:Exception){
             Log.d("test", err.toString())
             Log.d("test", err.stackTraceToString())
+        }
+    }
+
+
+    private fun mkSwitchMemberDialog(workingMemberList: (ArrayList<String>) -> Unit) {
+        Dialog(requireContext()).apply {
+            setContentView(R.layout.dialog_switch_member)
+            mainActivity.setDialogSize(this, vBinding.tableFragmentLayout, 0.9f, null)
+            show()
+
+            val switchMemberLayout = findViewById<LinearLayout>(R.id.switchMemberLayout)
+
+            val inflater = LayoutInflater.from(requireContext())
+            mainActivity.helper.select("MemberTable").map { it["memberName"] }.onEach {name->
+                val mySwitch = inflater.inflate(R.layout.custom_switch, null) as Switch
+                mySwitch.text = name as String
+                mySwitch.isChecked = name in mainMemberList
+                switchMemberLayout.addView(mySwitch)
+            }
+
+            findViewById<Button>(R.id.switchMemberBtn).setOnClickListener {
+//                workingMemberList()
+            }
+
+            /*            subMemberList.onEach {memberName->
+                val myCheckbox = (inflater.inflate(R.layout.custom_checkbox, null) as CheckBox)
+                myCheckbox.text = memberName
+                if(memberName in sameTimeSelected){
+                    myCheckbox.isEnabled = false
+                }
+                if(memberName in alreadySelected){
+                    myCheckbox.isChecked = true
+                }
+                subMemberHolderLayout.addView(myCheckbox)
+            }*/
+
         }
     }
 
