@@ -183,15 +183,15 @@
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:fontFamily="@font/ongulip"
-                    android:text="사고자 설정"
+                    android:text="사고자"
                     android:textSize="30sp" />
 
                 <Button
-                    android:id="@+id/button7"
+                    android:id="@+id/mkSubMemberDialogBtn"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:fontFamily="@font/ongulip"
-                    android:text="Button"
+                    android:text="지원근무"
                     android:textSize="30sp" />
 
                 <Button

@@ -1,5 +1,4 @@
 package com.worktimetable
-import android.annotation.SuppressLint
 import android.app.Dialog
 import android.content.Context
 //import android.os.Build.VERSION_CODES.R
@@ -9,23 +8,21 @@ import android.view.Gravity
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
-import android.view.View.OnClickListener
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.LinearLayout
 import android.widget.Spinner
-import android.widget.Switch
 import android.widget.TableLayout
 import android.widget.TableRow
 import androidx.appcompat.widget.AppCompatButton
+import androidx.appcompat.widget.SwitchCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.children
 import com.worktimetable.databinding.FragmentTableBinding
 import java.text.SimpleDateFormat
 import java.util.Calendar
-import kotlin.math.log
 
 
 class TableFragment : Fragment() {
@@ -143,10 +140,29 @@ class TableFragment : Fragment() {
                 mainActivity.helper.deleteByCondition("LogTable", hashMapOf("logDate" to formatter.format(calendar.time)))
                 clearTable()
             }
-            
+
             //사고자 설정
-            vBinding.mkSwitchMemberDialogBtn.setOnClickListener { 
-                mkSwitchMemberDialog{}
+            vBinding.mkSwitchMemberDialogBtn.setOnClickListener {
+                mkSwitchMemberDialog{
+                    mainMemberList = it
+                    logMapList.forEach { map->
+                        val memberList = map["member"] as ArrayList<String>
+                        val btn = map["btn"] as AppCompatButton
+                        memberList.forEach {name ->
+                            if(name !in it){
+                                memberList.remove(name)
+                            }
+                        }
+                        btn.text = memberList.joinToString("\n")
+                    }
+                }
+            }
+
+            //지원근무자 설정
+            vBinding.mkSubMemberDialogBtn.setOnClickListener {
+                mkSubMemberDialog(){
+
+                }
             }
 
             //출력 테스트
@@ -179,41 +195,13 @@ class TableFragment : Fragment() {
         }
     }
 
-
-    private fun mkSwitchMemberDialog(workingMemberList: (ArrayList<String>) -> Unit) {
+    private fun mkSubMemberDialog(setSubMemberList: () -> Unit) {
         Dialog(requireContext()).apply {
-            setContentView(R.layout.dialog_switch_member)
-            mainActivity.setDialogSize(this, vBinding.tableFragmentLayout, 0.9f, null)
-            show()
-
-            val switchMemberLayout = findViewById<LinearLayout>(R.id.switchMemberLayout)
-
-            val inflater = LayoutInflater.from(requireContext())
-            mainActivity.helper.select("MemberTable").map { it["memberName"] }.onEach {name->
-                val mySwitch = inflater.inflate(R.layout.custom_switch, null) as Switch
-                mySwitch.text = name as String
-                mySwitch.isChecked = name in mainMemberList
-                switchMemberLayout.addView(mySwitch)
-            }
-
-            findViewById<Button>(R.id.switchMemberBtn).setOnClickListener {
-//                workingMemberList()
-            }
-
-            /*            subMemberList.onEach {memberName->
-                val myCheckbox = (inflater.inflate(R.layout.custom_checkbox, null) as CheckBox)
-                myCheckbox.text = memberName
-                if(memberName in sameTimeSelected){
-                    myCheckbox.isEnabled = false
-                }
-                if(memberName in alreadySelected){
-                    myCheckbox.isChecked = true
-                }
-                subMemberHolderLayout.addView(myCheckbox)
-            }*/
-
+            setContentView()
         }
+
     }
+
 
     private fun updateTableForNewDate(num:Int){
         calendar.add(Calendar.DAY_OF_MONTH, num)
@@ -228,7 +216,8 @@ class TableFragment : Fragment() {
             mkTable()
         }else{
             logMapList.clear()
-            mainMemberList = ArrayList(mainActivity.helper.select("MemberTable").map{it["memberName"] as String})
+            mainMemberList = ArrayList(mainActivity.helper.select("MemberTable", toSortColumn = "sortIndex")
+                .map{it["memberName"] as String})
             subMemberList.clear()
             clearTable()
         }
@@ -370,7 +359,7 @@ class TableFragment : Fragment() {
     private fun mkCheckMemberDialog(
         alreadySelected:List<String>,
         sameTimeSelected:List<String>,
-        callbackChecked: (ArrayList<String>) -> Unit
+        callbackChecked: (List<String>) -> Unit
     ) {
         Dialog(requireContext()).apply {
             setContentView(R.layout.dialog_check_member)
@@ -382,7 +371,6 @@ class TableFragment : Fragment() {
             val inflater = LayoutInflater.from(requireContext())
             /*mainActivity.helper.select("MemberTable", toSortColumn = "sortIndex").map { it["memberName"] }*/
             mainMemberList.onEach {memberName->
-                memberName as String
                 val myCheckbox = inflater.inflate(R.layout.custom_checkbox, null) as CheckBox
                 myCheckbox.text = memberName
                 if(memberName in sameTimeSelected){
@@ -406,25 +394,46 @@ class TableFragment : Fragment() {
                 subMemberHolderLayout.addView(myCheckbox)
             }
             findViewById<Button>(R.id.checkMemberBtn).setOnClickListener {
-                val checkedMember = arrayListOf<String>()
-                mainMemberHolderLayout.children.forEach {view->
-                    if(view is CheckBox){
-                        if(view.isChecked){
-                            checkedMember.add(view.text.toString())
-                        }
-                    }
-                }
-                subMemberHolderLayout.children.forEach {view->
-                    if(view is CheckBox){
-                        if(view.isChecked){
-                            checkedMember.add(view.text.toString())
-                        }
-                    }
-                }
-                callbackChecked(checkedMember)
+                val checkedMainList = mainMemberHolderLayout.children
+                    .filterIsInstance<CheckBox>()
+                    .filter { it.isChecked }
+                    .mapTo(ArrayList()){it.text.toString()}
+                val checkedSubList = subMemberHolderLayout.children
+                    .filterIsInstance<CheckBox>()
+                    .filter{it.isChecked}
+                    .mapTo(ArrayList()){it.text.toString()}
+                callbackChecked(checkedMainList+checkedSubList)
                 dismiss()
             }
         }
     }
 
-}
+    private fun mkSwitchMemberDialog(workingMemberList: (ArrayList<String>) -> Unit) {
+        Dialog(requireContext()).apply {
+            setContentView(R.layout.dialog_switch_main)
+            mainActivity.setDialogSize(this, vBinding.tableFragmentLayout, 0.9f, null)
+            show()
+
+            val switchMemberLayout = findViewById<LinearLayout>(R.id.switchMemberLayout)
+
+            val inflater = LayoutInflater.from(requireContext())
+            mainActivity.helper.select("MemberTable").map { it["memberName"] }.onEach {name->
+                val mySwitch = inflater.inflate(R.layout.custom_switch, null) as SwitchCompat
+                mySwitch.text = name as String
+                mySwitch.isChecked = name in mainMemberList
+                switchMemberLayout.addView(mySwitch)
+            }
+
+            findViewById<Button>(R.id.switchMemberBtn).setOnClickListener {
+                val checkedMember = switchMemberLayout.children
+                    .filterIsInstance<SwitchCompat>()
+                    .filter { it.isChecked }
+                    .mapTo(ArrayList()) { it.text.toString() }
+                workingMemberList(checkedMember)
+                dismiss()
+            }
+        }
+    }
+
+
+} // class TableFragment : Fragment() End
