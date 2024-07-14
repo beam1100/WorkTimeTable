@@ -41,11 +41,12 @@ class TableFragment : Fragment() {
     private var typeMapList = arrayListOf<HashMap<String,Any>>()
     private var shiftMapList = arrayListOf<HashMap<String,Any>>()
     private var logMapList = arrayListOf<HashMap<String,Any>>()
+    private lateinit var mainMemberList:ArrayList<String>
     private var subMemberList = arrayListOf("지원1", "지원2", "지원3")
 
-    private val mainMemberList by lazy{
+    /*private val mainMemberList by lazy{
         mainActivity.helper.select("MemberTable", toSortColumn = "sortIndex").map {it["memberName"]}
-    }
+    }*/
 
     private var calendar: Calendar = Calendar.getInstance()
     private val formatter = SimpleDateFormat("yyyy-MM-dd")
@@ -96,8 +97,8 @@ class TableFragment : Fragment() {
                     val workMap = mainActivity.helper.select("WorkTable", where= hashMapOf("workName" to selectedWorkName)).first()
                     typeMapList = workMap["typeList"] as ArrayList<HashMap<String, Any>>
                     shiftMapList = workMap["shiftList"] as ArrayList<HashMap<String, Any>>
-                    logMapList = mkNewLogList(typeMapList, shiftMapList)
-                    mkTable(typeMapList, shiftMapList)
+                    logMapList = mkNewLogMapList(typeMapList, shiftMapList)
+                    mkTable()
                 }
             }
 
@@ -149,12 +150,18 @@ class TableFragment : Fragment() {
                 /*logMapList.forEach {
                     Log.d("test", it.toString())
                 }*/
-                mainActivity.helper.select("LogTable").forEach {map->
+                /*mainActivity.helper.select("LogTable").forEach {map->
                     map.forEach { (key, value) ->
                         Log.d("test", "▣key: $key, ▣value: $value")
                     }
                     Log.d("test", "=".repeat(150))
-                }
+                }*/
+                Log.d("test", """
+                    logMapList size : ${logMapList.size}
+                    mainMemberList : $mainMemberList
+                    subMemberList : $subMemberList
+                    
+                """.trimIndent())
             }
 
             //드랍 LogTable
@@ -176,15 +183,19 @@ class TableFragment : Fragment() {
             typeMapList = recorded[0]["typeMapList"] as ArrayList<HashMap<String, Any>>
             shiftMapList = recorded[0]["shiftMapList"] as ArrayList<HashMap<String, Any>>
             logMapList = recorded[0]["logMapList"] as ArrayList<HashMap<String, Any>>
+            mainMemberList = recorded[0]["mainMemberList"] as ArrayList<String>
             subMemberList = recorded[0]["subMemberList"] as ArrayList<String>
-            mkTable(typeMapList, shiftMapList)
+            mkTable()
         }else{
+            logMapList.clear()
+            mainMemberList = ArrayList(mainActivity.helper.select("MemberTable").map{it["memberName"] as String})
+            subMemberList.clear()
             clearTable()
         }
     }
 
 
-    private fun mkNewLogList(typeList: ArrayList<HashMap<String, Any>>, shiftList: ArrayList<HashMap<String, Any>>):ArrayList<HashMap<String,Any>> {
+    private fun mkNewLogMapList(typeList: ArrayList<HashMap<String, Any>>, shiftList: ArrayList<HashMap<String, Any>>):ArrayList<HashMap<String,Any>> {
         val resultMapList = arrayListOf<HashMap<String,Any>>()
         typeList.forEach {typeMap->
             shiftList.forEach { shiftMap->
@@ -225,17 +236,17 @@ class TableFragment : Fragment() {
         }
     }
 
-    private fun mkTable(typeList:ArrayList<HashMap<String,Any>>, shiftList:ArrayList<HashMap<String,Any>>){
+    private fun mkTable(){
         try{
             clearTable()
 
             // 메인 테이블
             val tableLayout = TableLayout(requireContext())
-            for(typeMap in typeList){
+            for(typeMap in typeMapList){
                 val tableRow = TableRow(requireContext())
                 val type = typeMap["type"] as String
                 val isConcurrent = typeMap["isConcurrent"] as Boolean
-                for(shiftMap in shiftList){
+                for(shiftMap in shiftMapList){
                     val shift = shiftMap["shift"] as String
                     AppCompatButton(requireContext()).apply btn@{
                         tableRow.addView(this)
@@ -262,7 +273,7 @@ class TableFragment : Fragment() {
 
             // 행제목(근무 종류)
             val rowTL = TableLayout(requireContext())
-            for(typeMap in typeList){
+            for(typeMap in typeMapList){
                 val row = TableRow(requireContext())
                 AppCompatButton(requireContext()).apply{
                     this.text = typeMap["type"] as String
@@ -278,7 +289,7 @@ class TableFragment : Fragment() {
             //열제목(근무 시간)
             val colTL = TableLayout(requireContext())
             val colRow = TableRow(requireContext())
-            for(shiftMap in shiftList){
+            for(shiftMap in shiftMapList){
                 AppCompatButton(requireContext()).apply {
                     this.text = (shiftMap["shift"] as String).replace(" ~ ", "\n~\n")
                     this.textSize = 20f
@@ -318,7 +329,7 @@ class TableFragment : Fragment() {
 
     private fun mkCheckMemberDialog(
         alreadySelected:List<String>,
-        otherTimeSelected:List<String>,
+        sameTimeSelected:List<String>,
         callbackChecked: (ArrayList<String>) -> Unit
     ) {
         Dialog(requireContext()).apply {
@@ -334,7 +345,7 @@ class TableFragment : Fragment() {
                 memberName as String
                 val myCheckbox = inflater.inflate(R.layout.custom_checkbox, null) as CheckBox
                 myCheckbox.text = memberName
-                if(memberName in otherTimeSelected){
+                if(memberName in sameTimeSelected){
                     myCheckbox.isEnabled = false
                 }
                 if(memberName in alreadySelected){
@@ -346,7 +357,7 @@ class TableFragment : Fragment() {
             subMemberList.onEach {memberName->
                 val myCheckbox = (inflater.inflate(R.layout.custom_checkbox, null) as CheckBox)
                 myCheckbox.text = memberName
-                if(memberName in otherTimeSelected){
+                if(memberName in sameTimeSelected){
                     myCheckbox.isEnabled = false
                 }
                 if(memberName in alreadySelected){
