@@ -1,4 +1,5 @@
 package com.worktimetable
+import android.annotation.SuppressLint
 import android.app.Dialog
 import android.content.Context
 //import android.os.Build.VERSION_CODES.R
@@ -12,15 +13,19 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.CheckBox
+import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.Spinner
 import android.widget.TableLayout
 import android.widget.TableRow
+import android.widget.TextView
 import androidx.appcompat.widget.AppCompatButton
 import androidx.appcompat.widget.SwitchCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.children
 import com.worktimetable.databinding.FragmentTableBinding
+import org.w3c.dom.Text
 import java.text.SimpleDateFormat
 import java.util.Calendar
 
@@ -160,8 +165,8 @@ class TableFragment : Fragment() {
 
             //지원근무자 설정
             vBinding.mkSubMemberDialogBtn.setOnClickListener {
-                mkSubMemberDialog(){
-
+                mkSubMemberDialog{
+                    subMemberList = it
                 }
             }
 
@@ -194,14 +199,6 @@ class TableFragment : Fragment() {
             Log.d("test", err.stackTraceToString())
         }
     }
-
-    private fun mkSubMemberDialog(setSubMemberList: () -> Unit) {
-        Dialog(requireContext()).apply {
-            setContentView()
-        }
-
-    }
-
 
     private fun updateTableForNewDate(num:Int){
         calendar.add(Calendar.DAY_OF_MONTH, num)
@@ -430,6 +427,46 @@ class TableFragment : Fragment() {
                     .filter { it.isChecked }
                     .mapTo(ArrayList()) { it.text.toString() }
                 workingMemberList(checkedMember)
+                dismiss()
+            }
+        }
+    }
+
+    private fun mkSubMemberDialog(callbackSubMember: (ArrayList<String>) -> Unit) {
+        Dialog(requireContext()).apply {
+            setContentView(R.layout.dialog_set_sub)
+            mainActivity.setDialogSize(this, vBinding.tableFragmentLayout, 1f, null)
+            show()
+            val subMemberLayout = findViewById<LinearLayout>(R.id.sumMemberLayout)
+            val inflater = LayoutInflater.from(requireContext())
+
+            subMemberList.forEach {name->
+                val holder = inflater.inflate(R.layout.holder_added_sub, null) as LinearLayout
+                holder.findViewById<TextView>(R.id.subNameTV).text = name
+                subMemberLayout.addView(holder)
+                holder.findViewById<ImageButton>(R.id.removeSubBtn).setOnClickListener {
+                    subMemberLayout.removeView(holder)
+                }
+            }
+
+            findViewById<ImageButton>(R.id.addSubMemberBtn).setOnClickListener {
+                val subNameET = findViewById<EditText>(R.id.toAddSubNameTV)
+                val holder = inflater.inflate(R.layout.holder_added_sub, null) as LinearLayout
+                holder.findViewById<TextView>(R.id.subNameTV).text = subNameET.text.toString()
+                subMemberLayout.addView(holder)
+                holder.findViewById<ImageButton>(R.id.removeSubBtn).setOnClickListener {
+                    subMemberLayout.removeView(holder)
+                }
+                subNameET.text.clear()
+            }
+
+            findViewById<Button>(R.id.setSubMemberBtn).setOnClickListener {
+                val addedSubList = subMemberLayout.children
+                    .filterIsInstance<LinearLayout>()
+                    .mapTo(ArrayList()){
+                        (it.findViewById(R.id.subNameTV) as TextView).text.toString()
+                    }
+                callbackSubMember(addedSubList)
                 dismiss()
             }
         }
