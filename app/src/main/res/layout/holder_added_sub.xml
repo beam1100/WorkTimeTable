@@ -11,7 +11,7 @@
         android:layout_weight="4"
         android:fontFamily="@font/ongulip"
         android:gravity="center"
-        android:textSize="30sp" />
+        android:textSize="50sp" />
 
     <ImageButton
         android:id="@+id/removeSubBtn"

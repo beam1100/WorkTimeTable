@@ -1,61 +1,61 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
 
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="6"
+        tools:ignore="SpeakableTextPresentCheck">
+
+        <LinearLayout
+            android:id="@+id/sumMemberLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+        </LinearLayout>
+    </ScrollView>
+
     <LinearLayout
-        android:id="@+id/sumMemberLayout"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        app:layout_constraintBottom_toTopOf="@+id/toAddSubNameTV"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="2"
+        android:orientation="horizontal">
 
+        <EditText
+            android:id="@+id/toAddSubNameTV"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="4"
+            android:ems="10"
+            android:fontFamily="@font/ongulip"
+            android:inputType="text"
+            android:textSize="50sp"
+            tools:ignore="SpeakableTextPresentCheck" />
+
+        <ImageButton
+            android:id="@+id/addSubMemberBtn"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@android:color/transparent"
+            android:src="@drawable/add"
+            tools:ignore="SpeakableTextPresentCheck" />
     </LinearLayout>
-
-    <EditText
-        android:id="@+id/toAddSubNameTV"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_weight="4"
-        android:ems="10"
-        android:fontFamily="@font/ongulip"
-        android:inputType="text"
-        android:textSize="30sp"
-        app:layout_constraintBottom_toTopOf="@+id/setSubMemberBtn"
-        app:layout_constraintEnd_toStartOf="@+id/addSubMemberBtn"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/sumMemberLayout" />
-
-    <ImageButton
-        android:id="@+id/addSubMemberBtn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:src="@drawable/add"
-        app:layout_constraintBottom_toBottomOf="@+id/toAddSubNameTV"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/toAddSubNameTV"
-        app:layout_constraintTop_toTopOf="@+id/toAddSubNameTV"
-        app:layout_constraintVertical_bias="0.0"
-        android:background="@android:color/transparent"
-        />
 
     <Button
         android:id="@+id/setSubMemberBtn"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="2"
         android:fontFamily="@font/ongulip"
         android:text="설정"
-        android:textSize="30sp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/toAddSubNameTV" />
+        android:textSize="50sp" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+</LinearLayout>

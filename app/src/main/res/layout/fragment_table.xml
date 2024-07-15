@@ -129,6 +129,7 @@
         </androidx.constraintlayout.widget.ConstraintLayout>
 
         <HorizontalScrollView
+            android:id="@+id/unselectedBtnLayout"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1">
@@ -195,22 +196,74 @@
                     android:textSize="30sp" />
 
                 <Button
-                    android:id="@+id/button8"
+                    android:id="@+id/mkExchangeDialogBtn"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:fontFamily="@font/ongulip"
-                    android:text="Button"
+                    android:text="교체"
                     android:textSize="30sp" />
 
                 <Button
-                    android:id="@+id/button9"
+                    android:id="@+id/undoBtn"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:fontFamily="@font/ongulip"
-                    android:text="Button"
+                    android:text="실행취소"
                     android:textSize="30sp" />
             </LinearLayout>
         </HorizontalScrollView>
+
+        <HorizontalScrollView
+            android:id="@+id/selectedBtnLayout"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/cancelSelectBtn"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:fontFamily="@font/ongulip"
+                    android:text="선택취소"
+                    android:textSize="30sp" />
+
+                <Button
+                    android:id="@+id/removeCellBtn"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:fontFamily="@font/ongulip"
+                    android:text="칸지우기"
+                    android:textSize="30sp" />
+
+                <Button
+                    android:id="@+id/copyToNextBtn"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:fontFamily="@font/ongulip"
+                    android:text="다음 칸 채우기"
+                    android:textSize="30sp" />
+
+                <Button
+                    android:id="@+id/mkExchangeAtSelectedDialogBtn"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:fontFamily="@font/ongulip"
+                    android:text="교체"
+                    android:textSize="30sp" />
+            </LinearLayout>
+        </HorizontalScrollView>
+
     </LinearLayout>
 
 </FrameLayout>

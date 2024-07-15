@@ -4,6 +4,7 @@ import android.content.Context
 //import android.os.Build.VERSION_CODES.R
 import android.os.Bundle
 import android.util.Log
+import android.view.DragEvent
 import android.view.Gravity
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -19,11 +20,13 @@ import android.widget.Spinner
 import android.widget.TableLayout
 import android.widget.TableRow
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.widget.AppCompatButton
 import androidx.appcompat.widget.SwitchCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.children
 import com.worktimetable.databinding.FragmentTableBinding
+import kotlinx.coroutines.flow.callbackFlow
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import kotlin.math.log
@@ -47,9 +50,13 @@ class TableFragment : Fragment() {
     private lateinit var mainMemberList:ArrayList<String>
     private var subMemberList = arrayListOf("지원1", "지원2", "지원3")
 
-
     private var calendar: Calendar = Calendar.getInstance()
     private val formatter = SimpleDateFormat("yyyy-MM-dd")
+
+    private var selectMode:Boolean = false
+    private val selectedBtnList = arrayListOf<AppCompatButton>()
+
+    private val stack: ArrayDeque<ArrayList<HashMap<String, Any>>> = ArrayDeque()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -74,10 +81,18 @@ class TableFragment : Fragment() {
             updateTableForNewDate(0)
 
             // 다음 날짜로 이동 버튼
-            vBinding.nextDateBtn.setOnClickListener{updateTableForNewDate(1)}
+            vBinding.nextDateBtn.setOnClickListener{
+                updateTableForNewDate(1)
+                switchSelectMode(false)
+                stack.clear()
+            }
 
             // 이전 날짜로 이동 버튼
-            vBinding.beforeDateBtn.setOnClickListener{updateTableForNewDate(-1)}
+            vBinding.beforeDateBtn.setOnClickListener{
+                updateTableForNewDate(-1)
+                switchSelectMode(false)
+                stack.clear()
+            }
 
             // 이전 근무로 이동 버튼
             vBinding.beforeLogBtn.setOnClickListener {
@@ -91,6 +106,8 @@ class TableFragment : Fragment() {
                             mainActivity.daysBetween( formatter.format(calendar.time), logDateList[betweenList.indexOf(it)] )
                         )
                     }
+                switchSelectMode(false)
+                stack.clear()
             }
 
             // 다음 근무로 이동 버튼
@@ -105,6 +122,8 @@ class TableFragment : Fragment() {
                             mainActivity.daysBetween( formatter.format(calendar.time), logDateList[betweenList.indexOf(it)] )
                         )
                     }
+                switchSelectMode(false)
+                stack.clear()
             }
 
             //스크롤 연동
@@ -175,16 +194,12 @@ class TableFragment : Fragment() {
 
             //사고자 설정
             vBinding.mkSwitchMemberDialogBtn.setOnClickListener {
-                mkSwitchMemberDialog{
-                    mainMemberList = it
+                mkSwitchMemberDialog{ workingMemberList->
+                    mainMemberList = workingMemberList
                     logMapList.forEach { map->
                         val memberList = map["member"] as ArrayList<String>
                         val btn = map["btn"] as AppCompatButton
-                        memberList.forEach {name ->
-                            if(name !in it){
-                                memberList.remove(name)
-                            }
-                        }
+                        memberList.removeIf { name -> name !in workingMemberList }
                         btn.text = memberList.joinToString("\n")
                     }
                 }
@@ -197,33 +212,63 @@ class TableFragment : Fragment() {
                 }
             }
 
-            //드랍 LogTable
+            //선택취소 버튼
+            vBinding.cancelSelectBtn.setOnClickListener {
+                switchSelectMode(false)
+            }
+
+            // 선택 칸 삭제 버튼
+            vBinding.removeCellBtn.setOnClickListener {
+                stack.addLast(mainActivity.deepCopy(logMapList) as ArrayList<HashMap<String,Any>>)
+                selectedBtnList.forEach {btn->
+                    mainActivity.getMapByCondition(logMapList, hashMapOf("btn" to btn))?.let{ map->
+                        map["member"] = arrayListOf<String>()
+                        btn.text = ""
+                    }
+                }
+                switchSelectMode(false)
+            }
+
+            // 우측으로 셀 복사 버튼
+            vBinding.copyToNextBtn.setOnClickListener {
+                copyToRight()
+            }
+
+            // 되돌리기 버튼
+            vBinding.undoBtn.setOnClickListener {
+                if(stack.isNotEmpty()){
+                    logMapList = stack.removeLast()
+                    mkTable()
+                }else{
+                    Toast.makeText(requireContext(), "이전 작업이 없습니다.", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            //교체 버튼
+            vBinding.mkExchangeDialogBtn.setOnClickListener {
+                mkExchangeDialog{ name1, name2 ->
+                    exchangeWorker(name1, name2)
+                }
+            }
+            // 교체버튼(선택모드)
+            vBinding.mkExchangeAtSelectedDialogBtn.setOnClickListener {
+                mkExchangeDialog{name1, name2->
+                    exchangeWorker(name1, name2)
+                }
+            }
+
+            //테이블 드랍 버튼(임시)
             vBinding.dropLogTableBtn.setOnClickListener {
                 mainActivity.helper.dropTable("LogTable")
             }
 
-            //출력 테스트
+            //출력 테스트(임시)
             vBinding.printLogBtn.setOnClickListener {
-
-                /*logMapList.forEach {
+                logMapList.forEach {
                     Log.d("test", it.toString())
-                }*/
-
-                /*mainActivity.helper.select("LogTable").forEach {map->
-                    map.forEach { (key, value) ->
-                        Log.d("test", "▣key: $key, ▣value: $value")
-                    }
-                    Log.d("test", "=".repeat(150))
-                }*/
-
-                /*Log.d("test", """
-                    logMapList size : ${logMapList.size}
-                    mainMemberList : $mainMemberList
-                    subMemberList : $subMemberList
-
-                """.trimIndent())*/
-
+                }
             }
+
 
 
         }catch(err:Exception){
@@ -232,6 +277,62 @@ class TableFragment : Fragment() {
         }
     }
 
+    private fun mkExchangeDialog(callback:(name1:String, name2:String)->Unit) {
+        Dialog(requireContext()).apply {
+            setContentView(R.layout.dialog_exchange)
+            mainActivity.setDialogSize(this, vBinding.tableFragmentLayout, 0.9f, null)
+            show()
+            val exchangeSpinner1 = findViewById<Spinner>(R.id.exchangeSpinner1).apply {
+                adapter = ArrayAdapter(
+                    requireContext(),
+                    R.layout.custom_spinner,
+                    mainMemberList + subMemberList
+                )
+            }
+            val exchangeSpinner2 = findViewById<Spinner>(R.id.exchangeSpinner2).apply {
+                adapter = ArrayAdapter(
+                    requireContext(),
+                    R.layout.custom_spinner,
+                    mainMemberList + subMemberList
+                )
+            }
+            findViewById<Button>(R.id.exchangeMemberBtn).setOnClickListener {
+                callback(exchangeSpinner1.selectedItem.toString(), exchangeSpinner2.selectedItem.toString())
+                dismiss()
+            }
+        }
+    }
+
+    private fun exchangeWorker(name1: String, name2: String) {
+        stack.add(mainActivity.deepCopy(logMapList) as ArrayList<HashMap<String,Any>>)
+        if(selectMode){
+            for(btn in selectedBtnList){
+                val selectedMap = mainActivity.getMapByCondition(logMapList, hashMapOf("btn" to btn))
+                val workerList = selectedMap?.get("member") as ArrayList<String>
+                for(index in 0 until workerList.size){
+                    if(workerList[index]==name1){
+                        workerList[index] = name2
+                    }else if(workerList[index]==name2){
+                        workerList[index]=name1
+                    }
+                }
+                btn.text = workerList.joinToString("\n")
+            }
+        }else{
+            for(map in logMapList){
+                val workerList = map["member"] as ArrayList<String>
+                for(index in 0 until workerList.size){
+                    if(workerList[index]==name1){
+                        workerList[index] = name2
+                    }else if(workerList[index]==name2){
+                        workerList[index]=name1
+                    }
+                }
+                val btn = map["btn"] as AppCompatButton
+                btn.text = workerList.joinToString("\n")
+            }
+        }
+    }
 
 
     private fun updateTableForNewDate(num:Int){
@@ -290,11 +391,7 @@ class TableFragment : Fragment() {
         }
     }
 
-    private fun clearTable(){
-        listOf(vBinding.subSV, vBinding.rowSV, vBinding.colSV).forEach {
-            it.removeAllViews()
-        }
-    }
+
 
     private fun mkTable(){
         try{
@@ -306,12 +403,14 @@ class TableFragment : Fragment() {
                 val tableRow = TableRow(requireContext())
                 val type = typeMap["type"] as String
                 val isConcurrent = typeMap["isConcurrent"] as Boolean
+
                 for(shiftMap in shiftMapList){
                     val shift = shiftMap["shift"] as String
                     AppCompatButton(requireContext()).apply btn@{
                         tableRow.addView(this)
                         val logMap = mainActivity.getMapByCondition( logMapList, hashMapOf("type" to type, "shift" to shift))?.apply { set("btn", this@btn) }
                         text = (logMap?.get("member") as ArrayList<*>).joinToString("\n")
+
                         this.setOnClickListener {
                             val alreadySelected = logMap?.get("member") as List<String>
                             val otherTimeSelected = if(isConcurrent){
@@ -320,11 +419,25 @@ class TableFragment : Fragment() {
                                 getSameTimeMember(shift).filterNot { it in alreadySelected}
                             }
                             mkCheckMemberDialog( alreadySelected, otherTimeSelected ){ checkedMember->
-                                text = checkedMember.joinToString("\n")
-                                logMap["member"] = checkedMember
+                                stack.add(mainActivity.deepCopy(logMapList) as ArrayList<HashMap<String,Any>>)
+                                if(selectMode){
+                                    selectedBtnList.forEach { btn->
+                                        btn.text = checkedMember.joinToString("\n")
+                                        mainActivity.getMapByCondition(logMapList, hashMapOf("btn" to btn))?.let{map->
+                                            map["member"] = checkedMember
+                                        }
+                                    }
+                                    switchSelectMode(false)
+                                }else{
+                                    text = checkedMember.joinToString("\n")
+                                    logMap["member"] = checkedMember
+                                }
                             }
                         }
-                        setBtnStyle(this, androidx.appcompat.R.color.material_grey_300, 200, 200)
+
+                        this.setOnLongClickListener (cellLongClickEvent())
+                        this.setOnDragListener{ v, event -> cellDrag(v, event) }
+                        setBtnStyle(this, R.color.unSelectedColor)
                     }
                 }
                 tableLayout.addView(tableRow)
@@ -336,12 +449,14 @@ class TableFragment : Fragment() {
             for(typeMap in typeMapList){
                 val row = TableRow(requireContext())
                 AppCompatButton(requireContext()).apply{
-                    this.text = typeMap["type"] as String
+                    val type = typeMap["type"] as String
+                    this.text = type
                     this.textSize = 20f
                     row.addView(this)
                     rowTL.addView(row)
                     this.setOnClickListener {  }
-                    setBtnStyle(this, androidx.appcompat.R.color.material_grey_600, 200, 200)
+                    setBtnStyle(this, androidx.appcompat.R.color.material_grey_600)
+                    setOnLongClickListener(selectSameType(type))
                 }
             }
             vBinding.rowSV.addView(rowTL)
@@ -351,11 +466,13 @@ class TableFragment : Fragment() {
             val colRow = TableRow(requireContext())
             for(shiftMap in shiftMapList){
                 AppCompatButton(requireContext()).apply {
-                    this.text = (shiftMap["shift"] as String).replace(" ~ ", "\n~\n")
+                    val shift = shiftMap["shift"] as String
+                    this.text = shift.replace(" ~ ", "\n~\n")
                     this.textSize = 20f
                     colRow.addView(this)
                     this.setOnClickListener{}
-                    setBtnStyle(this, androidx.appcompat.R.color.material_grey_600, 200, 250)
+                    setBtnStyle(this, androidx.appcompat.R.color.material_grey_600, height=250)
+                    setOnLongClickListener(selectSameShift(shift))
                 }
             }
             colTL.addView(colRow)
@@ -365,6 +482,122 @@ class TableFragment : Fragment() {
             Log.d("test", err.stackTraceToString())
         }
     } // mkTable End
+
+    private fun clearTable(){
+        listOf(vBinding.subSV, vBinding.rowSV, vBinding.colSV).forEach {
+            it.removeAllViews()
+        }
+    }
+
+    private fun selectSameType(type: String): View.OnLongClickListener? {
+        return View.OnLongClickListener {
+            switchSelectMode(true)
+            logMapList.forEach {logMap->
+                if(logMap["type"] == type){
+                    val toInputBtn = logMap["btn"] as AppCompatButton
+                    if(toInputBtn !in selectedBtnList){
+                        selectedBtnList.add(toInputBtn)
+                        setBtnStyle(toInputBtn, R.color.selectedColor)
+                    }
+                }
+            }
+            return@OnLongClickListener true
+        }
+    }
+
+    private fun selectSameShift(shift:String): View.OnLongClickListener? {
+        return View.OnLongClickListener {
+            switchSelectMode(true)
+            logMapList.forEach {logMap->
+                if(logMap["shift"] == shift){
+                    val toInputBtn = logMap["btn"] as AppCompatButton
+                    if(toInputBtn !in selectedBtnList){
+                        selectedBtnList.add(toInputBtn)
+                        setBtnStyle(toInputBtn, R.color.selectedColor)
+                    }
+                }
+            }
+            return@OnLongClickListener true
+        }
+    }
+
+    private fun cellLongClickEvent(): View.OnLongClickListener? {
+        return View.OnLongClickListener {
+            val dragShadowBuilder = View.DragShadowBuilder(it)
+            it.startDragAndDrop(null, dragShadowBuilder, it, 0)
+            return@OnLongClickListener true
+        }
+    }
+
+    private fun cellDrag(v:View, event: DragEvent): Boolean {
+        when (event.action) {
+            DragEvent.ACTION_DROP -> {
+                val fromBtn = event.localState as AppCompatButton
+                val toBtn = v as AppCompatButton
+                if(fromBtn==toBtn){
+                    selectBtn(fromBtn)
+                }else{
+                    stack.add(mainActivity.deepCopy(logMapList) as ArrayList<HashMap<String,Any>>)
+                    val fromMap = mainActivity.getMapByCondition(logMapList, hashMapOf("btn" to fromBtn))
+                    val toMap = mainActivity.getMapByCondition(logMapList, hashMapOf("btn" to toBtn))
+                    val cloneMap = fromMap?.clone() as HashMap<*, *>
+                    fromMap["member"] = toMap!!["member"] as ArrayList<*>
+                    toMap["member"] = cloneMap["member"] as ArrayList<*>
+                    val tempText = fromBtn.text
+                    fromBtn.text = toBtn.text
+                    toBtn.text = tempText
+
+                    if(selectedBtnList.contains(fromBtn) && !selectedBtnList.contains(toBtn)){
+                        selectedBtnList.remove(fromBtn)
+                        selectedBtnList.add(toBtn)
+                        setBtnStyle(fromBtn, R.color.unSelectedColor)
+                        setBtnStyle(toBtn, R.color.selectedColor)
+                    }else if(!selectedBtnList.contains(fromBtn) && selectedBtnList.contains(toBtn)){
+                        selectedBtnList.remove(toBtn)
+                        selectedBtnList.add(fromBtn)
+                        setBtnStyle(fromBtn, R.color.selectedColor)
+                        setBtnStyle(toBtn, R.color.unSelectedColor)
+                    }
+                }
+                return true
+            }
+        }
+        return true
+    }
+
+    private fun selectBtn(btn:AppCompatButton){
+        if(!selectMode){
+            switchSelectMode(true)
+        }
+        if(btn in selectedBtnList){
+            selectedBtnList.remove(btn)
+            setBtnStyle(btn, R.color.unSelectedColor)
+            if(selectedBtnList.isEmpty()){
+                switchSelectMode(false)
+            }
+        }else{
+            selectedBtnList.add(btn)
+            setBtnStyle(btn, R.color.selectedColor)
+        }
+    }
+
+    private fun switchSelectMode(turnOn:Boolean){
+        if(turnOn){
+            selectMode = true
+            vBinding.selectedBtnLayout.visibility=View.VISIBLE
+            vBinding.unselectedBtnLayout.visibility=View.GONE
+        }else{
+            selectMode = false
+            selectedBtnList.forEach { btn->
+                setBtnStyle(btn, R.color.unSelectedColor)
+            }
+            selectedBtnList.clear()
+            vBinding.selectedBtnLayout.visibility=View.GONE
+            vBinding.unselectedBtnLayout.visibility=View.VISIBLE
+        }
+    }
+
+
 
     private fun getSameTimeMember(shift: String): List<String> {
         val resultSet = mutableSetOf<String>()
@@ -378,7 +611,7 @@ class TableFragment : Fragment() {
     }
 
 
-    private fun setBtnStyle(btn: AppCompatButton, backGroundColor:Int, width:Int, height:Int){
+    private fun setBtnStyle(btn: AppCompatButton, backGroundColor:Int, width:Int=200, height:Int=200){
         btn.setBackgroundColor(ContextCompat.getColor(requireContext(), backGroundColor))
         val params = TableRow.LayoutParams(width, height)
         params.gravity = Gravity.NO_GRAVITY
@@ -386,6 +619,8 @@ class TableFragment : Fragment() {
         btn.layoutParams = params
         btn.setTextColor(ContextCompat.getColor(requireContext(), R.color.black))
     }
+
+
 
     private fun mkCheckMemberDialog(
         alreadySelected:List<String>,
@@ -439,7 +674,7 @@ class TableFragment : Fragment() {
         }
     }
 
-    private fun mkSwitchMemberDialog(workingMemberList: (ArrayList<String>) -> Unit) {
+    private fun mkSwitchMemberDialog(callback: (ArrayList<String>) -> Unit) {
         Dialog(requireContext()).apply {
             setContentView(R.layout.dialog_switch_main)
             mainActivity.setDialogSize(this, vBinding.tableFragmentLayout, 0.9f, null)
@@ -460,7 +695,7 @@ class TableFragment : Fragment() {
                     .filterIsInstance<SwitchCompat>()
                     .filter { it.isChecked }
                     .mapTo(ArrayList()) { it.text.toString() }
-                workingMemberList(checkedMember)
+                callback(checkedMember)
                 dismiss()
             }
         }
@@ -469,7 +704,7 @@ class TableFragment : Fragment() {
     private fun mkSubMemberDialog(callbackSubMember: (ArrayList<String>) -> Unit) {
         Dialog(requireContext()).apply {
             setContentView(R.layout.dialog_set_sub)
-            mainActivity.setDialogSize(this, vBinding.tableFragmentLayout, 1f, null)
+            mainActivity.setDialogSize(this, vBinding.tableFragmentLayout, 0.9f, 0.5f)
             show()
             val subMemberLayout = findViewById<LinearLayout>(R.id.sumMemberLayout)
             val inflater = LayoutInflater.from(requireContext())
@@ -504,6 +739,39 @@ class TableFragment : Fragment() {
                 dismiss()
             }
         }
+    }
+
+    private fun copyToRight() {
+        val toRemoveBtnSet = mutableSetOf<AppCompatButton>()
+        val toAddBtnSet = mutableSetOf<AppCompatButton>()
+        stack.add(mainActivity.deepCopy(logMapList) as ArrayList<HashMap<String,Any>>)
+        selectedBtnList.forEach { btn ->
+            mainActivity.getMapByCondition(logMapList, hashMapOf("btn" to btn))?.let{thisMap ->
+                val thisBtn = thisMap["btn"] as AppCompatButton
+                val thisWork = thisMap["type"] as String
+                val thisShift = thisMap["shift"] as String
+                val thisWorker = thisMap["member"] as ArrayList<String>
+                val thisShiftIndex = shiftMapList.indexOf(mainActivity.getMapByCondition(shiftMapList, hashMapOf("shift" to thisShift)))
+                val nextShiftIndex = if(thisShiftIndex != shiftMapList.size-1){thisShiftIndex + 1}else{null}
+                nextShiftIndex?.let{nextShiftIndex->
+                    val nextShift = shiftMapList[nextShiftIndex]["shift"] as String
+                    mainActivity.getMapByCondition(logMapList, hashMapOf("shift" to nextShift, "type" to thisWork))?.let{nextMap ->
+                        val nextBtn = nextMap["btn"] as AppCompatButton
+                        val nextWorker = nextMap["member"] as ArrayList<String>
+                        toRemoveBtnSet.add(thisBtn)
+                        toAddBtnSet.add(nextBtn)
+                        setBtnStyle(thisBtn, R.color.unSelectedColor)
+                        setBtnStyle(nextBtn, R.color.selectedColor)
+                        if(nextWorker.isEmpty()){
+                            nextMap["member"] = thisWorker
+                            nextBtn.text = thisWorker.joinToString("\n")
+                        }
+                    }
+                }
+            }
+        }
+        selectedBtnList.removeAll(toRemoveBtnSet)
+        selectedBtnList.addAll(toAddBtnSet)
     }
 
 
