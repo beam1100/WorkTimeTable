@@ -1,5 +1,4 @@
 package com.worktimetable
-import android.annotation.SuppressLint
 import android.app.Dialog
 import android.content.Context
 //import android.os.Build.VERSION_CODES.R
@@ -25,9 +24,9 @@ import androidx.appcompat.widget.SwitchCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.children
 import com.worktimetable.databinding.FragmentTableBinding
-import org.w3c.dom.Text
 import java.text.SimpleDateFormat
 import java.util.Calendar
+import kotlin.math.log
 
 
 class TableFragment : Fragment() {
@@ -74,11 +73,39 @@ class TableFragment : Fragment() {
 
             updateTableForNewDate(0)
 
-            // 다음 날로 이동 버튼 클릭 리스터
+            // 다음 날짜로 이동 버튼
             vBinding.nextDateBtn.setOnClickListener{updateTableForNewDate(1)}
 
-            // 전 날로 이동 버튼 클릭 리스터
+            // 이전 날짜로 이동 버튼
             vBinding.beforeDateBtn.setOnClickListener{updateTableForNewDate(-1)}
+
+            // 이전 근무로 이동 버튼
+            vBinding.beforeLogBtn.setOnClickListener {
+                val logDateList = mainActivity.helper.select("LogTable", toSortColumn = "logDate").map { it["logDate"] as String }
+                val betweenList = logDateList.map { mainActivity.daysBetween(it, formatter.format(calendar.time)) }
+                betweenList
+                    .filter {  it > 0}
+                    .minOrNull()
+                    ?.let{
+                        updateTableForNewDate(
+                            mainActivity.daysBetween( formatter.format(calendar.time), logDateList[betweenList.indexOf(it)] )
+                        )
+                    }
+            }
+
+            // 다음 근무로 이동 버튼
+            vBinding.nextLogBtn.setOnClickListener {
+                val logDateList = mainActivity.helper.select("LogTable", toSortColumn = "logDate").map { it["logDate"] as String }
+                val betweenList = logDateList.map { mainActivity.daysBetween(it, formatter.format(calendar.time)) }
+                betweenList
+                    .filter {  it < 0}
+                    .maxOrNull()
+                    ?.let{
+                        updateTableForNewDate(
+                            mainActivity.daysBetween( formatter.format(calendar.time), logDateList[betweenList.indexOf(it)] )
+                        )
+                    }
+            }
 
             //스크롤 연동
             arrayOf(vBinding.subSV, vBinding.mainSV, vBinding.colSV, vBinding.rowSV).forEach {
@@ -170,35 +197,42 @@ class TableFragment : Fragment() {
                 }
             }
 
+            //드랍 LogTable
+            vBinding.dropLogTableBtn.setOnClickListener {
+                mainActivity.helper.dropTable("LogTable")
+            }
+
             //출력 테스트
             vBinding.printLogBtn.setOnClickListener {
+
                 /*logMapList.forEach {
                     Log.d("test", it.toString())
                 }*/
+
                 /*mainActivity.helper.select("LogTable").forEach {map->
                     map.forEach { (key, value) ->
                         Log.d("test", "▣key: $key, ▣value: $value")
                     }
                     Log.d("test", "=".repeat(150))
                 }*/
-                Log.d("test", """
+
+                /*Log.d("test", """
                     logMapList size : ${logMapList.size}
                     mainMemberList : $mainMemberList
                     subMemberList : $subMemberList
-                    
-                """.trimIndent())
+
+                """.trimIndent())*/
+
             }
 
-            //드랍 LogTable
-            vBinding.dropLogTableBtn.setOnClickListener {
-                mainActivity.helper.dropTable("LogTable")
-            }
 
         }catch(err:Exception){
             Log.d("test", err.toString())
             Log.d("test", err.stackTraceToString())
         }
     }
+
+
 
     private fun updateTableForNewDate(num:Int){
         calendar.add(Calendar.DAY_OF_MONTH, num)

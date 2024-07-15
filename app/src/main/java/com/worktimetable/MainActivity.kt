@@ -1,13 +1,14 @@
 package com.worktimetable
 
 import android.app.Dialog
+import android.icu.text.SimpleDateFormat
+import android.icu.util.Calendar
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
-import android.widget.Toast
 import androidx.fragment.app.FragmentActivity
 import com.worktimetable.databinding.ActivityMainBinding
 
@@ -217,6 +218,28 @@ class MainActivity : FragmentActivity() {
         dialog.window?.attributes = layoutParams
     }
 
+    private fun getCalendarFromString(dateStr: String): Calendar {
+        val format = SimpleDateFormat("yyyy-MM-dd")
+        val date = format.parse(dateStr)
+        val calendar = Calendar.getInstance()
+        calendar.time = date
+        return calendar
+    }
 
+    // 두 날짜 사이의 일수를 계산하는 함수
+    fun daysBetween(startDate: String, endDate: String): Int{
+        val startCalendar = getCalendarFromString(startDate)
+        val endCalendar = getCalendarFromString(endDate)
+        val diffInMillis = endCalendar.timeInMillis - startCalendar.timeInMillis
+        return (diffInMillis / (24 * 60 * 60 * 1000)).toInt()
+    }
+
+    /*fun <T> myGet(c:Collection<T>, index:Int): T?{
+        return if (index in c.indices){
+            c.elementAt(index)
+        }else{
+            null
+        }
+    }*/
 
 }
