@@ -279,6 +279,7 @@ class TableFragment : Fragment() {
                 typeMapList.forEach {
                     Log.d("test", it.toString())
                 }
+                Log.d("test", mainMemberList.toString())
             }
 
 
@@ -454,7 +455,6 @@ class TableFragment : Fragment() {
             typeMapList = recorded[0]["typeMapList"] as ArrayList<HashMap<String, Any>>
             shiftMapList = recorded[0]["shiftMapList"] as ArrayList<HashMap<String, Any>>
             logMapList = recorded[0]["logMapList"] as ArrayList<HashMap<String, Any>>
-            // ★★★★★★★★★★★★★★★★★★★★★★★ mainMemberList 순서 정렬하기 ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
             mainMemberList = recorded[0]["mainMemberList"] as ArrayList<String>
             subMemberList = recorded[0]["subMemberList"] as ArrayList<String>
             mkTable()
