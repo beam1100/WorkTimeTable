@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
@@ -13,6 +14,15 @@
         tools:ignore="SpeakableTextPresentCheck"
         tools:src="@android:drawable/arrow_up_float" />
 
+    <ImageButton
+        android:id="@+id/holderMoveItemDown"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:src="@android:drawable/arrow_down_float"
+        tools:ignore="SpeakableTextPresentCheck"
+        tools:src="@android:drawable/arrow_down_float" />
+
     <TextView
         android:id="@+id/holderTV"
         android:layout_width="0dp"
@@ -23,12 +33,11 @@
         android:textSize="50sp" />
 
     <ImageButton
-        android:id="@+id/holderMoveItemDown"
+        android:id="@+id/holderEditBtn"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
-        android:src="@android:drawable/arrow_down_float"
-        tools:ignore="SpeakableTextPresentCheck"
-        tools:src="@android:drawable/arrow_down_float" />
+        android:src="@drawable/outline_edit_24"
+        tools:ignore="SpeakableTextPresentCheck" />
 
 </LinearLayout>

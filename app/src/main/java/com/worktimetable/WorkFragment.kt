@@ -177,15 +177,15 @@ class WorkFragment : Fragment() {
                 copiedTypeMapList.forEach { typeMap ->
                     val inflater = LayoutInflater.from(requireContext())
                     val holder = inflater.inflate(R.layout.holder_sortable, null) as LinearLayout
-                    mainActivity.mkHolderFromMap(copiedTypeMapList, typeHolderLayout, holder, typeMap, "type"){ longClickedTypeMap ->
+                    mainActivity.mkHolderFromMap(copiedTypeMapList, typeHolderLayout, holder, typeMap, "type"){ toEditTypeMap ->
                         addOrUpdateTypeDialog(
-                            longClickedTypeMap,
+                            toEditTypeMap,
                             {
                                 newTypeMap ->
                                     holder.findViewById<TextView>(R.id.holderTV).text = newTypeMap["type"] as String
-                                    longClickedTypeMap["type"] = newTypeMap["type"] as String
-                                    longClickedTypeMap["isPatrol"] = newTypeMap["isPatrol"] as Boolean
-                                    longClickedTypeMap["isConcurrent"] = newTypeMap["isConcurrent"] as Boolean
+                                    toEditTypeMap["type"] = newTypeMap["type"] as String
+                                    toEditTypeMap["isPatrol"] = newTypeMap["isPatrol"] as Boolean
+                                    toEditTypeMap["isConcurrent"] = newTypeMap["isConcurrent"] as Boolean
                             },
                             {
                                 copiedTypeMapList.remove(typeMap)
@@ -204,17 +204,17 @@ class WorkFragment : Fragment() {
                         null,
                         {toAddTypeMap ->
                             copiedTypeMapList.add(toAddTypeMap)
-                            mainActivity.mkHolderFromMap(copiedTypeMapList, typeHolderLayout, holder, toAddTypeMap, "type"){ longClickedTypeMap ->
+                            mainActivity.mkHolderFromMap(copiedTypeMapList, typeHolderLayout, holder, toAddTypeMap, "type"){ toEditTypeMap ->
                                 addOrUpdateTypeDialog(
-                                    longClickedTypeMap,
+                                    toEditTypeMap,
                                     { newTypeMap ->
                                         holder.findViewById<TextView>(R.id.holderTV).text = newTypeMap["type"] as String
-                                        longClickedTypeMap["type"] = newTypeMap["type"] as String
-                                        longClickedTypeMap["isPatrol"] = newTypeMap["isPatrol"] as Boolean
-                                        longClickedTypeMap["isConcurrent"] = newTypeMap["isConcurrent"] as Boolean
+                                        toEditTypeMap["type"] = newTypeMap["type"] as String
+                                        toEditTypeMap["isPatrol"] = newTypeMap["isPatrol"] as Boolean
+                                        toEditTypeMap["isConcurrent"] = newTypeMap["isConcurrent"] as Boolean
                                     },
                                     {
-                                        copiedTypeMapList.remove(longClickedTypeMap)
+                                        copiedTypeMapList.remove(toEditTypeMap)
                                         typeHolderLayout.removeView(holder)
                                     }
                                 )

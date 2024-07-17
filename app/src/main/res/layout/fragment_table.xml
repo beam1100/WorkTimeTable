@@ -69,7 +69,7 @@
             android:layout_weight="8">
 
             <ImageButton
-                android:id="@+id/mkCountTableBtn"
+                android:id="@+id/mkSummaryDialogBtn"
                 android:layout_width="0dp"
                 android:layout_height="0dp"
                 android:scrollbars="none"

@@ -3,6 +3,7 @@ package com.worktimetable
 import android.app.Dialog
 import android.icu.text.SimpleDateFormat
 import android.icu.util.Calendar
+import android.media.Image
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -63,12 +64,11 @@ class MainActivity : FragmentActivity() {
         try{
 
             //홀더 근무이름 텍스트뷰
-            holder.findViewById<TextView>(R.id.holderTV).apply{
-                text = mapItem[toPrintKey] as String
-                setOnLongClickListener {_ ->
-                    longClickCallback(mapItem)
-                    return@setOnLongClickListener true
-                }
+            holder.findViewById<TextView>(R.id.holderTV).text = mapItem[toPrintKey] as String
+
+            //에디트 버튼
+            holder.findViewById<ImageButton>(R.id.holderEditBtn).setOnClickListener {
+                longClickCallback(mapItem)
             }
 
             //맵에서 위로
@@ -121,12 +121,11 @@ class MainActivity : FragmentActivity() {
         try{
 
             //홀더 근무이름 텍스트뷰
-            holder.findViewById<TextView>(R.id.holderTV).apply{
-                text = mapItem[toPrintKey] as String
-                setOnLongClickListener {_ ->
-                    longClickCallback(mapItem)
-                    return@setOnLongClickListener true
-                }
+            holder.findViewById<TextView>(R.id.holderTV).text = mapItem[toPrintKey] as String
+
+            //홀더 에디트 버튼
+            holder.findViewById<ImageButton>(R.id.holderEditBtn).setOnClickListener {
+                longClickCallback(mapItem)
             }
 
             //DB에서 위로

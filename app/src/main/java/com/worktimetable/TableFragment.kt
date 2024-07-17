@@ -26,10 +26,8 @@ import androidx.appcompat.widget.SwitchCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.children
 import com.worktimetable.databinding.FragmentTableBinding
-import kotlinx.coroutines.flow.callbackFlow
 import java.text.SimpleDateFormat
 import java.util.Calendar
-import kotlin.math.log
 
 
 class TableFragment : Fragment() {
@@ -245,15 +243,26 @@ class TableFragment : Fragment() {
             }
 
             //교체 버튼
-            vBinding.mkExchangeDialogBtn.setOnClickListener {
+            val exchangeMemberClickListener = View.OnClickListener {
                 mkExchangeDialog{ name1, name2 ->
                     exchangeWorker(name1, name2)
                 }
             }
-            // 교체버튼(선택모드)
-            vBinding.mkExchangeAtSelectedDialogBtn.setOnClickListener {
-                mkExchangeDialog{name1, name2->
-                    exchangeWorker(name1, name2)
+            vBinding.mkExchangeDialogBtn.setOnClickListener(exchangeMemberClickListener)
+            vBinding.mkExchangeAtSelectedDialogBtn.setOnClickListener(exchangeMemberClickListener)
+
+            //근무표 요약버튼
+            vBinding.mkSummaryDialogBtn.setOnClickListener {
+                mkSummaryDialog{name->
+                    switchSelectMode(false)
+                    switchSelectMode(true)
+                    logMapList.forEach {map->
+                        val memberList = map["member"] as ArrayList<String>
+                        if(name in memberList){
+                            val btn = map["btn"] as AppCompatButton
+                            selectBtn(btn)
+                        }
+                    }
                 }
             }
 
@@ -267,6 +276,9 @@ class TableFragment : Fragment() {
                 logMapList.forEach {
                     Log.d("test", it.toString())
                 }
+                typeMapList.forEach {
+                    Log.d("test", it.toString())
+                }
             }
 
 
@@ -276,122 +288,6 @@ class TableFragment : Fragment() {
             Log.d("test", err.stackTraceToString())
         }
     }
-
-    private fun mkExchangeDialog(callback:(name1:String, name2:String)->Unit) {
-        Dialog(requireContext()).apply {
-            setContentView(R.layout.dialog_exchange)
-            mainActivity.setDialogSize(this, vBinding.tableFragmentLayout, 0.9f, null)
-            show()
-            val exchangeSpinner1 = findViewById<Spinner>(R.id.exchangeSpinner1).apply {
-                adapter = ArrayAdapter(
-                    requireContext(),
-                    R.layout.custom_spinner,
-                    mainMemberList + subMemberList
-                )
-            }
-            val exchangeSpinner2 = findViewById<Spinner>(R.id.exchangeSpinner2).apply {
-                adapter = ArrayAdapter(
-                    requireContext(),
-                    R.layout.custom_spinner,
-                    mainMemberList + subMemberList
-                )
-            }
-            findViewById<Button>(R.id.exchangeMemberBtn).setOnClickListener {
-                callback(exchangeSpinner1.selectedItem.toString(), exchangeSpinner2.selectedItem.toString())
-                dismiss()
-            }
-        }
-    }
-
-    private fun exchangeWorker(name1: String, name2: String) {
-        stack.add(mainActivity.deepCopy(logMapList) as ArrayList<HashMap<String,Any>>)
-        if(selectMode){
-            for(btn in selectedBtnList){
-                val selectedMap = mainActivity.getMapByCondition(logMapList, hashMapOf("btn" to btn))
-                val workerList = selectedMap?.get("member") as ArrayList<String>
-                for(index in 0 until workerList.size){
-                    if(workerList[index]==name1){
-                        workerList[index] = name2
-                    }else if(workerList[index]==name2){
-                        workerList[index]=name1
-                    }
-                }
-                btn.text = workerList.joinToString("\n")
-            }
-        }else{
-            for(map in logMapList){
-                val workerList = map["member"] as ArrayList<String>
-                for(index in 0 until workerList.size){
-                    if(workerList[index]==name1){
-                        workerList[index] = name2
-                    }else if(workerList[index]==name2){
-                        workerList[index]=name1
-                    }
-                }
-                val btn = map["btn"] as AppCompatButton
-                btn.text = workerList.joinToString("\n")
-            }
-        }
-    }
-
-
-    private fun updateTableForNewDate(num:Int){
-        calendar.add(Calendar.DAY_OF_MONTH, num)
-        vBinding.dateTV.text = formatter.format(calendar.time)
-        val recorded = mainActivity.helper.select("LogTable", where = hashMapOf("logDate" to formatter.format(calendar.time)))
-        if(recorded.isNotEmpty()){
-            typeMapList = recorded[0]["typeMapList"] as ArrayList<HashMap<String, Any>>
-            shiftMapList = recorded[0]["shiftMapList"] as ArrayList<HashMap<String, Any>>
-            logMapList = recorded[0]["logMapList"] as ArrayList<HashMap<String, Any>>
-            mainMemberList = recorded[0]["mainMemberList"] as ArrayList<String>
-            subMemberList = recorded[0]["subMemberList"] as ArrayList<String>
-            mkTable()
-        }else{
-            logMapList.clear()
-            mainMemberList = ArrayList(mainActivity.helper.select("MemberTable", toSortColumn = "sortIndex")
-                .map{it["memberName"] as String})
-            subMemberList.clear()
-            clearTable()
-        }
-    }
-
-
-    private fun mkNewLogMapList(typeList: ArrayList<HashMap<String, Any>>, shiftList: ArrayList<HashMap<String, Any>>):ArrayList<HashMap<String,Any>> {
-        val resultMapList = arrayListOf<HashMap<String,Any>>()
-        typeList.forEach {typeMap->
-            shiftList.forEach { shiftMap->
-                resultMapList.add(
-                    hashMapOf(
-                        "type" to typeMap["type"] as String,
-                        "shift" to shiftMap["shift"] as String,
-                        "member" to arrayListOf<String>()
-                    )
-                )
-            }
-        }
-        return resultMapList
-    }
-
-    private fun mkSelectWorkDialog(resType:(String)->Unit) {
-        Dialog(requireContext()).apply {
-            setContentView(R.layout.dialog_select_work)
-            mainActivity.setDialogSize(this, vBinding.tableFragmentLayout, 0.9f, null)
-            val workSpinner = findViewById<Spinner>(R.id.selectWorkSpinner).apply {
-                adapter = ArrayAdapter(
-                    requireContext(),
-                    R.layout.custom_spinner,
-                    mainActivity.helper.select("WorkTable").map { it["workName"] }
-                )
-            }
-            findViewById<Button>(R.id.mkNewTableBtn).setOnClickListener{
-                dismiss()
-                resType(workSpinner.selectedItem.toString())
-            }
-            show()
-        }
-    }
-
-
 
     private fun mkTable(){
         try{
@@ -482,6 +378,130 @@ class TableFragment : Fragment() {
             Log.d("test", err.stackTraceToString())
         }
     } // mkTable End
+
+
+    private fun mkExchangeDialog(callback:(name1:String, name2:String)->Unit) {
+        Dialog(requireContext()).apply {
+            setContentView(R.layout.dialog_exchange)
+            mainActivity.setDialogSize(this, vBinding.tableFragmentLayout, 0.9f, null)
+            show()
+            val exchangeSpinner1 = findViewById<Spinner>(R.id.exchangeSpinner1).apply {
+                adapter = ArrayAdapter(
+                    requireContext(),
+                    R.layout.custom_spinner,
+                    mainMemberList + subMemberList
+                )
+            }
+            val exchangeSpinner2 = findViewById<Spinner>(R.id.exchangeSpinner2).apply {
+                adapter = ArrayAdapter(
+                    requireContext(),
+                    R.layout.custom_spinner,
+                    mainMemberList + subMemberList
+                )
+            }
+            findViewById<Button>(R.id.exchangeMemberBtn).setOnClickListener {
+                callback(exchangeSpinner1.selectedItem.toString(), exchangeSpinner2.selectedItem.toString())
+                dismiss()
+            }
+        }
+    }
+
+    private fun exchangeWorker(name1: String, name2: String) {
+        stack.add(mainActivity.deepCopy(logMapList) as ArrayList<HashMap<String,Any>>)
+        if(selectMode){
+            for(btn in selectedBtnList){
+                val selectedMap = mainActivity.getMapByCondition(logMapList, hashMapOf("btn" to btn))
+                val workerList = selectedMap?.get("member") as ArrayList<String>
+                for(index in 0 until workerList.size){
+                    if(workerList[index]==name1){
+                        workerList[index] = name2
+                    }else if(workerList[index]==name2){
+                        workerList[index]=name1
+                    }
+                }
+            }
+            for(btn in selectedBtnList){
+                val selectedMap = mainActivity.getMapByCondition(logMapList, hashMapOf("btn" to btn))
+                val workerList = selectedMap?.get("member") as ArrayList<*>
+                btn.text = workerList.joinToString("\n")
+            }
+        }else{
+            for(map in logMapList){
+                val workerList = map["member"] as ArrayList<String>
+                for(index in 0 until workerList.size){
+                    if(workerList[index]==name1){
+                        workerList[index] = name2
+                    }else if(workerList[index]==name2){
+                        workerList[index]=name1
+                    }
+                }
+            }
+            for (map in logMapList){
+                val btn = map["btn"] as AppCompatButton
+                val workerList = map["member"] as ArrayList<*>
+                btn.text = workerList.joinToString("\n")
+            }
+        }
+    }
+
+
+
+    private fun updateTableForNewDate(num:Int){
+        calendar.add(Calendar.DAY_OF_MONTH, num)
+        vBinding.dateTV.text = formatter.format(calendar.time)
+        val recorded = mainActivity.helper.select("LogTable", where = hashMapOf("logDate" to formatter.format(calendar.time)))
+        if(recorded.isNotEmpty()){
+            typeMapList = recorded[0]["typeMapList"] as ArrayList<HashMap<String, Any>>
+            shiftMapList = recorded[0]["shiftMapList"] as ArrayList<HashMap<String, Any>>
+            logMapList = recorded[0]["logMapList"] as ArrayList<HashMap<String, Any>>
+            // ★★★★★★★★★★★★★★★★★★★★★★★ mainMemberList 순서 정렬하기 ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+            mainMemberList = recorded[0]["mainMemberList"] as ArrayList<String>
+            subMemberList = recorded[0]["subMemberList"] as ArrayList<String>
+            mkTable()
+        }else{
+            logMapList.clear()
+            mainMemberList = ArrayList(mainActivity.helper.select("MemberTable", toSortColumn = "sortIndex")
+                .map{it["memberName"] as String})
+            subMemberList.clear()
+            clearTable()
+        }
+    }
+
+
+    private fun mkNewLogMapList(typeList: ArrayList<HashMap<String, Any>>, shiftList: ArrayList<HashMap<String, Any>>):ArrayList<HashMap<String,Any>> {
+        val resultMapList = arrayListOf<HashMap<String,Any>>()
+        typeList.forEach {typeMap->
+            shiftList.forEach { shiftMap->
+                resultMapList.add(
+                    hashMapOf(
+                        "type" to typeMap["type"] as String,
+                        "shift" to shiftMap["shift"] as String,
+                        "member" to arrayListOf<String>()
+                    )
+                )
+            }
+        }
+        return resultMapList
+    }
+
+    private fun mkSelectWorkDialog(resType:(String)->Unit) {
+        Dialog(requireContext()).apply {
+            setContentView(R.layout.dialog_select_work)
+            mainActivity.setDialogSize(this, vBinding.tableFragmentLayout, 0.9f, null)
+            val workSpinner = findViewById<Spinner>(R.id.selectWorkSpinner).apply {
+                adapter = ArrayAdapter(
+                    requireContext(),
+                    R.layout.custom_spinner,
+                    mainActivity.helper.select("WorkTable").map { it["workName"] }
+                )
+            }
+            findViewById<Button>(R.id.mkNewTableBtn).setOnClickListener{
+                dismiss()
+                resType(workSpinner.selectedItem.toString())
+            }
+            show()
+        }
+    }
 
     private fun clearTable(){
         listOf(vBinding.subSV, vBinding.rowSV, vBinding.colSV).forEach {
@@ -635,7 +655,7 @@ class TableFragment : Fragment() {
             val mainMemberHolderLayout = findViewById<LinearLayout>(R.id.mainMemberLayout)
             val subMemberHolderLayout = findViewById<LinearLayout>(R.id.subMemberLayout)
             val inflater = LayoutInflater.from(requireContext())
-            /*mainActivity.helper.select("MemberTable", toSortColumn = "sortIndex").map { it["memberName"] }*/
+
             mainMemberList.onEach {memberName->
                 val myCheckbox = inflater.inflate(R.layout.custom_checkbox, null) as CheckBox
                 myCheckbox.text = memberName
@@ -772,6 +792,53 @@ class TableFragment : Fragment() {
         }
         selectedBtnList.removeAll(toRemoveBtnSet)
         selectedBtnList.addAll(toAddBtnSet)
+    }
+
+    private fun mkSummaryDialog(callback: (String) -> Unit){
+        try{
+            Dialog(requireContext()).apply {
+                setContentView(R.layout.dialog_summary)
+                mainActivity.setDialogSize(this, vBinding.tableFragmentLayout, 0.9f, null)
+                show()
+
+                val inflater = LayoutInflater.from(requireContext())
+                (mainMemberList+subMemberList).forEach {name->
+                    val holder = inflater.inflate(R.layout.holder_summary, null) as LinearLayout
+                    findViewById<LinearLayout>(R.id.summaryLayout).addView(holder)
+                    val countPair = countNameInLog(name)
+                    holder.findViewById<TextView>(R.id.summaryHolderNameTV).text = name
+                    holder.findViewById<TextView>(R.id.summaryHolderNum1).text = countPair.first.toString()
+                    holder.findViewById<TextView>(R.id.summaryHolderNum2).text = countPair.second.toString()
+                    holder.findViewById<TextView>(R.id.summaryHolderSelectMemberBtn).setOnClickListener {
+                        callback(name)
+                        dismiss()
+                    }
+                }
+
+            }
+        }catch(err:Exception){
+            Log.d("test", err.toString())
+            Log.d("test", err.stackTraceToString())
+        }
+    }
+
+    private fun countNameInLog(name:String):Pair<Int,Int>{
+        var numOfAll = 0
+        var numOfPatrol = 0
+        logMapList.forEach {map->
+            val memberList = map["member"] as ArrayList<String>
+            val type = map["type"] as String
+            val isPatrol = mainActivity.getMapByCondition(typeMapList, hashMapOf("type" to type))?.get("isPatrol") as Boolean
+            if(name in memberList){
+                if(isPatrol){
+                    numOfAll++
+                    numOfPatrol++
+                }else{
+                    numOfAll++
+                }
+            }
+        }
+        return Pair(numOfAll, numOfPatrol)
     }
 
 
