@@ -128,6 +128,15 @@
             android:textSize="30sp" />
 
         <Button
+            android:id="@+id/copyWorkBtn"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:fontFamily="@font/ongulip"
+            android:text="복사"
+            android:textSize="30sp" />
+
+        <Button
             android:id="@+id/deleteWorkBtn"
             android:layout_width="0dp"
             android:layout_height="match_parent"

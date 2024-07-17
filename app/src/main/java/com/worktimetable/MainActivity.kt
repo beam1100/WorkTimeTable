@@ -1,6 +1,8 @@
 package com.worktimetable
 
 import android.app.Dialog
+import android.content.Context
+import android.content.SharedPreferences
 import android.icu.text.SimpleDateFormat
 import android.icu.util.Calendar
 import android.media.Image
@@ -21,6 +23,9 @@ class MainActivity : FragmentActivity() {
     private val memberFragment = MemberFragment()
     private val workFragment = WorkFragment()
     val helper = SqliteHelper(this, "WorkTable.db", 1)
+
+    val preferences: SharedPreferences by lazy {getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)}
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         try{

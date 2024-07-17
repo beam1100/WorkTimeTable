@@ -66,6 +66,7 @@ class WorkFragment : Fragment() {
                     { clickedWorkMap->
                         setWorkDialog(
                             clickedWorkMap,
+                            // 근무 업데이트 콜백
                             {id, workName, typeList, shiftList->
                                 mainActivity.helper.updateByCondition(
                                     "WorkTable",
@@ -79,6 +80,22 @@ class WorkFragment : Fragment() {
                                 )
                                 onViewCreated(view, savedInstanceState)
                             },
+                            // 근무 복사 콜백
+                            {
+                                val sortIndexMaxOrNull = mainActivity.helper.select("WorkTable").maxOfOrNull { it["sortIndex"] as Int}
+                                val sortIndex = if(sortIndexMaxOrNull==null){0}else{sortIndexMaxOrNull+1}
+                                mainActivity.helper.insert(
+                                    "WorkTable",
+                                    hashMapOf(
+                                        "workName" to "${clickedWorkMap["workName"] as String}(사본)",
+                                        "typeList" to clickedWorkMap["typeList"] as ArrayList<HashMap<String,Any>>,
+                                        "shiftList" to clickedWorkMap["shiftList"] as ArrayList<HashMap<String,Any>>,
+                                        "sortIndex" to sortIndex
+                                    )
+                                )
+                                onViewCreated(view, savedInstanceState)
+                            },
+                            // 근무 삭제 콜백
                             {
                                 mainActivity.helper.deleteByCondition("WorkTable", hashMapOf("id" to clickedWorkMap["id"]))
                                 onViewCreated(view, savedInstanceState)
@@ -94,6 +111,7 @@ class WorkFragment : Fragment() {
             vBinding.mkWorkBtn.setOnClickListener {
                 setWorkDialog(
                     null,
+                    // 근무 저장 콜백
                     { _, workName, typeList, shiftList->
                         val sortIndexMaxOrNull = mainActivity.helper.select("WorkTable").maxOfOrNull { it["sortIndex"] as Int}
                         val sortIndex = if(sortIndexMaxOrNull==null){0}else{sortIndexMaxOrNull+1}
@@ -108,6 +126,7 @@ class WorkFragment : Fragment() {
                         )
                         onViewCreated(view, savedInstanceState)
                     },
+                    {},
                     {}
                 )
             }
@@ -144,6 +163,7 @@ class WorkFragment : Fragment() {
     private fun setWorkDialog(
         clickedMap:HashMap<String, Any>?=null,
         setMap: (id:Int?, workName:String, typeList:ArrayList<HashMap<String, Any>>, shiftList:ArrayList<HashMap<String, Any>>) -> Unit,
+        copyMap:()->Unit,
         deleteMap: () -> Unit){
         try{
             val selectedWorkMap = clickedMap?: hashMapOf(
@@ -160,9 +180,11 @@ class WorkFragment : Fragment() {
             Dialog(requireContext()).apply {
                 setContentView(R.layout.dialog_set_work)
                 mainActivity.setDialogSize(this, vBinding.workFragmentLayout,0.9f, 0.8f)
+                show()
 
                 if(clickedMap==null){
                     this.findViewById<Button>(R.id.deleteWorkBtn).isGone=true
+                    this.findViewById<Button>(R.id.copyWorkBtn).isGone=true
                 }
 
                 /*근무 이름 출력*/
@@ -178,7 +200,7 @@ class WorkFragment : Fragment() {
                     val inflater = LayoutInflater.from(requireContext())
                     val holder = inflater.inflate(R.layout.holder_sortable, null) as LinearLayout
                     mainActivity.mkHolderFromMap(copiedTypeMapList, typeHolderLayout, holder, typeMap, "type"){ toEditTypeMap ->
-                        addOrUpdateTypeDialog(
+                        saveTypeDialog(
                             toEditTypeMap,
                             {
                                 newTypeMap ->
@@ -195,17 +217,17 @@ class WorkFragment : Fragment() {
                     }
                 }
 
-                /*근무 추가하기*/
+                // 근무 추가 버튼
                 this.findViewById<ImageButton>(R.id.mkAddWorkDialogBtn).setOnClickListener { _ ->
                     //다이얼로그에서 새로운 근무유형 홀더에 담기
                     val inflater = LayoutInflater.from(requireContext())
                     val holder = inflater.inflate(R.layout.holder_sortable, null) as LinearLayout
-                    addOrUpdateTypeDialog(
+                    saveTypeDialog(
                         null,
                         {toAddTypeMap ->
                             copiedTypeMapList.add(toAddTypeMap)
                             mainActivity.mkHolderFromMap(copiedTypeMapList, typeHolderLayout, holder, toAddTypeMap, "type"){ toEditTypeMap ->
-                                addOrUpdateTypeDialog(
+                                saveTypeDialog(
                                     toEditTypeMap,
                                     { newTypeMap ->
                                         holder.findViewById<TextView>(R.id.holderTV).text = newTypeMap["type"] as String
@@ -250,7 +272,7 @@ class WorkFragment : Fragment() {
                     }
                 }
 
-                //근무시간 설정 버튼 클릭
+                // 근무 시간 설정 버튼
                 this.findViewById<ImageButton>(R.id.mkSetShiftDialogAtOnceBtn).setOnClickListener {
                     shiftHolderLayout.removeAllViews()
                     setShiftAtOnceDialog{ shiftMapList->
@@ -282,7 +304,7 @@ class WorkFragment : Fragment() {
                     }
                 }
 
-                //근무유형, 근무시간 설정
+                //근무 유형 설정 · 근무 시간 설정 전환
                 this.findViewById<RadioGroup>(R.id.setWorkRadioGroup).setOnCheckedChangeListener { _, id ->
                     when(id){
                         this.findViewById<RadioButton>(R.id.setTypeRadio).id -> {
@@ -296,7 +318,7 @@ class WorkFragment : Fragment() {
                     }
                 }
 
-                //★★★★★ 저장버튼 ★★★★★★
+                // 저장 버튼
                 this.findViewById<Button>(R.id.saveWorkBtn).setOnClickListener {
                     setMap(
                         selectedWorkMap["id"] as? Int,
@@ -306,13 +328,19 @@ class WorkFragment : Fragment() {
                     dismiss()
                 }
 
-                //★★★★★ 삭제버튼 ★★★★★
+                // 복사 버튼
+                this.findViewById<Button>(R.id.copyWorkBtn).setOnClickListener {
+                    copyMap()
+                    dismiss()
+                }
+
+                // 삭제 버튼
                 this.findViewById<Button>(R.id.deleteWorkBtn).setOnClickListener {
                     deleteMap()
                     dismiss()
                 }
 
-                show()
+
             } // Dialog(requireContext()).apply End
         }catch(err:Exception){
             Log.d("test", err.toString())
@@ -384,9 +412,9 @@ class WorkFragment : Fragment() {
         }
     }
 
-    private fun addOrUpdateTypeDialog(
+    private fun saveTypeDialog(
         typeMap:HashMap<String, Any>?=null,
-        addTypeCallback:(HashMap<String, Any>)->Unit,
+        saveTypeCallback:(HashMap<String, Any>)->Unit,
         deleteTypeCallback: () -> Unit){
         try{
             Dialog(requireContext()).apply{
@@ -407,9 +435,10 @@ class WorkFragment : Fragment() {
                     val toSaveTypeMap = hashMapOf<String, Any>(
                         "type" to workNameEditText.text.toString(),
                         "isPatrol" to isWorkPatrolBox.isChecked,
-                        "isConcurrent" to isConcurrentBox.isChecked
+                        "isConcurrent" to isConcurrentBox.isChecked,
+                        "height" to 0
                     )
-                    addTypeCallback(toSaveTypeMap)
+                    saveTypeCallback(toSaveTypeMap)
                     this.dismiss()
                 }
 

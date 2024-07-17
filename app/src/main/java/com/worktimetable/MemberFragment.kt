@@ -52,7 +52,8 @@ class MemberFragment : Fragment() {
             /* db 멤버 홀더에 담기 */
             mainActivity.helper.select("MemberTable",toSortColumn = "sortIndex").onEach {memberMap->
                 val holder = inflater.inflate(R.layout.holder_sortable, null) as LinearLayout
-                mainActivity.mkHolderFromDB("MemberTable", holderLayout, holder, memberMap, "memberName",
+                mainActivity.mkHolderFromDB(
+                    "MemberTable", holderLayout, holder, memberMap, "memberName",
                     {clickedMemberMap->
                         setMemberDialog(
                             clickedMemberMap,
@@ -139,7 +140,7 @@ class MemberFragment : Fragment() {
             }
 
             /* 멤버 저장 */
-            findViewById<Button>(R.id.insertMemberBtn).setOnClickListener {
+            findViewById<Button>(R.id.saveMemberBtn).setOnClickListener {
                 setMap(
                     selectedMemberMap["id"] as? Int,
                     findViewById<EditText>(R.id.memberNameET).text.toString()
