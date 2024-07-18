@@ -285,7 +285,7 @@ class TableFragment : Fragment() {
 
             // 크기 설정 버튼
             vBinding.mkSetSizeDialogBtn.setOnClickListener {
-                setSizeDialog()
+                mkSizeSettingDialog()
             }
 
             //테이블 드랍 버튼(임시)
@@ -373,9 +373,7 @@ class TableFragment : Fragment() {
                     rowTL.addView(row)
                     val toAddHeight = typeMap["height"] as Int
                     setBtnStyle(this, androidx.appcompat.R.color.material_grey_600, doesUpdateSize=true,  toAddHeight=toAddHeight)
-                    setOnClickListener {
-                        mkSetTypeHeight(typeMap)
-                    }
+                    setOnClickListener {mkHeightSettingDialog(typeMap)}
                     setOnLongClickListener(selectSameType(type))
                 }
             }
@@ -663,6 +661,7 @@ class TableFragment : Fragment() {
             val width = toAddWidth?.let { defaultWidth + it } ?: defaultWidth
             val height = toAddHeight?.let { defaultHeight + it } ?: defaultHeight
 
+
             val params = TableRow.LayoutParams(width, height)
             params.gravity = Gravity.NO_GRAVITY
             params.setMargins(3, 3, 3, 3)
@@ -871,26 +870,74 @@ class TableFragment : Fragment() {
         return Pair(numOfAll, numOfPatrol)
     }
 
-    private fun mkSetTypeHeight(typeMap:HashMap<String,Any>){
+    private fun mkHeightSettingDialog(typeMap:HashMap<String,Any>){
         try{
             Dialog(requireContext()).apply {
-                setContentView(R.layout.dialog_table_size)
+                setContentView(R.layout.dialog_one_seekbar)
                 mainActivity.setDialogSize(this, vBinding.tableFragmentLayout, 0.9f, null)
                 show()
-                findViewById<LinearLayout>(R.id.textSizeLayout).isGone = true
-                findViewById<LinearLayout>(R.id.tableWidthLayout).isGone = true
-                findViewById<TextView>(R.id.typeHeightTV).isGone = true
 
                 val type = typeMap["type"] as String
                 var toUpdateHeight = 0
 
-                findViewById<TextView>(R.id.tableSizeTitleTV).apply {
-                    isGone = false
+                findViewById<TextView>(R.id.oneSeekbarTV).apply {
                     val title = "$type 높이 설정"
                     text = title
                 }
 
-                findViewById<SeekBar>(R.id.heightSeekBar).apply {
+                findViewById<SeekBar>(R.id.oneSeekbar).apply {
+                    progress =  (typeMap["height"] as Int)/3 + 50
+                    setOnSeekBarChangeListener( object :OnSeekBarChangeListener{
+                        override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {
+                            typeMap["height"]  = (p1-50)*3
+                            toUpdateHeight = (p1-50)*3
+                            mkTable()
+                        }
+                        override fun onStartTrackingTouch(p0: SeekBar?) {}
+                        override fun onStopTrackingTouch(p0: SeekBar?) {}
+                    })
+                }
+
+                setOnDismissListener {
+                    mainActivity.helper.select("WorkTable").forEach {map->
+                        val id = map["id"] as Int
+                        val newTypeList = map["typeList"] as ArrayList<HashMap<String,Any>>
+                        newTypeList.forEach {selectedTypeMap->
+                            if(selectedTypeMap["type"] == type){
+                                selectedTypeMap["height"] = toUpdateHeight
+                            }
+                        }
+                        mainActivity.helper.updateByCondition(
+                            "WorkTable",
+                            hashMapOf("id" to id),
+                            hashMapOf("typeList" to newTypeList)
+                        )
+                    }
+                }
+
+            }
+        }catch(err:Exception){
+            Log.d("test", err.toString())
+            Log.d("test", err.stackTraceToString())
+        }
+    }
+
+    /* private fun mkHeightSettingDialog(typeMap:HashMap<String,Any>){
+        try{
+            Dialog(requireContext()).apply {
+                setContentView(R.layout.dialog_one_seekbar)
+                mainActivity.setDialogSize(this, vBinding.tableFragmentLayout, 0.9f, null)
+                show()
+
+                val type = typeMap["type"] as String
+                var toUpdateHeight = 0
+
+                findViewById<TextView>(R.id.oneSeekbarTV).apply {
+                    val title = "$type 높이 설정"
+                    text = title
+                }
+
+                findViewById<SeekBar>(R.id.oneSeekbar).apply {
                     progress =  (typeMap["height"] as Int) / 3
                     setOnSeekBarChangeListener( object :OnSeekBarChangeListener{
                         override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {
@@ -925,12 +972,12 @@ class TableFragment : Fragment() {
             Log.d("test", err.toString())
             Log.d("test", err.stackTraceToString())
         }
-    }
+    }*/
 
-    private fun setSizeDialog(){
+    private fun mkSizeSettingDialog(){
         try{
             Dialog(requireContext()).apply {
-                setContentView(R.layout.dialog_table_size)
+                setContentView(R.layout.dialog_multi_seekbar)
                 mainActivity.setDialogSize(this, vBinding.tableFragmentLayout, 0.9f, null)
                 show()
 
