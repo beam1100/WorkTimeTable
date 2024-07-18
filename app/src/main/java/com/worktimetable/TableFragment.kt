@@ -1,5 +1,4 @@
 package com.worktimetable
-import android.annotation.SuppressLint
 import android.app.Dialog
 import android.content.Context
 //import android.os.Build.VERSION_CODES.R
@@ -30,7 +29,6 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.children
 import androidx.core.view.isGone
 import com.worktimetable.databinding.FragmentTableBinding
-import org.w3c.dom.Text
 import java.text.SimpleDateFormat
 import java.util.Calendar
 
@@ -47,11 +45,12 @@ class TableFragment : Fragment() {
     private val vBinding get() = _vBinding!!
     private lateinit var mainActivity:MainActivity
 
+
+    private var logMapList = arrayListOf<HashMap<String,Any>>()
     private var typeMapList = arrayListOf<HashMap<String,Any>>()
     private var shiftMapList = arrayListOf<HashMap<String,Any>>()
-    private var logMapList = arrayListOf<HashMap<String,Any>>()
     private lateinit var mainMemberList:ArrayList<String>
-    private var subMemberList = arrayListOf("지원1", "지원2", "지원3")
+    private var subMemberList = arrayListOf<String>()
 
     private var calendar: Calendar = Calendar.getInstance()
     private val formatter = SimpleDateFormat("yyyy-MM-dd")
@@ -62,9 +61,19 @@ class TableFragment : Fragment() {
     private val stack: ArrayDeque<ArrayList<HashMap<String, Any>>> = ArrayDeque()
 
 
+
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+//        _vBinding = null
+        Log.d("test", "onDestroyView 실행")
+
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View? {
+        Log.d("test", "onCreateView 실행")
         _vBinding = FragmentTableBinding.inflate(inflater, container, false)
         return vBinding.root
     }
@@ -73,12 +82,14 @@ class TableFragment : Fragment() {
         super.onAttach(context)
         if(context is MainActivity){
             mainActivity = context
+            Log.d("test", "onAttach 실행")
         }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         try{
             super.onViewCreated(view, savedInstanceState)
+            Log.d("test", "onViewCreated 실행")
 
             vBinding.dateTV.text = formatter.format(calendar.time)
 
@@ -284,42 +295,22 @@ class TableFragment : Fragment() {
 
             //출력 테스트(임시)
             vBinding.printLogBtn.setOnClickListener {
-                /*logMapList.forEach {
-                    Log.d("test", it.toString())
-                }
                 typeMapList.forEach {
                     Log.d("test", it.toString())
                 }
-                Log.d("test", mainMemberList.toString())*/
-
-                try{
-                    Log.d("test", """
-                        ${mainActivity.preferences.getInt("myTextSize", 15)}
-                        ${mainActivity.preferences.getInt("tableWidth", 200)}
-                        ${mainActivity.preferences.getInt("tableHeight", 200)}
-                    """.trimIndent())
-
-                }catch(err:Exception){
-                    Log.d("test", err.toString())
-                    Log.d("test", err.stackTraceToString())
-                }
-                /*val editor = mainActivity.preferences.edit()
-                editor.clear()
-                editor.apply()*/
             }
-
-
-
         }catch(err:Exception){
             Log.d("test", err.toString())
             Log.d("test", err.stackTraceToString())
         }
+
     }
 
     private fun mkTable(){
         try{
 
             clearTable()
+            switchSelectMode(false)
 
             // 메인 테이블
             val tableLayout = TableLayout(requireContext())
@@ -327,6 +318,8 @@ class TableFragment : Fragment() {
                 val tableRow = TableRow(requireContext())
                 val type = typeMap["type"] as String
                 val isConcurrent = typeMap["isConcurrent"] as Boolean
+                val toAddHeight = typeMap["height"] as Int
+
 
                 for(shiftMap in shiftMapList){
                     val shift = shiftMap["shift"] as String
@@ -361,7 +354,7 @@ class TableFragment : Fragment() {
 
                         this.setOnLongClickListener (cellLongClickEvent())
                         this.setOnDragListener{ v, event -> cellDrag(v, event) }
-                        setBtnStyle(this, R.color.unSelectedColor)
+                        setBtnStyle(this, R.color.unSelectedColor, doesUpdateSize=true, toAddHeight=toAddHeight)
                     }
                 }
                 tableLayout.addView(tableRow)
@@ -378,17 +371,10 @@ class TableFragment : Fragment() {
                     textSize = mainActivity.preferences.getInt("myTextSize", 20).toFloat()
                     row.addView(this)
                     rowTL.addView(row)
-                    val height = typeMap["height"] as Int
-
-
-
-                    Log.d("test", height.toString())
-
-
-
-                    setBtnStyle(this, androidx.appcompat.R.color.material_grey_600)
+                    val toAddHeight = typeMap["height"] as Int
+                    setBtnStyle(this, androidx.appcompat.R.color.material_grey_600, doesUpdateSize=true,  toAddHeight=toAddHeight)
                     setOnClickListener {
-                        mkSetTypeHeightDialog(typeMap)
+                        mkSetTypeHeight(typeMap)
                     }
                     setOnLongClickListener(selectSameType(type))
                 }
@@ -405,7 +391,7 @@ class TableFragment : Fragment() {
                     textSize = mainActivity.preferences.getInt("myTextSize", 20).toFloat()
                     colRow.addView(this)
                     this.setOnClickListener{}
-                    setBtnStyle(this, androidx.appcompat.R.color.material_grey_600)
+                    setBtnStyle( this, androidx.appcompat.R.color.material_grey_600, doesUpdateSize=true)
                     setOnLongClickListener(selectSameShift(shift))
                 }
             }
@@ -488,19 +474,19 @@ class TableFragment : Fragment() {
         calendar.add(Calendar.DAY_OF_MONTH, num)
         vBinding.dateTV.text = formatter.format(calendar.time)
         val recorded = mainActivity.helper.select("LogTable", where = hashMapOf("logDate" to formatter.format(calendar.time)))
-        if(recorded.isNotEmpty()){
+        if(recorded.isEmpty()){
+            mainMemberList = ArrayList(mainActivity.helper.select("MemberTable", toSortColumn = "sortIndex")
+                .map{it["memberName"] as String})
+            logMapList.clear()
+            subMemberList.clear()
+            clearTable()
+        }else{
             typeMapList = recorded[0]["typeMapList"] as ArrayList<HashMap<String, Any>>
             shiftMapList = recorded[0]["shiftMapList"] as ArrayList<HashMap<String, Any>>
             logMapList = recorded[0]["logMapList"] as ArrayList<HashMap<String, Any>>
             mainMemberList = recorded[0]["mainMemberList"] as ArrayList<String>
             subMemberList = recorded[0]["subMemberList"] as ArrayList<String>
             mkTable()
-        }else{
-            logMapList.clear()
-            mainMemberList = ArrayList(mainActivity.helper.select("MemberTable", toSortColumn = "sortIndex")
-                .map{it["memberName"] as String})
-            subMemberList.clear()
-            clearTable()
         }
     }
 
@@ -529,7 +515,7 @@ class TableFragment : Fragment() {
                 adapter = ArrayAdapter(
                     requireContext(),
                     R.layout.custom_spinner,
-                    mainActivity.helper.select("WorkTable").map { it["workName"] }
+                    mainActivity.helper.select("WorkTable", toSortColumn="sortIndex").map { it["workName"] }
                 )
             }
             findViewById<Button>(R.id.mkNewTableBtn).setOnClickListener{
@@ -668,24 +654,20 @@ class TableFragment : Fragment() {
     }
 
 
-    private fun setBtnStyle(btn: AppCompatButton, backGroundColor:Int, heightRatio:Float?=null){
+    private fun setBtnStyle(btn: AppCompatButton, backGroundColor:Int, doesUpdateSize:Boolean = false, toAddHeight:Int?=null, toAddWidth:Int?=null){
         btn.setBackgroundColor(ContextCompat.getColor(requireContext(), backGroundColor))
-        val params = if(heightRatio==null){
-            TableRow.LayoutParams(
-                mainActivity.preferences.getInt("tableWidth", 200),
-                mainActivity.preferences.getInt("tableHeight", 200)
-            )
-        }else{
-            TableRow.LayoutParams(
-                mainActivity.preferences.getInt("tableWidth", 200),
-                mainActivity.preferences.getInt("tableHeight", 200*heightRatio.toInt())
-            )
-        }
-
-        params.gravity = Gravity.NO_GRAVITY
-        params.setMargins(3, 3, 3, 3)
-        btn.layoutParams = params
         btn.setTextColor(ContextCompat.getColor(requireContext(), R.color.black))
+        if(doesUpdateSize){
+            val defaultWidth = mainActivity.preferences.getInt("tableWidth", 200)
+            val defaultHeight = mainActivity.preferences.getInt("tableHeight", 200)
+            val width = toAddWidth?.let { defaultWidth + it } ?: defaultWidth
+            val height = toAddHeight?.let { defaultHeight + it } ?: defaultHeight
+
+            val params = TableRow.LayoutParams(width, height)
+            params.gravity = Gravity.NO_GRAVITY
+            params.setMargins(3, 3, 3, 3)
+            btn.layoutParams = params
+        }
     }
 
 
@@ -889,26 +871,59 @@ class TableFragment : Fragment() {
         return Pair(numOfAll, numOfPatrol)
     }
 
+    private fun mkSetTypeHeight(typeMap:HashMap<String,Any>){
+        try{
+            Dialog(requireContext()).apply {
+                setContentView(R.layout.dialog_table_size)
+                mainActivity.setDialogSize(this, vBinding.tableFragmentLayout, 0.9f, null)
+                show()
+                findViewById<LinearLayout>(R.id.textSizeLayout).isGone = true
+                findViewById<LinearLayout>(R.id.tableWidthLayout).isGone = true
+                findViewById<TextView>(R.id.typeHeightTV).isGone = true
 
-        private fun mkSetTypeHeightDialog(typeMap:HashMap<String,Any>){
-        Dialog(requireContext()).apply {
-            setContentView(R.layout.dialog_table_size)
-            mainActivity.setDialogSize(this, vBinding.tableFragmentLayout, 0.9f, null)
-            show()
+                val type = typeMap["type"] as String
+                var toUpdateHeight = 0
 
-            findViewById<LinearLayout>(R.id.textSizeLayout).isGone = true
-            findViewById<LinearLayout>(R.id.tableWidthLayout).isGone = true
-            val title = "${typeMap["type"]} 근무 높이 설정"
-            findViewById<TextView>(R.id.tableSizeTitleTV).text = title
-
-            findViewById<SeekBar>(R.id.heightSeekBar).setOnSeekBarChangeListener( object :OnSeekBarChangeListener{
-                override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {
-                    typeMap["height"] = p1
-                    mkTable()
+                findViewById<TextView>(R.id.tableSizeTitleTV).apply {
+                    isGone = false
+                    val title = "$type 높이 설정"
+                    text = title
                 }
-                override fun onStartTrackingTouch(p0: SeekBar?) {}
-                override fun onStopTrackingTouch(p0: SeekBar?) {}
-            })
+
+                findViewById<SeekBar>(R.id.heightSeekBar).apply {
+                    progress =  (typeMap["height"] as Int) / 3
+                    setOnSeekBarChangeListener( object :OnSeekBarChangeListener{
+                        override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {
+                            typeMap["height"]  = p1*3
+                            toUpdateHeight = p1*3
+                            mkTable()
+                        }
+                        override fun onStartTrackingTouch(p0: SeekBar?) {}
+                        override fun onStopTrackingTouch(p0: SeekBar?) {}
+                    })
+                }
+
+                setOnDismissListener {
+                    mainActivity.helper.select("WorkTable").forEach {map->
+                        val id = map["id"] as Int
+                        val newTypeList = map["typeList"] as ArrayList<HashMap<String,Any>>
+                        newTypeList.forEach {selectedTypeMap->
+                            if(selectedTypeMap["type"] == type){
+                                selectedTypeMap["height"] = toUpdateHeight
+                            }
+                        }
+                        mainActivity.helper.updateByCondition(
+                            "WorkTable",
+                            hashMapOf("id" to id),
+                            hashMapOf("typeList" to newTypeList)
+                        )
+                    }
+                }
+
+            }
+        }catch(err:Exception){
+            Log.d("test", err.toString())
+            Log.d("test", err.stackTraceToString())
         }
     }
 
@@ -922,10 +937,10 @@ class TableFragment : Fragment() {
                 val editor = mainActivity.preferences.edit()
 
                 findViewById<SeekBar>(R.id.textSizeSeekBar).apply {
-                    progress = mainActivity.preferences.getInt("myTextSize", 20)
+                    progress = mainActivity.preferences.getInt("myTextSize", 10) * 5
                     setOnSeekBarChangeListener( object :OnSeekBarChangeListener{
                         override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {
-                            editor.putInt("myTextSize", p1)
+                            editor.putInt("myTextSize", p1/5)
 							editor.apply()
                             mkTable()
                         }
@@ -935,10 +950,10 @@ class TableFragment : Fragment() {
                 }
 
                 findViewById<SeekBar>(R.id.widthSeekBar).apply {
-                    progress = mainActivity.preferences.getInt("tableWidth", 200)
+                    progress = mainActivity.preferences.getInt("tableWidth", 200) / 3
                     setOnSeekBarChangeListener( object :OnSeekBarChangeListener{
                         override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {
-                            editor.putInt("tableWidth", p1)
+                            editor.putInt("tableWidth", p1*3)
 							editor.apply()
                             mkTable()
                         }
@@ -948,10 +963,10 @@ class TableFragment : Fragment() {
                 }
 
                 findViewById<SeekBar>(R.id.heightSeekBar).apply {
-                    progress = mainActivity.preferences.getInt("tableHeight", 200)
+                    progress = mainActivity.preferences.getInt("tableHeight", 200) / 3
                     setOnSeekBarChangeListener( object :OnSeekBarChangeListener{
                         override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {
-                            editor.putInt("tableHeight", p1)
+                            editor.putInt("tableHeight", p1*3)
 							editor.apply()
                             mkTable()
                         }
@@ -959,15 +974,11 @@ class TableFragment : Fragment() {
                         override fun onStopTrackingTouch(p0: SeekBar?) {}
                     })
                 }
-
-
             }
         }catch(err:Exception){
             Log.d("test", err.toString())
             Log.d("test", err.stackTraceToString())
         }
-
-
     }
 
 

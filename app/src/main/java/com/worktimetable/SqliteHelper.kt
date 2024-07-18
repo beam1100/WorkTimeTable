@@ -190,6 +190,7 @@ class SqliteHelper(context:Context?, name:String, version: Int):SQLiteOpenHelper
 		val whereClause = where?.map { "${it.key} = ?" }?.joinToString(" AND ")
 		val whereArgs = where?.values?.map { it.toString() }?.toTypedArray()
 
+
 		val rowsUpdated = wd.update(tableName, values, whereClause, whereArgs)
 		wd.close()
 		return rowsUpdated
