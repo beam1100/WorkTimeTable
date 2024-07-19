@@ -28,6 +28,11 @@ import com.worktimetable.databinding.FragmentWorkBinding
 class WorkFragment : Fragment() {
     companion object { }
 
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _vBinding = null
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
     }

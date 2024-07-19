@@ -26,6 +26,11 @@ class MemberFragment : Fragment() {
     private val vBinding get() = _vBinding!!
     private lateinit var mainActivity:MainActivity
 
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _vBinding = null
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,

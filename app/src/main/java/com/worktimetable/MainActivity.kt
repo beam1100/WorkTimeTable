@@ -5,13 +5,15 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.icu.text.SimpleDateFormat
 import android.icu.util.Calendar
-import android.media.Image
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.widget.Button
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.core.content.ContentProviderCompat.requireContext
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import com.worktimetable.databinding.ActivityMainBinding
 
@@ -23,7 +25,6 @@ class MainActivity : FragmentActivity() {
     private val memberFragment = MemberFragment()
     private val workFragment = WorkFragment()
     val helper = SqliteHelper(this, "WorkTable.db", 1)
-
     val preferences: SharedPreferences by lazy {getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)}
 
 
@@ -35,27 +36,42 @@ class MainActivity : FragmentActivity() {
             setContentView(vBinding.root)
 
             vBinding.tableFragmentBtn.setOnClickListener {
-                supportFragmentManager.beginTransaction()
-                    .replace(vBinding.fragmentContainerView.id, tableFragment)
-                    .commit()
+                replaceFragment(tableFragment)
             }
 
             vBinding.memberFragmentBtn.setOnClickListener {
-                supportFragmentManager.beginTransaction()
-                    .replace(vBinding.fragmentContainerView.id, memberFragment)
-                    .commit()
+                handleFragmentChange(memberFragment)
             }
 
             vBinding.workFragmentBtn.setOnClickListener {
-                supportFragmentManager.beginTransaction()
-                    .replace(vBinding.fragmentContainerView.id, workFragment)
-                    .commit()
+                handleFragmentChange(workFragment)
             }
 
         }catch(err:Exception){
             Log.d("test", err.toString())
             Log.d("test", err.stackTraceToString())
         }
+    }
+
+    private fun handleFragmentChange(fragment: Fragment) {
+        if (supportFragmentManager.findFragmentById(vBinding.fragmentContainerView.id) == tableFragment) {
+            if (tableFragment.isChanged()) {
+                mkConfirmDialog(
+                    "변경된 내용을 저장하시겠습니까?",
+                    {
+                        tableFragment.saveLog()
+                        replaceFragment(fragment)
+                    },
+                    {replaceFragment(fragment) }
+                )
+            } else {replaceFragment(fragment)}
+        } else {replaceFragment(fragment)}
+    }
+
+    private fun replaceFragment(fragment: Fragment){
+        supportFragmentManager.beginTransaction()
+            .replace(vBinding.fragmentContainerView.id, fragment)
+            .commit()
     }
 
     fun mkHolderFromMap(
@@ -110,9 +126,6 @@ class MainActivity : FragmentActivity() {
             Log.d("test", err.stackTraceToString())
         }
     }
-
-
-
 
     fun mkHolderFromDB(
         tableName:String,
@@ -236,6 +249,23 @@ class MainActivity : FragmentActivity() {
         val endCalendar = getCalendarFromString(endDate)
         val diffInMillis = endCalendar.timeInMillis - startCalendar.timeInMillis
         return (diffInMillis / (24 * 60 * 60 * 1000)).toInt()
+    }
+
+    fun mkConfirmDialog(text:String, yesCallback: () -> Unit, noCallback:()->Unit){
+        Dialog(this).apply {
+            setContentView(R.layout.dialog_confirm)
+            setDialogSize(this, vBinding.mainLayout, 0.9f, null)
+            show()
+            findViewById<TextView>(R.id.confirmTV).text = text
+            findViewById<Button>(R.id.confirmYesBtn).setOnClickListener {
+                yesCallback()
+                dismiss()
+            }
+            findViewById<Button>(R.id.confirmNoBtn).setOnClickListener {
+                noCallback()
+                dismiss()
+            }
+        }
     }
 
     /*fun <T> myGet(c:Collection<T>, index:Int): T?{

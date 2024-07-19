@@ -47,7 +47,8 @@
                 android:layout_weight="1"
                 android:fontFamily="@font/ongulip"
                 android:text="인원 출력"
-                android:textSize="30sp" />
+                android:textSize="30sp"
+                android:visibility="gone" />
 
             <Button
                 android:id="@+id/dropMemberBtn"
@@ -56,7 +57,8 @@
                 android:layout_weight="1"
                 android:fontFamily="@font/ongulip"
                 android:text="인원 드랍"
-                android:textSize="30sp" />
+                android:textSize="30sp"
+                android:visibility="gone" />
         </LinearLayout>
     </LinearLayout>
 

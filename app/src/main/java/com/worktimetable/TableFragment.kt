@@ -44,7 +44,6 @@ class TableFragment : Fragment() {
     private val vBinding get() = _vBinding!!
     private lateinit var mainActivity:MainActivity
 
-
     private var logMapList = arrayListOf<HashMap<String,Any>>()
     private var typeMapList = arrayListOf<HashMap<String,Any>>()
     private var shiftMapList = arrayListOf<HashMap<String,Any>>()
@@ -62,19 +61,14 @@ class TableFragment : Fragment() {
     private val stack: ArrayDeque<ArrayList<HashMap<String, Any>>> = ArrayDeque()
 
 
-
-
     override fun onDestroyView() {
         super.onDestroyView()
-//        _vBinding = null
-        Log.d("test", "onDestroyView 실행")
-
+        _vBinding = null
     }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View? {
-        Log.d("test", "onCreateView 실행")
         _vBinding = FragmentTableBinding.inflate(inflater, container, false)
         return vBinding.root
     }
@@ -83,7 +77,6 @@ class TableFragment : Fragment() {
         super.onAttach(context)
         if(context is MainActivity){
             mainActivity = context
-            Log.d("test", "onAttach 실행")
         }
     }
 
@@ -99,18 +92,31 @@ class TableFragment : Fragment() {
 
             getLog(0)
 
+
             // 다음 날짜로 이동 버튼
             vBinding.nextDateBtn.setOnClickListener{
-                getLog(1)
-                switchSelectMode(false)
-                stack.clear()
+                if(isChanged()){
+                    mainActivity.mkConfirmDialog(
+                        "변경된 내용을 저장하시겠습니까?",
+                        {proceedWithSaving(1)},
+                        {proceedWithoutSaving(1)}
+                    )
+                }else{
+                    proceedWithoutSaving(1)
+                }
             }
 
             // 이전 날짜로 이동 버튼
             vBinding.beforeDateBtn.setOnClickListener{
-                getLog(-1)
-                switchSelectMode(false)
-                stack.clear()
+                if(isChanged()){
+                    mainActivity.mkConfirmDialog(
+                        "변경된 내용을 저장하시겠습니까?",
+                        {proceedWithSaving(-1)},
+                        {proceedWithoutSaving(-1)}
+                    )
+                }else{
+                    proceedWithoutSaving(-1)
+                }
             }
 
             // 이전 근무로 이동 버튼
@@ -120,10 +126,16 @@ class TableFragment : Fragment() {
                 betweenList
                     .filter {  it > 0}
                     .minOrNull()
-                    ?.let{
-                        getLog(
-                            mainActivity.daysBetween( formatter.format(calendar.time), logDateList[betweenList.indexOf(it)] )
-                        )
+                    ?.let{toMoveNum->
+                        if(isChanged()){
+                            mainActivity.mkConfirmDialog(
+                                "변경된 내용을 저장하시겠습니까?",
+                                {proceedWithSaving(toMoveNum*-1)},
+                                {proceedWithoutSaving(toMoveNum*-1)}
+                            )
+                        }else{
+                            proceedWithoutSaving(toMoveNum*-1)
+                        }
                     }
                 switchSelectMode(false)
                 stack.clear()
@@ -134,12 +146,18 @@ class TableFragment : Fragment() {
                 val logDateList = mainActivity.helper.select("LogTable", toSortColumn = "logDate").map { it["logDate"] as String }
                 val betweenList = logDateList.map { mainActivity.daysBetween(it, formatter.format(calendar.time)) }
                 betweenList
-                    .filter {  it < 0}
+                    .filter {it < 0}
                     .maxOrNull()
-                    ?.let{
-                        getLog(
-                            mainActivity.daysBetween( formatter.format(calendar.time), logDateList[betweenList.indexOf(it)] )
-                        )
+                    ?.let{moveToNum->
+                        if(isChanged()){
+                            mainActivity.mkConfirmDialog(
+                                "변경된 내용을 저장하시겠습니까?",
+                                {proceedWithSaving(moveToNum*-1)},
+                                {proceedWithoutSaving(moveToNum*-1)}
+                            )
+                        }else{
+                            proceedWithoutSaving(moveToNum*-1)
+                        }
                     }
                 switchSelectMode(false)
                 stack.clear()
@@ -180,47 +198,24 @@ class TableFragment : Fragment() {
 
             //일지 저장
             vBinding.saveLogBtn.setOnClickListener {
-                val toSaveLogMapList = logMapList.map {map->
-                    map.filterKeys {key->
-                        key != "btn"
-                    }
-                }
-
-                val isRecord = mainActivity.helper.select("LogTable", where=hashMapOf("logDate" to formatter.format(calendar.time)))
-
-                if(isRecord.isEmpty()){
-                    mainActivity.helper.insert(
-                        "LogTable",
-                        hashMapOf(
-                            "logDate" to formatter.format(calendar.time),
-                            "logMapList" to toSaveLogMapList,
-                            "typeMapList" to typeMapList,
-                            "shiftMapList" to shiftMapList,
-                            "mainMemberList" to mainMemberList,
-                            "subMemberList" to subMemberList,
-                            "workName" to workName
-                        )
-                    )
-                }else{
-                    mainActivity.helper.updateByCondition(
-                        "LogTable",
-                        where = hashMapOf("logDate" to formatter.format(calendar.time)),
-                        updateMap = hashMapOf(
-                            "logMapList" to toSaveLogMapList,
-                            "typeMapList" to typeMapList,
-                            "shiftMapList" to shiftMapList,
-                            "mainMemberList" to mainMemberList,
-                            "subMemberList" to subMemberList,
-                            "workName" to workName
-                        )
-                    )
-                }
+                saveLog()
             }
 
             //일지 삭제
             vBinding.deleteLogBtn.setOnClickListener {
-                mainActivity.helper.deleteByCondition("LogTable", hashMapOf("logDate" to formatter.format(calendar.time)))
-                clearTable()
+                if(logMapList.isNotEmpty()){
+                    mainActivity.mkConfirmDialog(
+                        "현재 근무표를 삭제하시겠습니까?",
+                        {
+                            mainActivity.helper.deleteByCondition("LogTable", hashMapOf("logDate" to formatter.format(calendar.time)))
+                            clearTable()
+                        },
+                        {}
+                    )
+                }else{
+                    Toast.makeText(requireContext(), "삭제할 근무표가 없습니다.", Toast.LENGTH_SHORT).show()
+                }
+
             }
 
             //사고자 설정
@@ -314,22 +309,84 @@ class TableFragment : Fragment() {
 
             //출력 테스트(임시)
             vBinding.printLogBtn.setOnClickListener {
-                mainActivity.helper.select("LogTable").forEach {
-
-                    it.forEach { (key, value) ->
-                        if(key!="logMapList" && key!="shiftMapList" && key!="typeMapList"){
-                            Log.d("test", "☆${key} :  ☆${value}")
-                        }
-                    }
-                    Log.d("test", "=".repeat(100))
-
-                }
             }
         }catch(err:Exception){
             Log.d("test", err.toString())
             Log.d("test", err.stackTraceToString())
         }
+    }
 
+    private fun proceedWithSaving(num:Int) {
+        saveLog()
+        proceedWithoutSaving(num)
+    }
+
+    private fun proceedWithoutSaving(num:Int) {
+        getLog(num)
+        switchSelectMode(false)
+        stack.clear()
+    }
+
+    fun saveLog(){
+        val toSaveLogMapList = logMapList.map {map->
+            map.filterKeys {key->
+                key != "btn"
+            }
+        }
+        val isRecord = mainActivity.helper.select("LogTable", where=hashMapOf("logDate" to formatter.format(calendar.time)))
+        if(isRecord.isEmpty()){
+            mainActivity.helper.insert(
+                "LogTable",
+                hashMapOf(
+                    "logDate" to formatter.format(calendar.time),
+                    "logMapList" to toSaveLogMapList,
+                    "typeMapList" to typeMapList,
+                    "shiftMapList" to shiftMapList,
+                    "mainMemberList" to mainMemberList,
+                    "subMemberList" to subMemberList,
+                    "workName" to workName
+                )
+            )
+        }else{
+            mainActivity.helper.updateByCondition(
+                "LogTable",
+                where = hashMapOf("logDate" to formatter.format(calendar.time)),
+                updateMap = hashMapOf(
+                    "logMapList" to toSaveLogMapList,
+                    "typeMapList" to typeMapList,
+                    "shiftMapList" to shiftMapList,
+                    "mainMemberList" to mainMemberList,
+                    "subMemberList" to subMemberList,
+                    "workName" to workName
+                )
+            )
+        }
+    }
+
+    private fun getLog(num:Int){
+        try{
+            calendar.add(Calendar.DAY_OF_MONTH, num)
+            vBinding.dateTV.text = formatter.format(calendar.time)
+            val recorded = mainActivity.helper.select("LogTable", where = hashMapOf("logDate" to formatter.format(calendar.time)))
+            if(recorded.isEmpty()){
+                mainMemberList = ArrayList(mainActivity.helper.select("MemberTable", toSortColumn = "sortIndex")
+                    .map{it["memberName"] as String})
+                logMapList.clear()
+                subMemberList.clear()
+                clearTable()
+            }else{
+                typeMapList = recorded[0]["typeMapList"] as ArrayList<HashMap<String, Any>>
+                shiftMapList = recorded[0]["shiftMapList"] as ArrayList<HashMap<String, Any>>
+                logMapList = recorded[0]["logMapList"] as ArrayList<HashMap<String, Any>>
+                mainMemberList = recorded[0]["mainMemberList"] as ArrayList<String>
+                subMemberList = recorded[0]["subMemberList"] as ArrayList<String>
+                workName = recorded[0]["workName"] as String
+                mkTable()
+            }
+        }catch(err:Exception){
+            Log.d("test", err.toString())
+            Log.d("test", err.stackTraceToString())
+        }
     }
 
     private fun mkTable(){
@@ -495,30 +552,6 @@ class TableFragment : Fragment() {
             }
         }
     }
-
-
-
-    private fun getLog(num:Int){
-        calendar.add(Calendar.DAY_OF_MONTH, num)
-        vBinding.dateTV.text = formatter.format(calendar.time)
-        val recorded = mainActivity.helper.select("LogTable", where = hashMapOf("logDate" to formatter.format(calendar.time)))
-        if(recorded.isEmpty()){
-            mainMemberList = ArrayList(mainActivity.helper.select("MemberTable", toSortColumn = "sortIndex")
-                .map{it["memberName"] as String})
-            logMapList.clear()
-            subMemberList.clear()
-            clearTable()
-        }else{
-            typeMapList = recorded[0]["typeMapList"] as ArrayList<HashMap<String, Any>>
-            shiftMapList = recorded[0]["shiftMapList"] as ArrayList<HashMap<String, Any>>
-            logMapList = recorded[0]["logMapList"] as ArrayList<HashMap<String, Any>>
-            mainMemberList = recorded[0]["mainMemberList"] as ArrayList<String>
-            subMemberList = recorded[0]["subMemberList"] as ArrayList<String>
-            workName = recorded[0]["workName"] as String
-            mkTable()
-        }
-    }
-
 
     private fun mkNewLogMapList(typeList: ArrayList<HashMap<String, Any>>, shiftList: ArrayList<HashMap<String, Any>>):ArrayList<HashMap<String,Any>> {
         val resultMapList = arrayListOf<HashMap<String,Any>>()
@@ -1012,7 +1045,7 @@ class TableFragment : Fragment() {
 
                 findViewById<SeekBar>(R.id.dateSizeSeekBar).apply {
                     progress = mainActivity.preferences.getInt("dateSize", 20)
-                    setOnSeekBarChangeListener( object :OnSeekBarChangeListener{
+                    setOnSeekBarChangeListener( object:OnSeekBarChangeListener{
                         override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {
                             editor.putInt("dateSize", p1)
                             editor.apply()
@@ -1050,6 +1083,34 @@ class TableFragment : Fragment() {
                 }
             }
         }
+    }
+
+    fun isChanged():Boolean{
+        try{
+            val recorded = mainActivity.helper.select("LogTable", where = hashMapOf("logDate" to formatter.format(calendar.time)))
+
+            if(recorded.isNotEmpty()){
+                val recordedTypeMapList = recorded[0]["typeMapList"] as ArrayList<HashMap<String, Any>>
+                val recordedLogMapList = recorded[0]["logMapList"] as ArrayList<HashMap<String, Any>>
+                val recordedMainMemberList = recorded[0]["mainMemberList"] as ArrayList<String>
+                val recordedSubMemberList = recorded[0]["subMemberList"] as ArrayList<String>
+                val btnRemovedLogMapList = logMapList.map {map->
+                    map.filterKeys {key->
+                        key != "btn"
+                    }
+                }
+                return recordedLogMapList!=btnRemovedLogMapList ||
+                        recordedTypeMapList != typeMapList ||
+                        recordedMainMemberList != mainMemberList ||
+                        recordedSubMemberList != subMemberList
+            }else{
+                return false
+            }
+        }catch (err:Exception){
+            Log.d("test", err.toString())
+            Log.d("test", err.stackTraceToString())
+        }
+        return false
     }
 
 
