@@ -43,7 +43,8 @@ class SqliteHelper(context:Context?, name:String, version: Int):SQLiteOpenHelper
 				typeMapList BLOB,
 				shiftMapList BLOB,
 				mainMemberList BLOB,
-				subMemberList BLOB
+				subMemberList BLOB,
+				workName TEXT
 			)
 	""".trimIndent()
 

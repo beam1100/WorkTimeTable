@@ -5,21 +5,10 @@
     android:layout_height="wrap_content"
     android:orientation="vertical">
 
-    <TextView
-        android:id="@+id/tableSizeTitleTV"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:layout_weight="1"
-        android:fontFamily="@font/ongulip"
-        android:gravity="center"
-        android:textSize="30sp"
-        android:visibility="gone" />
-
     <LinearLayout
-        android:id="@+id/textSizeLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_margin="10dp"
         android:layout_weight="1"
         android:orientation="horizontal"
         android:visibility="visible">
@@ -31,37 +20,7 @@
             android:layout_weight="1"
             android:fontFamily="@font/ongulip"
             android:gravity="center"
-            android:text="글자크기"
-            android:textSize="30sp" />
-
-        <SeekBar
-            android:id="@+id/textSizeSeekBar"
-            style="@android:style/Widget.SeekBar"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_weight="3"
-            android:max="100"
-            android:progress="0" />
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/tableWidthLayout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:orientation="horizontal"
-        android:visibility="visible">
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_weight="1"
-            android:fontFamily="@font/ongulip"
-            android:gravity="center"
-            android:text="너비"
+            android:text="전체 칸 너비"
             android:textSize="30sp" />
 
         <SeekBar
@@ -70,16 +29,16 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:layout_weight="3"
+            android:layout_weight="1"
             android:max="100"
             android:progress="1" />
 
     </LinearLayout>
 
     <LinearLayout
-        android:id="@+id/tableHeightLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_margin="10dp"
         android:layout_weight="1"
         android:orientation="horizontal">
 
@@ -91,7 +50,7 @@
             android:layout_weight="1"
             android:fontFamily="@font/ongulip"
             android:gravity="center"
-            android:text="높이"
+            android:text="전체 칸 높이"
             android:textSize="30sp" />
 
         <SeekBar
@@ -100,10 +59,92 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_gravity="center"
-            android:layout_weight="3"
+            android:layout_weight="1"
             android:max="100"
             android:progress="1" />
 
     </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="10dp"
+        android:layout_weight="1"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/textView4"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:fontFamily="@font/ongulip"
+            android:gravity="center"
+            android:text="근무이름 너비"
+            android:textSize="30sp" />
+
+        <SeekBar
+            android:id="@+id/workTypeWidthSeekbar"
+            style="@android:style/Widget.SeekBar"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:max="100" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:layout_weight="1"
+        android:orientation="horizontal"
+        android:visibility="visible">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_weight="1"
+            android:fontFamily="@font/ongulip"
+            android:gravity="center"
+            android:text="표 글자 크기"
+            android:textSize="30sp" />
+
+        <SeekBar
+            android:id="@+id/textSizeSeekBar"
+            style="@android:style/Widget.SeekBar"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_weight="1"
+            android:max="100"
+            android:progress="0" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="10dp"
+        android:layout_weight="1"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:fontFamily="@font/ongulip"
+            android:gravity="center"
+            android:text="날짜 글자 크기"
+            android:textSize="30sp" />
+
+        <SeekBar
+            android:id="@+id/dateSizeSeekBar"
+            style="@android:style/Widget.SeekBar"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:max="100" />
+    </LinearLayout>
+
 
 </LinearLayout>

@@ -27,7 +27,6 @@ import androidx.appcompat.widget.AppCompatButton
 import androidx.appcompat.widget.SwitchCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.children
-import androidx.core.view.isGone
 import com.worktimetable.databinding.FragmentTableBinding
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -51,6 +50,8 @@ class TableFragment : Fragment() {
     private var shiftMapList = arrayListOf<HashMap<String,Any>>()
     private lateinit var mainMemberList:ArrayList<String>
     private var subMemberList = arrayListOf<String>()
+
+    private var workName = ""
 
     private var calendar: Calendar = Calendar.getInstance()
     private val formatter = SimpleDateFormat("yyyy-MM-dd")
@@ -91,20 +92,23 @@ class TableFragment : Fragment() {
             super.onViewCreated(view, savedInstanceState)
             Log.d("test", "onViewCreated 실행")
 
-            vBinding.dateTV.text = formatter.format(calendar.time)
+            vBinding.dateTV.apply {
+                text = formatter.format(calendar.time)
+                textSize = mainActivity.preferences.getInt("dateSize", 20).toFloat()
+            }
 
-            updateTableForNewDate(0)
+            getLog(0)
 
             // 다음 날짜로 이동 버튼
             vBinding.nextDateBtn.setOnClickListener{
-                updateTableForNewDate(1)
+                getLog(1)
                 switchSelectMode(false)
                 stack.clear()
             }
 
             // 이전 날짜로 이동 버튼
             vBinding.beforeDateBtn.setOnClickListener{
-                updateTableForNewDate(-1)
+                getLog(-1)
                 switchSelectMode(false)
                 stack.clear()
             }
@@ -117,7 +121,7 @@ class TableFragment : Fragment() {
                     .filter {  it > 0}
                     .minOrNull()
                     ?.let{
-                        updateTableForNewDate(
+                        getLog(
                             mainActivity.daysBetween( formatter.format(calendar.time), logDateList[betweenList.indexOf(it)] )
                         )
                     }
@@ -133,12 +137,21 @@ class TableFragment : Fragment() {
                     .filter {  it < 0}
                     .maxOrNull()
                     ?.let{
-                        updateTableForNewDate(
+                        getLog(
                             mainActivity.daysBetween( formatter.format(calendar.time), logDateList[betweenList.indexOf(it)] )
                         )
                     }
                 switchSelectMode(false)
                 stack.clear()
+            }
+
+            //근무표 리스트 버튼
+            vBinding.mkLogListDialogBtn.setOnClickListener {
+                mkLogListDialog(){toGoDate->
+                    getLog(
+                        mainActivity.daysBetween(formatter.format(calendar.time), toGoDate)
+                    )
+                }
             }
 
             //스크롤 연동
@@ -160,6 +173,7 @@ class TableFragment : Fragment() {
                     typeMapList = workMap["typeList"] as ArrayList<HashMap<String, Any>>
                     shiftMapList = workMap["shiftList"] as ArrayList<HashMap<String, Any>>
                     logMapList = mkNewLogMapList(typeMapList, shiftMapList)
+                    workName = selectedWorkName
                     mkTable()
                 }
             }
@@ -183,7 +197,8 @@ class TableFragment : Fragment() {
                             "typeMapList" to typeMapList,
                             "shiftMapList" to shiftMapList,
                             "mainMemberList" to mainMemberList,
-                            "subMemberList" to subMemberList
+                            "subMemberList" to subMemberList,
+                            "workName" to workName
                         )
                     )
                 }else{
@@ -195,7 +210,8 @@ class TableFragment : Fragment() {
                             "typeMapList" to typeMapList,
                             "shiftMapList" to shiftMapList,
                             "mainMemberList" to mainMemberList,
-                            "subMemberList" to subMemberList
+                            "subMemberList" to subMemberList,
+                            "workName" to workName
                         )
                     )
                 }
@@ -273,19 +289,22 @@ class TableFragment : Fragment() {
                 mkSummaryDialog{name->
                     switchSelectMode(false)
                     switchSelectMode(true)
+                    var isFound = false
                     logMapList.forEach {map->
-                        val memberList = map["member"] as ArrayList<String>
-                        if(name in memberList){
-                            val btn = map["btn"] as AppCompatButton
-                            selectBtn(btn)
+                        if(name in map["member"] as ArrayList<*>){
+                            isFound = true
+                            selectBtn(map["btn"] as AppCompatButton)
                         }
+                    }
+                    if(!isFound){
+                        switchSelectMode(false)
                     }
                 }
             }
 
             // 크기 설정 버튼
             vBinding.mkSetSizeDialogBtn.setOnClickListener {
-                mkSizeSettingDialog()
+                mkMultiSeekbarDialog()
             }
 
             //테이블 드랍 버튼(임시)
@@ -295,8 +314,15 @@ class TableFragment : Fragment() {
 
             //출력 테스트(임시)
             vBinding.printLogBtn.setOnClickListener {
-                typeMapList.forEach {
-                    Log.d("test", it.toString())
+                mainActivity.helper.select("LogTable").forEach {
+
+                    it.forEach { (key, value) ->
+                        if(key!="logMapList" && key!="shiftMapList" && key!="typeMapList"){
+                            Log.d("test", "☆${key} :  ☆${value}")
+                        }
+                    }
+                    Log.d("test", "=".repeat(100))
+
                 }
             }
         }catch(err:Exception){
@@ -308,7 +334,6 @@ class TableFragment : Fragment() {
 
     private fun mkTable(){
         try{
-
             clearTable()
             switchSelectMode(false)
 
@@ -319,7 +344,6 @@ class TableFragment : Fragment() {
                 val type = typeMap["type"] as String
                 val isConcurrent = typeMap["isConcurrent"] as Boolean
                 val toAddHeight = typeMap["height"] as Int
-
 
                 for(shiftMap in shiftMapList){
                     val shift = shiftMap["shift"] as String
@@ -372,8 +396,14 @@ class TableFragment : Fragment() {
                     row.addView(this)
                     rowTL.addView(row)
                     val toAddHeight = typeMap["height"] as Int
-                    setBtnStyle(this, androidx.appcompat.R.color.material_grey_600, doesUpdateSize=true,  toAddHeight=toAddHeight)
-                    setOnClickListener {mkHeightSettingDialog(typeMap)}
+                    setBtnStyle(
+                        this,
+                        androidx.appcompat.R.color.material_grey_600,
+                        doesUpdateSize=true,
+                        toAddHeight=toAddHeight,
+                        toAddWidth = mainActivity.preferences.getInt("toAddWidth", 0)
+                    )
+                    setOnClickListener {mkOneSeekbarDialog(typeMap)}
                     setOnLongClickListener(selectSameType(type))
                 }
             }
@@ -468,7 +498,7 @@ class TableFragment : Fragment() {
 
 
 
-    private fun updateTableForNewDate(num:Int){
+    private fun getLog(num:Int){
         calendar.add(Calendar.DAY_OF_MONTH, num)
         vBinding.dateTV.text = formatter.format(calendar.time)
         val recorded = mainActivity.helper.select("LogTable", where = hashMapOf("logDate" to formatter.format(calendar.time)))
@@ -484,6 +514,7 @@ class TableFragment : Fragment() {
             logMapList = recorded[0]["logMapList"] as ArrayList<HashMap<String, Any>>
             mainMemberList = recorded[0]["mainMemberList"] as ArrayList<String>
             subMemberList = recorded[0]["subMemberList"] as ArrayList<String>
+            workName = recorded[0]["workName"] as String
             mkTable()
         }
     }
@@ -658,10 +689,8 @@ class TableFragment : Fragment() {
         if(doesUpdateSize){
             val defaultWidth = mainActivity.preferences.getInt("tableWidth", 200)
             val defaultHeight = mainActivity.preferences.getInt("tableHeight", 200)
-            val width = toAddWidth?.let { defaultWidth + it } ?: defaultWidth
-            val height = toAddHeight?.let { defaultHeight + it } ?: defaultHeight
-
-
+            val width = (toAddWidth?.let { defaultWidth + it } ?: defaultWidth).coerceAtLeast(30)
+            val height = (toAddHeight?.let { defaultHeight + it } ?: defaultHeight).coerceAtLeast(30)
             val params = TableRow.LayoutParams(width, height)
             params.gravity = Gravity.NO_GRAVITY
             params.setMargins(3, 3, 3, 3)
@@ -843,7 +872,6 @@ class TableFragment : Fragment() {
                         dismiss()
                     }
                 }
-
             }
         }catch(err:Exception){
             Log.d("test", err.toString())
@@ -870,7 +898,7 @@ class TableFragment : Fragment() {
         return Pair(numOfAll, numOfPatrol)
     }
 
-    private fun mkHeightSettingDialog(typeMap:HashMap<String,Any>){
+    private fun mkOneSeekbarDialog(typeMap:HashMap<String,Any>){
         try{
             Dialog(requireContext()).apply {
                 setContentView(R.layout.dialog_one_seekbar)
@@ -881,23 +909,21 @@ class TableFragment : Fragment() {
                 var toUpdateHeight = 0
 
                 findViewById<TextView>(R.id.oneSeekbarTV).apply {
-                    val title = "$type 높이 설정"
+                    val title = "$type 높이"
                     text = title
                 }
-
                 findViewById<SeekBar>(R.id.oneSeekbar).apply {
-                    progress =  (typeMap["height"] as Int)/3 + 50
+                    progress =  (typeMap["height"] as Int)/5 + 50
                     setOnSeekBarChangeListener( object :OnSeekBarChangeListener{
                         override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {
-                            typeMap["height"]  = (p1-50)*3
-                            toUpdateHeight = (p1-50)*3
+                            typeMap["height"]  = (p1-50)*5
+                            toUpdateHeight = (p1-50)*5
                             mkTable()
                         }
                         override fun onStartTrackingTouch(p0: SeekBar?) {}
                         override fun onStopTrackingTouch(p0: SeekBar?) {}
                     })
                 }
-
                 setOnDismissListener {
                     mainActivity.helper.select("WorkTable").forEach {map->
                         val id = map["id"] as Int
@@ -914,7 +940,6 @@ class TableFragment : Fragment() {
                         )
                     }
                 }
-
             }
         }catch(err:Exception){
             Log.d("test", err.toString())
@@ -922,59 +947,7 @@ class TableFragment : Fragment() {
         }
     }
 
-    /* private fun mkHeightSettingDialog(typeMap:HashMap<String,Any>){
-        try{
-            Dialog(requireContext()).apply {
-                setContentView(R.layout.dialog_one_seekbar)
-                mainActivity.setDialogSize(this, vBinding.tableFragmentLayout, 0.9f, null)
-                show()
-
-                val type = typeMap["type"] as String
-                var toUpdateHeight = 0
-
-                findViewById<TextView>(R.id.oneSeekbarTV).apply {
-                    val title = "$type 높이 설정"
-                    text = title
-                }
-
-                findViewById<SeekBar>(R.id.oneSeekbar).apply {
-                    progress =  (typeMap["height"] as Int) / 3
-                    setOnSeekBarChangeListener( object :OnSeekBarChangeListener{
-                        override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {
-                            typeMap["height"]  = p1*3
-                            toUpdateHeight = p1*3
-                            mkTable()
-                        }
-                        override fun onStartTrackingTouch(p0: SeekBar?) {}
-                        override fun onStopTrackingTouch(p0: SeekBar?) {}
-                    })
-                }
-
-                setOnDismissListener {
-                    mainActivity.helper.select("WorkTable").forEach {map->
-                        val id = map["id"] as Int
-                        val newTypeList = map["typeList"] as ArrayList<HashMap<String,Any>>
-                        newTypeList.forEach {selectedTypeMap->
-                            if(selectedTypeMap["type"] == type){
-                                selectedTypeMap["height"] = toUpdateHeight
-                            }
-                        }
-                        mainActivity.helper.updateByCondition(
-                            "WorkTable",
-                            hashMapOf("id" to id),
-                            hashMapOf("typeList" to newTypeList)
-                        )
-                    }
-                }
-
-            }
-        }catch(err:Exception){
-            Log.d("test", err.toString())
-            Log.d("test", err.stackTraceToString())
-        }
-    }*/
-
-    private fun mkSizeSettingDialog(){
+    private fun mkMultiSeekbarDialog(){
         try{
             Dialog(requireContext()).apply {
                 setContentView(R.layout.dialog_multi_seekbar)
@@ -983,18 +956,7 @@ class TableFragment : Fragment() {
 
                 val editor = mainActivity.preferences.edit()
 
-                findViewById<SeekBar>(R.id.textSizeSeekBar).apply {
-                    progress = mainActivity.preferences.getInt("myTextSize", 10) * 5
-                    setOnSeekBarChangeListener( object :OnSeekBarChangeListener{
-                        override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {
-                            editor.putInt("myTextSize", p1/5)
-							editor.apply()
-                            mkTable()
-                        }
-                        override fun onStartTrackingTouch(p0: SeekBar?) {}
-                        override fun onStopTrackingTouch(p0: SeekBar?) {}
-                    })
-                }
+
 
                 findViewById<SeekBar>(R.id.widthSeekBar).apply {
                     progress = mainActivity.preferences.getInt("tableWidth", 200) / 3
@@ -1021,10 +983,72 @@ class TableFragment : Fragment() {
                         override fun onStopTrackingTouch(p0: SeekBar?) {}
                     })
                 }
+
+                findViewById<SeekBar>(R.id.workTypeWidthSeekbar).apply {
+                    progress = mainActivity.preferences.getInt("toAddWidth", 0)
+                    setOnSeekBarChangeListener( object :OnSeekBarChangeListener{
+                        override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {
+                            editor.putInt("toAddWidth", p1)
+                            editor.apply()
+                            mkTable()
+                        }
+                        override fun onStartTrackingTouch(p0: SeekBar?) {}
+                        override fun onStopTrackingTouch(p0: SeekBar?) {}
+                    })
+                }
+
+                findViewById<SeekBar>(R.id.textSizeSeekBar).apply {
+                    progress = mainActivity.preferences.getInt("myTextSize", 10) * 5
+                    setOnSeekBarChangeListener( object :OnSeekBarChangeListener{
+                        override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {
+                            editor.putInt("myTextSize", p1/5)
+                            editor.apply()
+                            mkTable()
+                        }
+                        override fun onStartTrackingTouch(p0: SeekBar?) {}
+                        override fun onStopTrackingTouch(p0: SeekBar?) {}
+                    })
+                }
+
+                findViewById<SeekBar>(R.id.dateSizeSeekBar).apply {
+                    progress = mainActivity.preferences.getInt("dateSize", 20)
+                    setOnSeekBarChangeListener( object :OnSeekBarChangeListener{
+                        override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {
+                            editor.putInt("dateSize", p1)
+                            editor.apply()
+                            vBinding.dateTV.textSize = p1.toFloat()
+                        }
+                        override fun onStartTrackingTouch(p0: SeekBar?) {}
+                        override fun onStopTrackingTouch(p0: SeekBar?) {}
+                    })
+                }
             }
         }catch(err:Exception){
             Log.d("test", err.toString())
             Log.d("test", err.stackTraceToString())
+        }
+    }
+
+    private fun mkLogListDialog(callback: (String) -> Unit){
+        Dialog(requireContext()).apply {
+            setContentView(R.layout.dialog_log_list)
+            mainActivity.setDialogSize(this, vBinding.tableFragmentLayout, 0.9f, null)
+            show()
+            val inflater = LayoutInflater.from(requireContext())
+            mainActivity.helper.select("LogTable", toSortColumn = "logDate").forEach {logMap->
+                val holder = inflater.inflate(R.layout.holder_log, null) as LinearLayout
+                findViewById<LinearLayout>(R.id.logLayout).addView(holder)
+                holder.findViewById<TextView>(R.id.workNameTV).text = logMap["workName"] as String
+                holder.findViewById<TextView>(R.id.numOfMainTV).text = (logMap["mainMemberList"] as ArrayList<*>).size.toString()
+                holder.findViewById<TextView>(R.id.numOfSubTV).text = (logMap["subMemberList"] as ArrayList<*>).size.toString()
+                holder.findViewById<TextView>(R.id.logDateBtn).apply {
+                    text = logMap["logDate"] as String
+                    setOnClickListener {
+                        callback(logMap["logDate"] as String)
+                        dismiss()
+                    }
+                }
+            }
         }
     }
 

@@ -219,6 +219,15 @@
                     android:fontFamily="@font/ongulip"
                     android:text="크기설정"
                     android:textSize="30sp" />
+
+                <Button
+                    android:id="@+id/mkLogListDialogBtn"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:fontFamily="@font/ongulip"
+                    android:text="근무표 리스트"
+                    android:textSize="30sp" />
             </LinearLayout>
         </HorizontalScrollView>
 
@@ -270,6 +279,7 @@
                     android:fontFamily="@font/ongulip"
                     android:text="교체"
                     android:textSize="30sp" />
+
             </LinearLayout>
         </HorizontalScrollView>
 
