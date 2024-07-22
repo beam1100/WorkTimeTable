@@ -181,7 +181,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:fontFamily="@font/ongulip"
-            android:text="가져오기"
+            android:text="설정 가져오기"
             android:textSize="30sp" />
 
         <Button
@@ -190,7 +190,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:fontFamily="@font/ongulip"
-            android:text="저장하기"
+            android:text="설정 저장"
             android:textSize="30sp" />
     </LinearLayout>
 

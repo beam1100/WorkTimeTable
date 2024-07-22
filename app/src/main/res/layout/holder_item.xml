@@ -26,18 +26,32 @@
     <TextView
         android:id="@+id/holderTV"
         android:layout_width="0dp"
-        android:layout_height="80dp"
+        android:layout_height="match_parent"
         android:layout_weight="5"
         android:fontFamily="@font/ongulip"
         android:gravity="center"
         android:textSize="50sp" />
 
     <ImageButton
-        android:id="@+id/holderEditBtn"
+        android:id="@+id/holderUpdateBtn"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
         android:src="@drawable/outline_edit_24"
         tools:ignore="SpeakableTextPresentCheck" />
+
+    <ImageButton
+        android:id="@+id/holderDelBtn"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:src="@drawable/baseline_delete_24" />
+
+    <ImageButton
+        android:id="@+id/holderGetBtn"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:src="@drawable/baseline_touch_app_24" />
 
 </LinearLayout>

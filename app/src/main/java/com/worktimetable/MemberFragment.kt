@@ -10,6 +10,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.LinearLayout
 import androidx.core.view.isGone
 import com.worktimetable.databinding.FragmentMemberBinding
@@ -56,10 +57,15 @@ class MemberFragment : Fragment() {
 
             /* db 멤버 홀더에 담기 */
             mainActivity.helper.select("MemberTable",toSortColumn = "sortIndex").onEach {memberMap->
-                val holder = inflater.inflate(R.layout.holder_sortable, null) as LinearLayout
+                val holder = inflater.inflate(R.layout.holder_item, null) as LinearLayout
+                holder.findViewById<ImageButton>(R.id.holderGetBtn).isGone = true
+                holder.findViewById<ImageButton>(R.id.holderDelBtn).isGone = true
                 mainActivity.mkHolderFromDB(
                     "MemberTable", holderLayout, holder, memberMap, "memberName",
-                    {clickedMemberMap->
+                    refreshCallback = {onViewCreated(view, savedInstanceState)},
+                    getBtnCallback = {},
+                    delBtnCallback = {},
+                    updateBtnCallback = {clickedMemberMap->
                         setMemberDialog(
                             clickedMemberMap,
                             {id, memberName->
@@ -75,8 +81,8 @@ class MemberFragment : Fragment() {
                                 onViewCreated(view, savedInstanceState)
                             }
                         )
-                    },
-                    {onViewCreated(view, savedInstanceState)}
+                    }
+
                 )
             }
 

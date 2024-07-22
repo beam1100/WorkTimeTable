@@ -154,8 +154,8 @@ class SqliteHelper(context:Context?, name:String, version: Int):SQLiteOpenHelper
 	}
 
 	// 조건에 맞는 데이터 삭제
-	fun deleteByCondition(tableName:String, whereCondition:HashMap<String,*>){
-		val condition = whereCondition.map{
+	fun deleteByCondition(tableName:String, where:HashMap<String,*>){
+		val condition = where.map{
 			"${it.key}='${it.value}'"
 		}.joinToString (" AND ")
 		val sql = "DELETE FROM $tableName WHERE $condition"

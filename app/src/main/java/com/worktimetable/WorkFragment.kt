@@ -66,9 +66,15 @@ class WorkFragment : Fragment() {
 
             /*db에 저장된 근무 홀더에 담아서 출력*/
             mainActivity.helper.select(tableName = "WorkTable", toSortColumn = "sortIndex").onEach { workMap ->
-                val holder = inflater.inflate(R.layout.holder_sortable, null) as LinearLayout
-                mainActivity.mkHolderFromDB("WorkTable", holderLayout, holder, workMap, "workName",
-                    { clickedWorkMap->
+                val holder = inflater.inflate(R.layout.holder_item, null) as LinearLayout
+                holder.findViewById<ImageButton>(R.id.holderGetBtn).isGone = true
+                holder.findViewById<ImageButton>(R.id.holderDelBtn).isGone = true
+                mainActivity.mkHolderFromDB(
+                    "WorkTable", holderLayout, holder, workMap, "workName",
+                    refreshCallback = {onViewCreated(view, savedInstanceState)},
+                    getBtnCallback = {},
+                    delBtnCallback = {},
+                    updateBtnCallback = { clickedWorkMap->
                         setWorkDialog(
                             clickedWorkMap,
                             // 근무 업데이트 콜백
@@ -107,7 +113,6 @@ class WorkFragment : Fragment() {
                             }
                         )
                     },
-                    {onViewCreated(view, savedInstanceState)}
                 )
             }
 
@@ -203,49 +208,61 @@ class WorkFragment : Fragment() {
                 //기존 근무 유형 홀더에 담아서 레이아웃에 넣기
                 copiedTypeMapList.forEach { typeMap ->
                     val inflater = LayoutInflater.from(requireContext())
-                    val holder = inflater.inflate(R.layout.holder_sortable, null) as LinearLayout
-                    mainActivity.mkHolderFromMap(copiedTypeMapList, typeHolderLayout, holder, typeMap, "type"){ toEditTypeMap ->
-                        saveTypeDialog(
-                            toEditTypeMap,
-                            {
-                                newTypeMap ->
-                                    holder.findViewById<TextView>(R.id.holderTV).text = newTypeMap["type"] as String
-                                    toEditTypeMap["type"] = newTypeMap["type"] as String
-                                    toEditTypeMap["isPatrol"] = newTypeMap["isPatrol"] as Boolean
-                                    toEditTypeMap["isConcurrent"] = newTypeMap["isConcurrent"] as Boolean
-                            },
-                            {
-                                copiedTypeMapList.remove(typeMap)
-                                typeHolderLayout.removeView(holder)
-                            }
-                        )
-                    }
+                    val holder = inflater.inflate(R.layout.holder_item, null) as LinearLayout
+                    holder.findViewById<ImageButton>(R.id.holderGetBtn).isGone = true
+                    holder.findViewById<ImageButton>(R.id.holderDelBtn).isGone = true
+                    mainActivity.mkHolderFromMap(copiedTypeMapList, typeHolderLayout, holder, typeMap, "type",
+                        updateBtnCallback = { toEditTypeMap ->
+                            saveTypeDialog(
+                                toEditTypeMap,
+                                { newTypeMap ->
+                                    holder.findViewById<android.widget.TextView>(com.worktimetable.R.id.holderTV).text = newTypeMap["type"] as kotlin.String
+                                    toEditTypeMap["type"] = newTypeMap["type"] as kotlin.String
+                                    toEditTypeMap["isPatrol"] = newTypeMap["isPatrol"] as kotlin.Boolean
+                                    toEditTypeMap["isConcurrent"] = newTypeMap["isConcurrent"] as kotlin.Boolean
+                                },
+                                {
+                                    copiedTypeMapList.remove(typeMap)
+                                    typeHolderLayout.removeView(holder)
+                                }
+                            )
+                        },
+                        getBtnCallback = {},
+                        delBtnCallback = {}
+                    )
                 }
 
                 // 근무 추가 버튼
                 this.findViewById<ImageButton>(R.id.mkAddWorkDialogBtn).setOnClickListener { _ ->
                     //다이얼로그에서 새로운 근무유형 홀더에 담기
                     val inflater = LayoutInflater.from(requireContext())
-                    val holder = inflater.inflate(R.layout.holder_sortable, null) as LinearLayout
+                    val holder = inflater.inflate(R.layout.holder_item, null) as LinearLayout
+                    holder.findViewById<ImageButton>(R.id.holderGetBtn).isGone = true
+                    holder.findViewById<ImageButton>(R.id.holderDelBtn).isGone = true
                     saveTypeDialog(
                         null,
                         {toAddTypeMap ->
                             copiedTypeMapList.add(toAddTypeMap)
-                            mainActivity.mkHolderFromMap(copiedTypeMapList, typeHolderLayout, holder, toAddTypeMap, "type"){ toEditTypeMap ->
-                                saveTypeDialog(
-                                    toEditTypeMap,
-                                    { newTypeMap ->
-                                        holder.findViewById<TextView>(R.id.holderTV).text = newTypeMap["type"] as String
-                                        toEditTypeMap["type"] = newTypeMap["type"] as String
-                                        toEditTypeMap["isPatrol"] = newTypeMap["isPatrol"] as Boolean
-                                        toEditTypeMap["isConcurrent"] = newTypeMap["isConcurrent"] as Boolean
-                                    },
-                                    {
-                                        copiedTypeMapList.remove(toEditTypeMap)
-                                        typeHolderLayout.removeView(holder)
-                                    }
-                                )
-                            }
+                            mainActivity.mkHolderFromMap(
+                                copiedTypeMapList, typeHolderLayout, holder, toAddTypeMap, "type",
+                                getBtnCallback = {},
+                                delBtnCallback = {},
+                                updateBtnCallback = { toEditTypeMap ->
+                                    saveTypeDialog(
+                                        toEditTypeMap,
+                                        { newTypeMap ->
+                                            holder.findViewById<TextView>(R.id.holderTV).text = newTypeMap["type"] as String
+                                            toEditTypeMap["type"] = newTypeMap["type"] as String
+                                            toEditTypeMap["isPatrol"] = newTypeMap["isPatrol"] as Boolean
+                                            toEditTypeMap["isConcurrent"] = newTypeMap["isConcurrent"] as Boolean
+                                        },
+                                        {
+                                            copiedTypeMapList.remove(toEditTypeMap)
+                                            typeHolderLayout.removeView(holder)
+                                        }
+                                    )
+                                }
+                            )
                         },
                         {}
                     )
@@ -254,27 +271,34 @@ class WorkFragment : Fragment() {
                 //기존 근무시간 홀더에 담아서 레이아웃에 넣기
                 copiedShiftMapList.forEach { shiftMap ->
                     val inflater = LayoutInflater.from(requireContext())
-                    val holder = inflater.inflate(R.layout.holder_sortable, null) as LinearLayout
+                    val holder = inflater.inflate(R.layout.holder_item, null) as LinearLayout
                     holder.findViewById<ImageButton>(R.id.holderMoveItemUp).isGone=true
                     holder.findViewById<ImageButton>(R.id.holderMoveItemDown).isGone=true
-                    mainActivity.mkHolderFromMap(copiedShiftMapList, shiftHolderLayout, holder, shiftMap, "shift"){ clickedShiftMap ->
-                        updateShiftDialog(clickedShiftMap,
-                            {fh, fm, th, tm ->
-                                val fromTime = fh*60+fm
-                                val toTime = th*60+tm
-                                val newShift = "${minuetToTimeStr(fromTime)} ~ ${minuetToTimeStr(toTime)}"
-                                clickedShiftMap["shift"] = newShift
-                                clickedShiftMap["fromTime"] = fromTime
-                                clickedShiftMap["toTime"] = toTime
-                                clickedShiftMap["interval"] = if(toTime>fromTime){toTime - fromTime }else{24*60-fromTime + toTime}
-                                holder.findViewById<TextView>(R.id.holderTV).text = newShift
-                            },
-                            {
-                                copiedShiftMapList.remove(clickedShiftMap)
-                                shiftHolderLayout.removeView(holder)
-                            }
-                        )
-                    }
+                    holder.findViewById<ImageButton>(R.id.holderGetBtn).isGone = true
+                    holder.findViewById<ImageButton>(R.id.holderDelBtn).isGone = true
+                    mainActivity.mkHolderFromMap(
+                        copiedShiftMapList, shiftHolderLayout, holder, shiftMap, "shift",
+                        getBtnCallback = {},
+                        delBtnCallback = {},
+                        updateBtnCallback = { clickedShiftMap ->
+                            updateShiftDialog(clickedShiftMap,
+                                {fh, fm, th, tm ->
+                                    val fromTime = fh*60+fm
+                                    val toTime = th*60+tm
+                                    val newShift = "${minuetToTimeStr(fromTime)} ~ ${minuetToTimeStr(toTime)}"
+                                    clickedShiftMap["shift"] = newShift
+                                    clickedShiftMap["fromTime"] = fromTime
+                                    clickedShiftMap["toTime"] = toTime
+                                    clickedShiftMap["interval"] = if(toTime>fromTime){toTime - fromTime }else{24*60-fromTime + toTime}
+                                    holder.findViewById<TextView>(R.id.holderTV).text = newShift
+                                },
+                                {
+                                    copiedShiftMapList.remove(clickedShiftMap)
+                                    shiftHolderLayout.removeView(holder)
+                                }
+                            )
+                        }
+                    )
                 }
 
                 // 근무 시간 설정 버튼
@@ -284,27 +308,34 @@ class WorkFragment : Fragment() {
                         copiedShiftMapList = shiftMapList
                         shiftMapList.forEach {shiftMap->
                             val inflater = LayoutInflater.from(requireContext())
-                            val holder = inflater.inflate(R.layout.holder_sortable, null) as LinearLayout
+                            val holder = inflater.inflate(R.layout.holder_item, null) as LinearLayout
                             holder.findViewById<ImageButton>(R.id.holderMoveItemUp).isGone = true
                             holder.findViewById<ImageButton>(R.id.holderMoveItemDown).isGone = true
-                            mainActivity.mkHolderFromMap(shiftMapList, shiftHolderLayout, holder, shiftMap, "shift"){ clickedShiftMap->
-                                updateShiftDialog(clickedShiftMap,
-                                    {fh, fm, th, tm ->
-                                        val fromTime = fh*60+fm
-                                        val toTime = th*60+tm
-                                        val newShift = "${minuetToTimeStr(fromTime)} ~ ${minuetToTimeStr(toTime)}"
-                                        clickedShiftMap["shift"] = newShift
-                                        clickedShiftMap["fromTime"] = fromTime
-                                        clickedShiftMap["toTime"] = toTime
-                                        clickedShiftMap["interval"] = if(toTime>fromTime){toTime - fromTime }else{24*60-fromTime + toTime}
-                                        holder.findViewById<TextView>(R.id.holderTV).text = newShift
-                                    },
-                                    {
-                                        copiedShiftMapList.remove(clickedShiftMap)
-                                        shiftHolderLayout.removeView(holder)
-                                    }
-                                )
-                            }
+                            holder.findViewById<ImageButton>(R.id.holderGetBtn).isGone = true
+                            holder.findViewById<ImageButton>(R.id.holderDelBtn).isGone = true
+                            mainActivity.mkHolderFromMap(
+                                shiftMapList, shiftHolderLayout, holder, shiftMap, "shift",
+                                getBtnCallback = {},
+                                delBtnCallback = {},
+                                updateBtnCallback = { clickedShiftMap->
+                                    updateShiftDialog(clickedShiftMap,
+                                        {fh, fm, th, tm ->
+                                            val fromTime = fh*60+fm
+                                            val toTime = th*60+tm
+                                            val newShift = "${minuetToTimeStr(fromTime)} ~ ${minuetToTimeStr(toTime)}"
+                                            clickedShiftMap["shift"] = newShift
+                                            clickedShiftMap["fromTime"] = fromTime
+                                            clickedShiftMap["toTime"] = toTime
+                                            clickedShiftMap["interval"] = if(toTime>fromTime){toTime - fromTime }else{24*60-fromTime + toTime}
+                                            holder.findViewById<TextView>(R.id.holderTV).text = newShift
+                                        },
+                                        {
+                                            copiedShiftMapList.remove(clickedShiftMap)
+                                            shiftHolderLayout.removeView(holder)
+                                        }
+                                    )
+1                                }
+                            )
                         }
                     }
                 }

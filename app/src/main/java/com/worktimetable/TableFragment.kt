@@ -27,6 +27,7 @@ import androidx.appcompat.widget.AppCompatButton
 import androidx.appcompat.widget.SwitchCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.children
+import androidx.core.view.isGone
 import com.worktimetable.databinding.FragmentTableBinding
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -217,7 +218,10 @@ class TableFragment : Fragment() {
                     mainActivity.mkConfirmDialog(
                         "현재 근무표를 삭제하시겠습니까?",
                         {
-                            mainActivity.helper.deleteByCondition("LogTable", hashMapOf("logDate" to formatter.format(calendar.time)))
+                            mainActivity.helper.deleteByCondition(
+                                "LogTable",
+                                hashMapOf("logDate" to formatter.format(calendar.time))
+                            )
                             logMapList.clear()
                             clearTable()
                         },
@@ -1081,8 +1085,7 @@ class TableFragment : Fragment() {
                 }
 
                 findViewById<Button>(R.id.mkSaveSizeDialogBtn).setOnClickListener {
-                    val sizeNameList = mainActivity.helper.select("SizeTable").map{it["sizeName"] as String}
-                    mainActivity.mkInputTextDialog(sizeNameList, "저장할 이름") {
+                    mainActivity.mkInputTextDialog("저장할 이름") {
                         mainActivity.helper.insert(
                             "SizeTable",
                             hashMapOf(
@@ -1099,22 +1102,38 @@ class TableFragment : Fragment() {
                 }
 
                 findViewById<Button>(R.id.mkGetSizeDialogBtn).setOnClickListener {
-                    val sizeNameList = mainActivity.helper.select("SizeTable").map{it["sizeName"] as String}
-                    mainActivity.mkHolderDialog(
-                        sizeNameList,
-                        delCallback = {selectedName->
-                            mainActivity.helper.deleteByCondition("SizeTable", hashMapOf("sizeName" to selectedName))
-                        },
-                        getCallback = {selectedName->
-                            val selectedSizeMap = mainActivity.helper.select("SizeTable", where= hashMapOf("sizeName" to selectedName)).firstOrNull()
-                            widthSeekBar.progress = selectedSizeMap?.get("tableWidth") as Int
-                            heightSeekBar.progress = selectedSizeMap["tableHeight"] as Int
-                            typeWidthSeekBar.progress = selectedSizeMap["typeWidth"] as Int
-                            shiftHeightSeekBar.progress = selectedSizeMap["shiftHeight"] as Int
-                            textSizeSeekBar.progress = selectedSizeMap["tableTextSize"] as Int
-                            dateSizeSeekBar.progress = selectedSizeMap["dateTextSize"] as Int
+                    Dialog(requireContext()).apply {
+                        setContentView(R.layout.dialog_holder_layout)
+                        mainActivity.setDialogSize(this, vBinding.tableFragmentLayout, 0.9f, null)
+                        show()
+                        val holderLayout = findViewById<LinearLayout>(R.id.holderLayout)
+                        mainActivity.helper.select("SizeTable").apply {
+                            forEach { mapItem->
+                                val inflater = LayoutInflater.from(requireContext())
+                                val holder = inflater.inflate(R.layout.holder_item, null) as LinearLayout
+                                holder.findViewById<ImageButton>(R.id.holderMoveItemUp).isGone = true
+                                holder.findViewById<ImageButton>(R.id.holderMoveItemDown).isGone = true
+                                holder.findViewById<ImageButton>(R.id.holderUpdateBtn).isGone = true
+                                mainActivity.mkHolderFromMap(
+                                    this , holderLayout, holder, mapItem, "sizeName",
+                                    updateBtnCallback = {},
+                                    getBtnCallback = {map->
+                                        widthSeekBar.progress = map["tableWidth"] as Int
+                                        heightSeekBar.progress = map["tableHeight"] as Int
+                                        typeWidthSeekBar.progress = map["typeWidth"] as Int
+                                        shiftHeightSeekBar.progress = map["shiftHeight"] as Int
+                                        textSizeSeekBar.progress = map["tableTextSize"] as Int
+                                        dateSizeSeekBar.progress = map["dateTextSize"] as Int
+                                        dismiss()
+                                    },
+                                    delBtnCallback = {map->
+                                        mainActivity.helper.deleteByCondition("SizeTable", hashMapOf("id" to map["id"]))
+                                        holderLayout.removeView(holder)
+                                    }
+                                )
+                            }
                         }
-                    )
+                    }
                 }
             }
         }catch(err:Exception){
@@ -1122,8 +1141,6 @@ class TableFragment : Fragment() {
             Log.d("test", err.stackTraceToString())
         }
     }
-
-
 
     private fun mkLogListDialog(callback: (String) -> Unit){
         Dialog(requireContext()).apply {

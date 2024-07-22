@@ -1,24 +1,20 @@
 package com.worktimetable
 
 import android.app.Dialog
-import android.app.ProgressDialog.show
 import android.content.Context
 import android.content.SharedPreferences
 import android.icu.text.SimpleDateFormat
 import android.icu.util.Calendar
 import android.os.Bundle
 import android.util.Log
-import android.view.LayoutInflater
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
-import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import com.worktimetable.databinding.ActivityMainBinding
 
@@ -38,7 +34,6 @@ class MainActivity : FragmentActivity() {
             vBinding = ActivityMainBinding.inflate(layoutInflater)
             super.onCreate(savedInstanceState)
             setContentView(vBinding.root)
-
 
             supportFragmentManager
                 .beginTransaction()
@@ -101,16 +96,28 @@ class MainActivity : FragmentActivity() {
         holder: LinearLayout,
         mapItem:HashMap<String,Any>,
         toPrintKey:String,
-        longClickCallback: (HashMap<String,Any>) -> Unit
+        getBtnCallback: (HashMap<String,Any>) -> Unit,
+        updateBtnCallback: (HashMap<String,Any>) -> Unit,
+        delBtnCallback: (HashMap<String,Any>) -> Unit,
     ){
         try{
 
-            //홀더 근무이름 텍스트뷰
+            //홀더 텍스트뷰
             holder.findViewById<TextView>(R.id.holderTV).text = mapItem[toPrintKey] as String
 
-            //에디트 버튼
-            holder.findViewById<ImageButton>(R.id.holderEditBtn).setOnClickListener {
-                longClickCallback(mapItem)
+            //홀더 업데이트 버튼
+            holder.findViewById<ImageButton>(R.id.holderUpdateBtn).setOnClickListener {
+                updateBtnCallback(mapItem)
+            }
+
+            //홀더 겟 버튼
+            holder.findViewById<ImageButton>(R.id.holderGetBtn).setOnClickListener {
+                getBtnCallback(mapItem)
+            }
+
+            //홀더 삭제 버튼
+            holder.findViewById<ImageButton>(R.id.holderDelBtn).setOnClickListener {
+                delBtnCallback(mapItem)
             }
 
             //맵에서 위로
@@ -134,7 +141,6 @@ class MainActivity : FragmentActivity() {
                     holderLayout.removeView(holder)
                     holderLayout.addView(holder, holderIndex+1)
                 }
-
                 val mapIndex = data.indexOf(mapItem)
                 if(mapIndex < data.size-1){
                     data[mapIndex] = data[mapIndex+1]
@@ -154,17 +160,29 @@ class MainActivity : FragmentActivity() {
         holder: LinearLayout,
         mapItem:HashMap<String,Any>,
         toPrintKey:String,
-        longClickCallback: (HashMap<String,Any>) -> Unit,
-        refreshHolder:()->Unit
+        refreshCallback:()->Unit,
+        getBtnCallback: (HashMap<String,Any>) -> Unit,
+        updateBtnCallback: (HashMap<String,Any>) -> Unit,
+        delBtnCallback: (HashMap<String,Any>) -> Unit
     ){
         try{
 
-            //홀더 근무이름 텍스트뷰
+            //홀더 텍스트뷰
             holder.findViewById<TextView>(R.id.holderTV).text = mapItem[toPrintKey] as String
 
-            //홀더 에디트 버튼
-            holder.findViewById<ImageButton>(R.id.holderEditBtn).setOnClickListener {
-                longClickCallback(mapItem)
+            //홀더 겟 버튼
+            holder.findViewById<ImageButton>(R.id.holderGetBtn).setOnClickListener {
+                getBtnCallback(mapItem)
+            }
+
+            //홀더 업데이트 버튼
+            holder.findViewById<ImageButton>(R.id.holderUpdateBtn).setOnClickListener {
+                updateBtnCallback(mapItem)
+            }
+
+            //홀더 삭제 버튼
+            holder.findViewById<ImageButton>(R.id.holderDelBtn).setOnClickListener {
+                delBtnCallback(mapItem)
             }
 
             //DB에서 위로
@@ -182,7 +200,7 @@ class MainActivity : FragmentActivity() {
                     val beforeId = getMapByCondition(selectMapList, hashMapOf("sortIndex" to beforeSortIndex))?.get("id") as Int
                     helper.updateByCondition(tableName, hashMapOf("id" to hereId), hashMapOf("sortIndex" to beforeSortIndex))
                     helper.updateByCondition(tableName, hashMapOf("id" to beforeId), hashMapOf("sortIndex" to hereSortIndex))
-                    refreshHolder()
+                    refreshCallback()
                 }
             }
 
@@ -201,7 +219,7 @@ class MainActivity : FragmentActivity() {
                     val nextId = getMapByCondition(selectMapList, hashMapOf("sortIndex" to nextSortIndex))?.get("id") as Int
                     helper.updateByCondition(tableName, hashMapOf("id" to hereId), hashMapOf("sortIndex" to nextSortIndex))
                     helper.updateByCondition(tableName, hashMapOf("id" to nextId), hashMapOf("sortIndex" to hereSortIndex))
-                    refreshHolder()
+                    refreshCallback()
                 }
             }
 
@@ -289,58 +307,20 @@ class MainActivity : FragmentActivity() {
         }
     }
 
-    fun mkInputTextDialog(list:List<String>, toHint:String, callback: (String) -> Unit){
+    fun mkInputTextDialog(toHint:String, callback: (String) -> Unit){
         try{
             Dialog(this).apply dialog@{
                 setContentView(R.layout.dialog_input_text)
                 setDialogSize(this, vBinding.mainLayout, 0.9f, null)
                 show()
 
-                val textInputLayout = findViewById<TextInputLayout>(R.id.textInputLayout)
-
-                val et = findViewById<TextInputEditText>(R.id.textInputET).apply btn@{
-                    this.hint = toHint
-                    this.addTextChangedListener {
-                        val condition = this.text.toString() in list
-                        validateTimeForm(textInputLayout,condition,"다른 이름으로 저장하세요")
-                    }
+                val et = findViewById<EditText>(R.id.inputTextET).apply {
+                    hint = toHint
                 }
 
                 findViewById<Button>(R.id.inputTextBtn).setOnClickListener {
                     callback(et.text.toString())
                     dialog@dismiss()
-
-                }
-
-            }
-        }catch(err:Exception){
-            Log.d("test", err.toString())
-            Log.d("test", err.stackTraceToString())
-        }
-    }
-
-    fun mkHolderDialog(list:List<String>, delCallback:(String)->Unit, getCallback:(String)->Unit) {
-        try{
-            Dialog(this@MainActivity).apply {
-                setContentView(R.layout.dialog_holder_layout)
-                setDialogSize(this, vBinding.mainLayout, 0.9f, null)
-                show()
-                val holderLayout = findViewById<LinearLayout>(R.id.holderLayout)
-                val inflater = LayoutInflater.from(this@MainActivity)
-
-                list.forEach { listItem->
-                    val holder = inflater.inflate(R.layout.holder_two_btn, null) as LinearLayout
-                    holder.findViewById<TextView>(R.id.holderTextView).text = listItem
-                    holderLayout.addView(holder)
-
-                    holder.findViewById<Button>(R.id.holderDelBtn).setOnClickListener {
-                        holderLayout.removeView(holder)
-                        delCallback(listItem)
-                    }
-                    holder.findViewById<Button>(R.id.holderGetBtn).setOnClickListener {
-                        getCallback(listItem)
-                        dismiss()
-                    }
                 }
 
             }
