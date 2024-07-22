@@ -59,7 +59,7 @@
                 android:fontFamily="@font/ongulip"
                 android:text="근무 드랍"
                 android:textSize="30sp"
-                android:visibility="gone" />
+                android:visibility="visible" />
 
         </LinearLayout>
 

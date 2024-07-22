@@ -19,6 +19,16 @@
         android:orientation="horizontal">
 
         <Button
+            android:id="@+id/confirmNoBtn"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:layout_weight="1"
+            android:fontFamily="@font/ongulip"
+            android:text="아니요"
+            android:textSize="30sp" />
+
+        <Button
             android:id="@+id/confirmYesBtn"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -28,15 +38,6 @@
             android:text="예"
             android:textSize="30sp" />
 
-        <Button
-            android:id="@+id/confirmNoBtn"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_margin="5dp"
-            android:layout_weight="1"
-            android:fontFamily="@font/ongulip"
-            android:text="아니요"
-            android:textSize="30sp" />
     </LinearLayout>
 
 </LinearLayout>

@@ -48,11 +48,25 @@ class SqliteHelper(context:Context?, name:String, version: Int):SQLiteOpenHelper
 			)
 	""".trimIndent()
 
+	private val mkSizeTable = """
+		CREATE TABLE IF NOT EXISTS SizeTable
+		(
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			sizeName TEXT,
+			tableWidth INTEGER,
+			tableHeight INTEGER,
+			typeWidth INTEGER,
+			shiftHeight INTEGER,
+			tableTextSize INTEGER,
+			dateTextSize INTEGER
+		)
+	""".trimIndent()
+
 	// 테이블 생성
 	override fun onCreate(p0: SQLiteDatabase) {
 		try{
 			Log.d("test", "helper OnCreate 실행")
-			listOf(mkWorkTable, mkMemberTable, mkLogTable).forEach {
+			listOf(mkWorkTable, mkMemberTable, mkLogTable, mkSizeTable).forEach {
 				p0.execSQL(it)
 			}
 		}catch(err:Exception){

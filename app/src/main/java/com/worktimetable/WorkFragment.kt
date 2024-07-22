@@ -325,12 +325,21 @@ class WorkFragment : Fragment() {
 
                 // 저장 버튼
                 this.findViewById<Button>(R.id.saveWorkBtn).setOnClickListener {
-                    setMap(
-                        selectedWorkMap["id"] as? Int,
-                        findViewById<EditText>(R.id.inputWorkName).text.toString(),
-                        copiedTypeMapList,
-                        copiedShiftMapList)
-                    dismiss()
+                    val workName = findViewById<EditText>(R.id.inputWorkName).text.toString()
+                    if(copiedTypeMapList.isNotEmpty() && copiedShiftMapList.isNotEmpty() && workName.isNotBlank()){
+                        setMap(
+                            selectedWorkMap["id"] as? Int,
+                            workName,
+                            copiedTypeMapList,
+                            copiedShiftMapList)
+                        dismiss()
+                    }else if(copiedTypeMapList.isEmpty()) {
+                        Toast.makeText(requireContext(), "근무형태를 입력하세요", Toast.LENGTH_SHORT).show()
+                    }else if(copiedShiftMapList.isEmpty()) {
+                        Toast.makeText(requireContext(), "근무시간을 입력하세요", Toast.LENGTH_SHORT).show()
+                    }else if(workName.isBlank()) {
+                        Toast.makeText(requireContext(), "근무이름을 입력하세요", Toast.LENGTH_SHORT).show()
+                    }
                 }
 
                 // 복사 버튼
@@ -361,6 +370,7 @@ class WorkFragment : Fragment() {
             Dialog(requireContext()).apply dialog@{
                 setContentView(R.layout.dialog_set_shift_at_once)
                 mainActivity.setDialogSize(this, vBinding.workFragmentLayout, 0.85f, null)
+                show()
 
                 val intervalMinuetEt = findViewById<TextInputEditText>(R.id.interverMinuetEt)
                 val shiftNumEt = findViewById<TextInputEditText>(R.id.shiftNumEt)
@@ -369,7 +379,7 @@ class WorkFragment : Fragment() {
                     addTextChangedListener {et->
                         val number = et.toString().toIntOrNull()
                         val errCondition = number == null || number < 0 || number > 23
-                        validateTimeForm(this@dialog.findViewById(R.id.startHourLayout), errCondition, "0~23")
+                        mainActivity.validateTimeForm(this@dialog.findViewById(R.id.startHourLayout), errCondition, "0~23")
                     }
                 }
 
@@ -377,7 +387,7 @@ class WorkFragment : Fragment() {
                     addTextChangedListener { et ->
                         val number = et.toString().toIntOrNull()
                         val errCondition = number == null || number < 0 || number > 59
-                        validateTimeForm(this@dialog.findViewById(R.id.startMinuetLayout), errCondition, "0~59")
+                        mainActivity.validateTimeForm(this@dialog.findViewById(R.id.startMinuetLayout), errCondition, "0~59")
                     }
                 }
 
@@ -408,8 +418,6 @@ class WorkFragment : Fragment() {
                         Toast.makeText(requireContext(), "다시 입력하세요", Toast.LENGTH_SHORT).show()
                     }
                 }
-
-                show()
             }
         }catch(err:Exception){
             Log.d("test", err.toString())
@@ -469,13 +477,16 @@ class WorkFragment : Fragment() {
             Dialog(requireContext()).apply dialog@{
                 setContentView(R.layout.dialog_update_shift)
                 mainActivity.setDialogSize(this, vBinding.workFragmentLayout, 0.9f, null)
+                show()
+
+
                 val periodSplit = splitPeriod(clickedShiftMap["shift"] as String)
                 val updateFromHourEt = findViewById<TextInputEditText>(R.id.updateFromHourEt).apply {
                     setText(periodSplit[0])
                     this.addTextChangedListener{
                         val num:Int? = this.text.toString().toIntOrNull()
                         val errCondition = num == null ||  num>23 || num<0
-                        validateTimeForm( this@dialog.findViewById<TextInputLayout>(R.id.updateFromHourLayout), errCondition,  "0~23 입렵바람")
+                        mainActivity.validateTimeForm( this@dialog.findViewById<TextInputLayout>(R.id.updateFromHourLayout), errCondition,  "0~23 입렵바람")
                     }
                 }
                 val updateFromMinuetEt = findViewById<TextInputEditText>(R.id.updateFromMinuetEt).apply {
@@ -483,7 +494,7 @@ class WorkFragment : Fragment() {
                     addTextChangedListener {
                         val num:Int? = this.text.toString().toIntOrNull()
                         val errCondition = num == null ||  num>59 || num<0
-                        validateTimeForm( this@dialog.findViewById<TextInputLayout>(R.id.updateFromMinuetLayout), errCondition,  "0~59 입렵바람")
+                        mainActivity.validateTimeForm( this@dialog.findViewById<TextInputLayout>(R.id.updateFromMinuetLayout), errCondition,  "0~59 입렵바람")
                     }
                 }
                 val updateToHourEt = findViewById<TextInputEditText>(R.id.updateToHourEt).apply {
@@ -491,7 +502,7 @@ class WorkFragment : Fragment() {
                     addTextChangedListener {
                         val num:Int? = this.text.toString().toIntOrNull()
                         val errCondition = num == null ||  num>23 || num<0
-                        validateTimeForm( this@dialog.findViewById<TextInputLayout>(R.id.updateToHourLayout), errCondition,  "0~23 입렵바람")
+                        mainActivity.validateTimeForm( this@dialog.findViewById<TextInputLayout>(R.id.updateToHourLayout), errCondition,  "0~23 입렵바람")
                     }
                 }
                 val updateToMinuetEt = findViewById<TextInputEditText>(R.id.updateToMinuetEt).apply {
@@ -499,7 +510,7 @@ class WorkFragment : Fragment() {
                     addTextChangedListener {
                         val num:Int? = this.text.toString().toIntOrNull()
                         val errCondition = num == null ||  num>59 || num<0
-                        validateTimeForm( this@dialog.findViewById<TextInputLayout>(R.id.updateToMinuetLayout), errCondition,  "0~59 입렵바람")
+                        mainActivity.validateTimeForm( this@dialog.findViewById<TextInputLayout>(R.id.updateToMinuetLayout), errCondition,  "0~59 입렵바람")
                     }
                 }
                 findViewById<Button>(R.id.updateShiftBtn).setOnClickListener {
@@ -513,13 +524,13 @@ class WorkFragment : Fragment() {
                     }
                 }
 
+
                 findViewById<Button>(R.id.deleteShiftBtn).setOnClickListener {
                     deleteShift()
                     this.dismiss()
                 }
 
-                show()
-            }
+           }
         }catch(err:Exception){
             Log.d("test", err.toString())
             Log.d("test", err.stackTraceToString())
@@ -541,19 +552,6 @@ class WorkFragment : Fragment() {
         return fromTimeSplitByColon + toTimeSplitByColon
     }
 
-    private fun validateTimeForm(textInputLayout: TextInputLayout, errCondition:Boolean, errMessage:String){
-        try{
-            if(errCondition){
-                textInputLayout.isErrorEnabled = true
-                textInputLayout.error = errMessage
-            }else{
-                textInputLayout.isErrorEnabled = false
-            }
-        }catch(err:Exception){
-            Log.d("test", err.toString())
-            Log.d("test", err.stackTraceToString())
-        }
-    }
 
 
 } // class WorkFragment : Fragment() End

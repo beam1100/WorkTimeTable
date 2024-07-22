@@ -184,38 +184,46 @@ class TableFragment : Fragment() {
                 }
             }
 
-            //일지 작성
+            //근무표 작성
             vBinding.mkWorkSelectDialogBtn.setOnClickListener {
-                mkSelectWorkDialog{selectedWorkName->
-                    val workMap = mainActivity.helper.select("WorkTable", where= hashMapOf("workName" to selectedWorkName)).first()
-                    typeMapList = workMap["typeList"] as ArrayList<HashMap<String, Any>>
-                    shiftMapList = workMap["shiftList"] as ArrayList<HashMap<String, Any>>
-                    logMapList = mkNewLogMapList(typeMapList, shiftMapList)
-                    workName = selectedWorkName
-                    mkTable()
+
+                if(mainActivity.helper.select("WorkTable").isEmpty()){
+                    mainActivity.replaceFragment(mainActivity.workFragment)
+                    Toast.makeText(requireContext(), "근무를 생성하세요", Toast.LENGTH_SHORT).show()
+                }else if(mainActivity.helper.select("MemberTable").isEmpty()){
+                    mainActivity.replaceFragment(mainActivity.memberFragment)
+                    Toast.makeText(requireContext(), "인원을 추가하세요", Toast.LENGTH_SHORT).show()
+                }else{
+                    mkSelectWorkDialog{selectedWorkName->
+                        val workMap = mainActivity.helper.select("WorkTable", where= hashMapOf("workName" to selectedWorkName)).first()
+                        typeMapList = workMap["typeList"] as ArrayList<HashMap<String, Any>>
+                        shiftMapList = workMap["shiftList"] as ArrayList<HashMap<String, Any>>
+                        logMapList = mkNewLogMapList(typeMapList, shiftMapList)
+                        workName = selectedWorkName
+                        mkTable()
+                    }
                 }
+
             }
 
-            //일지 저장
+            //근무표 저장
             vBinding.saveLogBtn.setOnClickListener {
                 saveLog()
             }
 
-            //일지 삭제
+            //근무표 삭제
             vBinding.deleteLogBtn.setOnClickListener {
                 if(logMapList.isNotEmpty()){
                     mainActivity.mkConfirmDialog(
                         "현재 근무표를 삭제하시겠습니까?",
                         {
                             mainActivity.helper.deleteByCondition("LogTable", hashMapOf("logDate" to formatter.format(calendar.time)))
+                            logMapList.clear()
                             clearTable()
                         },
                         {}
                     )
-                }else{
-                    Toast.makeText(requireContext(), "삭제할 근무표가 없습니다.", Toast.LENGTH_SHORT).show()
                 }
-
             }
 
             //사고자 설정
@@ -299,7 +307,7 @@ class TableFragment : Fragment() {
 
             // 크기 설정 버튼
             vBinding.mkSetSizeDialogBtn.setOnClickListener {
-                mkMultiSeekbarDialog()
+                setSizeDialog()
             }
 
             //테이블 드랍 버튼(임시)
@@ -476,7 +484,12 @@ class TableFragment : Fragment() {
                     textSize = mainActivity.preferences.getInt("myTextSize", 20).toFloat()
                     colRow.addView(this)
                     this.setOnClickListener{}
-                    setBtnStyle( this, androidx.appcompat.R.color.material_grey_600, doesUpdateSize=true)
+                    setBtnStyle(
+                        this,
+                        androidx.appcompat.R.color.material_grey_600,
+                        doesUpdateSize=true,
+                        toAddHeight = mainActivity.preferences.getInt("toAddHeight", 0)
+                    )
                     setOnLongClickListener(selectSameShift(shift))
                 }
             }
@@ -980,18 +993,16 @@ class TableFragment : Fragment() {
         }
     }
 
-    private fun mkMultiSeekbarDialog(){
+    private fun setSizeDialog(){
         try{
             Dialog(requireContext()).apply {
-                setContentView(R.layout.dialog_multi_seekbar)
+                setContentView(R.layout.dialog_size)
                 mainActivity.setDialogSize(this, vBinding.tableFragmentLayout, 0.9f, null)
                 show()
 
                 val editor = mainActivity.preferences.edit()
 
-
-
-                findViewById<SeekBar>(R.id.widthSeekBar).apply {
+                val widthSeekBar = findViewById<SeekBar>(R.id.widthSeekBar).apply {
                     progress = mainActivity.preferences.getInt("tableWidth", 200) / 3
                     setOnSeekBarChangeListener( object :OnSeekBarChangeListener{
                         override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {
@@ -1004,7 +1015,7 @@ class TableFragment : Fragment() {
                     })
                 }
 
-                findViewById<SeekBar>(R.id.heightSeekBar).apply {
+                val heightSeekBar = findViewById<SeekBar>(R.id.heightSeekBar).apply {
                     progress = mainActivity.preferences.getInt("tableHeight", 200) / 3
                     setOnSeekBarChangeListener( object :OnSeekBarChangeListener{
                         override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {
@@ -1017,11 +1028,11 @@ class TableFragment : Fragment() {
                     })
                 }
 
-                findViewById<SeekBar>(R.id.workTypeWidthSeekbar).apply {
-                    progress = mainActivity.preferences.getInt("toAddWidth", 0)
+                val typeWidthSeekBar = findViewById<SeekBar>(R.id.workTypeWidthSeekbar).apply {
+                    progress = mainActivity.preferences.getInt("toAddWidth", 0)+50
                     setOnSeekBarChangeListener( object :OnSeekBarChangeListener{
                         override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {
-                            editor.putInt("toAddWidth", p1)
+                            editor.putInt("toAddWidth", p1-50)
                             editor.apply()
                             mkTable()
                         }
@@ -1030,7 +1041,20 @@ class TableFragment : Fragment() {
                     })
                 }
 
-                findViewById<SeekBar>(R.id.textSizeSeekBar).apply {
+                val shiftHeightSeekBar = findViewById<SeekBar>(R.id.shiftHeightSeekbar).apply {
+                    progress = mainActivity.preferences.getInt("toAddHeight", 0)+50
+                    setOnSeekBarChangeListener( object :OnSeekBarChangeListener{
+                        override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {
+                            editor.putInt("toAddHeight", p1-50)
+                            editor.apply()
+                            mkTable()
+                        }
+                        override fun onStartTrackingTouch(p0: SeekBar?) {}
+                        override fun onStopTrackingTouch(p0: SeekBar?) {}
+                    })
+                }
+
+                val textSizeSeekBar = findViewById<SeekBar>(R.id.textSizeSeekBar).apply {
                     progress = mainActivity.preferences.getInt("myTextSize", 10) * 5
                     setOnSeekBarChangeListener( object :OnSeekBarChangeListener{
                         override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {
@@ -1043,7 +1067,7 @@ class TableFragment : Fragment() {
                     })
                 }
 
-                findViewById<SeekBar>(R.id.dateSizeSeekBar).apply {
+                val dateSizeSeekBar = findViewById<SeekBar>(R.id.dateSizeSeekBar).apply {
                     progress = mainActivity.preferences.getInt("dateSize", 20)
                     setOnSeekBarChangeListener( object:OnSeekBarChangeListener{
                         override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {
@@ -1055,12 +1079,51 @@ class TableFragment : Fragment() {
                         override fun onStopTrackingTouch(p0: SeekBar?) {}
                     })
                 }
+
+                findViewById<Button>(R.id.mkSaveSizeDialogBtn).setOnClickListener {
+                    val sizeNameList = mainActivity.helper.select("SizeTable").map{it["sizeName"] as String}
+                    mainActivity.mkInputTextDialog(sizeNameList, "저장할 이름") {
+                        mainActivity.helper.insert(
+                            "SizeTable",
+                            hashMapOf(
+                                "sizeName" to it,
+                                "tableWidth" to widthSeekBar.progress,
+                                "tableHeight" to heightSeekBar.progress,
+                                "typeWidth" to typeWidthSeekBar.progress,
+                                "shiftHeight" to shiftHeightSeekBar.progress,
+                                "tableTextSize" to textSizeSeekBar.progress,
+                                "dateTextSize" to dateSizeSeekBar.progress
+                            )
+                        )
+                    }
+                }
+
+                findViewById<Button>(R.id.mkGetSizeDialogBtn).setOnClickListener {
+                    val sizeNameList = mainActivity.helper.select("SizeTable").map{it["sizeName"] as String}
+                    mainActivity.mkHolderDialog(
+                        sizeNameList,
+                        delCallback = {selectedName->
+                            mainActivity.helper.deleteByCondition("SizeTable", hashMapOf("sizeName" to selectedName))
+                        },
+                        getCallback = {selectedName->
+                            val selectedSizeMap = mainActivity.helper.select("SizeTable", where= hashMapOf("sizeName" to selectedName)).firstOrNull()
+                            widthSeekBar.progress = selectedSizeMap?.get("tableWidth") as Int
+                            heightSeekBar.progress = selectedSizeMap["tableHeight"] as Int
+                            typeWidthSeekBar.progress = selectedSizeMap["typeWidth"] as Int
+                            shiftHeightSeekBar.progress = selectedSizeMap["shiftHeight"] as Int
+                            textSizeSeekBar.progress = selectedSizeMap["tableTextSize"] as Int
+                            dateSizeSeekBar.progress = selectedSizeMap["dateTextSize"] as Int
+                        }
+                    )
+                }
             }
         }catch(err:Exception){
             Log.d("test", err.toString())
             Log.d("test", err.stackTraceToString())
         }
     }
+
+
 
     private fun mkLogListDialog(callback: (String) -> Unit){
         Dialog(requireContext()).apply {
@@ -1088,23 +1151,18 @@ class TableFragment : Fragment() {
     fun isChanged():Boolean{
         try{
             val recorded = mainActivity.helper.select("LogTable", where = hashMapOf("logDate" to formatter.format(calendar.time)))
-
-            if(recorded.isNotEmpty()){
+            val btnRemovedLogMapList = logMapList.map {map->map.filterKeys {key->key != "btn"}}
+            return if(recorded.isEmpty()){
+                btnRemovedLogMapList.isNotEmpty()
+            }else{
                 val recordedTypeMapList = recorded[0]["typeMapList"] as ArrayList<HashMap<String, Any>>
                 val recordedLogMapList = recorded[0]["logMapList"] as ArrayList<HashMap<String, Any>>
                 val recordedMainMemberList = recorded[0]["mainMemberList"] as ArrayList<String>
                 val recordedSubMemberList = recorded[0]["subMemberList"] as ArrayList<String>
-                val btnRemovedLogMapList = logMapList.map {map->
-                    map.filterKeys {key->
-                        key != "btn"
-                    }
-                }
-                return recordedLogMapList!=btnRemovedLogMapList ||
+                recordedLogMapList!=btnRemovedLogMapList ||
                         recordedTypeMapList != typeMapList ||
                         recordedMainMemberList != mainMemberList ||
                         recordedSubMemberList != subMemberList
-            }else{
-                return false
             }
         }catch (err:Exception){
             Log.d("test", err.toString())
@@ -1112,6 +1170,8 @@ class TableFragment : Fragment() {
         }
         return false
     }
+
+
 
 
 } // class TableFragment : Fragment() End

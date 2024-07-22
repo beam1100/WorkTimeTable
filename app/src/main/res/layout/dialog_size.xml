@@ -43,7 +43,6 @@
         android:orientation="horizontal">
 
         <TextView
-            android:id="@+id/typeHeightTV"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
@@ -73,13 +72,12 @@
         android:orientation="horizontal">
 
         <TextView
-            android:id="@+id/textView4"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:fontFamily="@font/ongulip"
             android:gravity="center"
-            android:text="근무이름 너비"
+            android:text="근무형태 너비"
             android:textSize="30sp" />
 
         <SeekBar
@@ -89,6 +87,31 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:max="100" />
+    </LinearLayout>
+
+     <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="10dp"
+        android:layout_weight="1"
+        android:orientation="horizontal">
+
+         <TextView
+             android:layout_width="0dp"
+             android:layout_height="match_parent"
+             android:layout_weight="1"
+             android:fontFamily="@font/ongulip"
+             android:gravity="center"
+             android:text="근무시간 높이"
+             android:textSize="30sp" />
+
+         <SeekBar
+             android:id="@+id/shiftHeightSeekbar"
+             style="@android:style/Widget.SeekBar"
+             android:layout_width="0dp"
+             android:layout_height="match_parent"
+             android:layout_weight="1"
+             android:max="100" />
     </LinearLayout>
 
     <LinearLayout
@@ -144,6 +167,31 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:max="100" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/mkGetSizeDialogBtn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:fontFamily="@font/ongulip"
+            android:text="가져오기"
+            android:textSize="30sp" />
+
+        <Button
+            android:id="@+id/mkSaveSizeDialogBtn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:fontFamily="@font/ongulip"
+            android:text="저장하기"
+            android:textSize="30sp" />
     </LinearLayout>
 
 

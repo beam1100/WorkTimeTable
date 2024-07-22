@@ -32,7 +32,7 @@
             android:layout_weight="1"
             android:checked="true"
             android:fontFamily="@font/ongulip"
-            android:text="근무유형 설정"
+            android:text="근무형태 설정"
             android:textSize="30sp" />
 
         <RadioButton

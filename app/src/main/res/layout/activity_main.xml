@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/mainLayout"
     android:layout_width="match_parent"
@@ -16,33 +15,43 @@
 
         <Button
             android:id="@+id/tableFragmentBtn"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_margin="5dp"
-            android:layout_weight="1"
+            android:layout_weight="2"
             android:fontFamily="@font/ghanachocolate"
             android:text="표"
             android:textSize="20sp" />
 
         <Button
             android:id="@+id/memberFragmentBtn"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_margin="5dp"
-            android:layout_weight="1"
+            android:layout_weight="2"
             android:fontFamily="@font/ghanachocolate"
             android:text="인원"
             android:textSize="20sp" />
 
         <Button
             android:id="@+id/workFragmentBtn"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_margin="5dp"
-            android:layout_weight="1"
+            android:layout_weight="2"
             android:fontFamily="@font/ghanachocolate"
             android:text="근무"
             android:textSize="20sp" />
+
+        <ImageButton
+            android:id="@+id/settingBtn"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@android:color/transparent"
+            android:src="@drawable/baseline_settings_24"
+            tools:ignore="SpeakableTextPresentCheck" />
+
     </LinearLayout>
 
     <androidx.fragment.app.FragmentContainerView

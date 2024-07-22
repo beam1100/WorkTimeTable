@@ -1,20 +1,25 @@
 package com.worktimetable
 
 import android.app.Dialog
+import android.app.ProgressDialog.show
 import android.content.Context
 import android.content.SharedPreferences
 import android.icu.text.SimpleDateFormat
 import android.icu.util.Calendar
 import android.os.Bundle
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.View
 import android.widget.Button
+import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.core.content.ContentProviderCompat.requireContext
+import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
+import com.google.android.material.textfield.TextInputEditText
+import com.google.android.material.textfield.TextInputLayout
 import com.worktimetable.databinding.ActivityMainBinding
 
 class MainActivity : FragmentActivity() {
@@ -22,18 +27,23 @@ class MainActivity : FragmentActivity() {
     private lateinit var vBinding:ActivityMainBinding
 
     private val tableFragment = TableFragment()
-    private val memberFragment = MemberFragment()
-    private val workFragment = WorkFragment()
+    val memberFragment = MemberFragment()
+    val workFragment = WorkFragment()
     val helper = SqliteHelper(this, "WorkTable.db", 1)
     val preferences: SharedPreferences by lazy {getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)}
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         try{
-
             vBinding = ActivityMainBinding.inflate(layoutInflater)
             super.onCreate(savedInstanceState)
             setContentView(vBinding.root)
+
+
+            supportFragmentManager
+                .beginTransaction()
+                .add(vBinding.fragmentContainerView.id, tableFragment)
+                .commit()
 
             vBinding.tableFragmentBtn.setOnClickListener {
                 replaceFragment(tableFragment)
@@ -46,10 +56,21 @@ class MainActivity : FragmentActivity() {
             vBinding.workFragmentBtn.setOnClickListener {
                 handleFragmentChange(workFragment)
             }
+            vBinding.settingBtn.setOnClickListener {
+                mkSettingDialog()
+            }
 
         }catch(err:Exception){
             Log.d("test", err.toString())
             Log.d("test", err.stackTraceToString())
+        }
+    }
+
+    private fun mkSettingDialog() {
+        Dialog(this@MainActivity).apply {
+            setContentView(R.layout.dialog_setting)
+            setDialogSize(this, vBinding.mainLayout, 0.9f, null)
+            show()
         }
     }
 
@@ -68,7 +89,7 @@ class MainActivity : FragmentActivity() {
         } else {replaceFragment(fragment)}
     }
 
-    private fun replaceFragment(fragment: Fragment){
+    fun replaceFragment(fragment: Fragment){
         supportFragmentManager.beginTransaction()
             .replace(vBinding.fragmentContainerView.id, fragment)
             .commit()
@@ -243,7 +264,7 @@ class MainActivity : FragmentActivity() {
         return calendar
     }
 
-    // 두 날짜 사이의 일수를 계산하는 함수
+    // 문자열로 입력된 두 날짜 사이의 일수를 정수로 리턴
     fun daysBetween(startDate: String, endDate: String): Int{
         val startCalendar = getCalendarFromString(startDate)
         val endCalendar = getCalendarFromString(endDate)
@@ -268,12 +289,81 @@ class MainActivity : FragmentActivity() {
         }
     }
 
-    /*fun <T> myGet(c:Collection<T>, index:Int): T?{
-        return if (index in c.indices){
-            c.elementAt(index)
-        }else{
-            null
-        }
-    }*/
+    fun mkInputTextDialog(list:List<String>, toHint:String, callback: (String) -> Unit){
+        try{
+            Dialog(this).apply dialog@{
+                setContentView(R.layout.dialog_input_text)
+                setDialogSize(this, vBinding.mainLayout, 0.9f, null)
+                show()
 
-}
+                val textInputLayout = findViewById<TextInputLayout>(R.id.textInputLayout)
+
+                val et = findViewById<TextInputEditText>(R.id.textInputET).apply btn@{
+                    this.hint = toHint
+                    this.addTextChangedListener {
+                        val condition = this.text.toString() in list
+                        validateTimeForm(textInputLayout,condition,"다른 이름으로 저장하세요")
+                    }
+                }
+
+                findViewById<Button>(R.id.inputTextBtn).setOnClickListener {
+                    callback(et.text.toString())
+                    dialog@dismiss()
+
+                }
+
+            }
+        }catch(err:Exception){
+            Log.d("test", err.toString())
+            Log.d("test", err.stackTraceToString())
+        }
+    }
+
+    fun mkHolderDialog(list:List<String>, delCallback:(String)->Unit, getCallback:(String)->Unit) {
+        try{
+            Dialog(this@MainActivity).apply {
+                setContentView(R.layout.dialog_holder_layout)
+                setDialogSize(this, vBinding.mainLayout, 0.9f, null)
+                show()
+                val holderLayout = findViewById<LinearLayout>(R.id.holderLayout)
+                val inflater = LayoutInflater.from(this@MainActivity)
+
+                list.forEach { listItem->
+                    val holder = inflater.inflate(R.layout.holder_two_btn, null) as LinearLayout
+                    holder.findViewById<TextView>(R.id.holderTextView).text = listItem
+                    holderLayout.addView(holder)
+
+                    holder.findViewById<Button>(R.id.holderDelBtn).setOnClickListener {
+                        holderLayout.removeView(holder)
+                        delCallback(listItem)
+                    }
+                    holder.findViewById<Button>(R.id.holderGetBtn).setOnClickListener {
+                        getCallback(listItem)
+                        dismiss()
+                    }
+                }
+
+            }
+        }catch(err:Exception){
+            Log.d("test", err.toString())
+            Log.d("test", err.stackTraceToString())
+        }
+    }
+
+        fun validateTimeForm(textInputLayout: TextInputLayout, errCondition:Boolean, errMessage:String){
+            try{
+                if(errCondition){
+                    textInputLayout.isErrorEnabled = true
+                    textInputLayout.error = errMessage
+                }else{
+                    textInputLayout.isErrorEnabled = false
+                }
+            }catch(err:Exception){
+                Log.d("test", err.toString())
+                Log.d("test", err.stackTraceToString())
+            }
+    }
+
+
+
+} // class MainActivity : FragmentActivity() End
