@@ -5,27 +5,27 @@
     android:orientation="vertical">
 
     <Button
-        android:id="@+id/button"
+        android:id="@+id/putDbBtn"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:fontFamily="@font/ongulip"
-        android:text="DB 가져오기"
+        android:text="자료 백업하기"
         android:textSize="30sp" />
 
     <Button
-        android:id="@+id/button2"
+        android:id="@+id/getDbBtn"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:fontFamily="@font/ongulip"
-        android:text="DB 내보내기"
+        android:text="자료 가져오기"
         android:textSize="30sp" />
 
     <Button
-        android:id="@+id/button3"
+        android:id="@+id/resetDbBtn"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:fontFamily="@font/ongulip"
-        android:text="DB 초기화"
+        android:text="모든 자료 초기화"
         android:textSize="30sp" />
 
 </LinearLayout>

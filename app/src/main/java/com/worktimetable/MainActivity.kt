@@ -2,9 +2,11 @@ package com.worktimetable
 
 import android.app.Dialog
 import android.content.Context
+import android.content.Intent
 import android.content.SharedPreferences
 import android.icu.text.SimpleDateFormat
 import android.icu.util.Calendar
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -13,10 +15,13 @@ import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import com.google.android.material.textfield.TextInputLayout
 import com.worktimetable.databinding.ActivityMainBinding
+import java.io.FileOutputStream
 
 class MainActivity : FragmentActivity() {
 
@@ -28,6 +33,25 @@ class MainActivity : FragmentActivity() {
     val helper = SqliteHelper(this, "WorkTable.db", 1)
     val preferences: SharedPreferences by lazy {getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)}
 
+    private val resultLauncher =  registerForActivityResult( ActivityResultContracts.StartActivityForResult() ){ result ->
+        if (result.resultCode == RESULT_OK){
+            val uri = result.data?.data
+            val dbFile = getDatabasePath("WorkTable.db").readBytes()
+			writeData(uri, dbFile)
+            Toast.makeText(this@MainActivity, "DB파일 백업됨!!!!!", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private val readResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == RESULT_OK) {
+            val uri = result.data?.data
+            uri?.let {
+                val fileData = readData(it)
+                getDatabasePath("WorkTable.db").writeBytes(fileData)
+                Toast.makeText(this@MainActivity, "DB파일 가져옴!!!!!", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         try{
@@ -51,9 +75,11 @@ class MainActivity : FragmentActivity() {
             vBinding.workFragmentBtn.setOnClickListener {
                 handleFragmentChange(workFragment)
             }
-            vBinding.settingBtn.setOnClickListener {
-                mkSettingDialog()
+            vBinding.dbDialogBtn.setOnClickListener {
+                mkDbDialog()
             }
+
+
 
         }catch(err:Exception){
             Log.d("test", err.toString())
@@ -61,11 +87,66 @@ class MainActivity : FragmentActivity() {
         }
     }
 
-    private fun mkSettingDialog() {
-        Dialog(this@MainActivity).apply {
-            setContentView(R.layout.dialog_setting)
-            setDialogSize(this, vBinding.mainLayout, 0.9f, null)
-            show()
+    private fun readData(uri: Uri): ByteArray {
+        return contentResolver.openInputStream(uri)?.use { inputStream ->
+            inputStream.readBytes()
+        } ?: byteArrayOf()
+    }
+
+    private fun mkDbDialog() {
+        try{
+            Dialog(this@MainActivity).apply {
+                setContentView(R.layout.dialog_db)
+                setDialogSize(this, vBinding.mainLayout, 0.9f, null)
+                show()
+
+                findViewById<Button>(R.id.putDbBtn).setOnClickListener {
+                    mkConfirmDialog(
+                        "자료를 백업하시겠습니까?",
+                        {
+                            val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+                                addCategory(Intent.CATEGORY_OPENABLE)
+                                type = "application/octet-stream"
+                                putExtra(Intent.EXTRA_TITLE, "WorkTable")
+                            }
+                            resultLauncher.launch(intent)
+                        },
+                        {}
+                    )
+                }
+
+
+                findViewById<Button>(R.id.getDbBtn).setOnClickListener {
+                    mkConfirmDialog(
+                        "기존 기록이 모두 지워지고, 가져온 기록이 적용됩니다. 진행하시겠습니까?",
+                        {
+                            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                                addCategory(Intent.CATEGORY_OPENABLE)
+                                type = "application/octet-stream"
+                            }
+                            readResultLauncher.launch(intent)
+                        },
+                        {}
+                    )
+                }
+
+                findViewById<Button>(R.id.resetDbBtn).setOnClickListener {
+                    mkConfirmDialog(
+                        "기존 기록을 모두 삭제합니다. 진행하시겠습니까?",
+                        {
+                            listOf("LogTable", "MemberTable", "WorkTable", "SizeTable").forEach {
+                                helper.dropTable(it)
+                            }
+                            Toast.makeText(this@MainActivity, "초기화 되었습니다.", Toast.LENGTH_SHORT).show()
+                        },
+                        {}
+                    )
+                }
+            }
+
+        }catch (err:Exception){
+            Log.d("test", err.toString())
+            Log.d("test", err.stackTraceToString())
         }
     }
 
@@ -101,7 +182,6 @@ class MainActivity : FragmentActivity() {
         delBtnCallback: (HashMap<String,Any>) -> Unit,
     ){
         try{
-
             //홀더 텍스트뷰
             holder.findViewById<TextView>(R.id.holderTV).text = mapItem[toPrintKey] as String
 
@@ -330,19 +410,35 @@ class MainActivity : FragmentActivity() {
         }
     }
 
-        fun validateTimeForm(textInputLayout: TextInputLayout, errCondition:Boolean, errMessage:String){
-            try{
-                if(errCondition){
-                    textInputLayout.isErrorEnabled = true
-                    textInputLayout.error = errMessage
-                }else{
-                    textInputLayout.isErrorEnabled = false
-                }
-            }catch(err:Exception){
-                Log.d("test", err.toString())
-                Log.d("test", err.stackTraceToString())
+    fun validateTimeForm(textInputLayout: TextInputLayout, errCondition:Boolean, errMessage:String){
+        try{
+            if(errCondition){
+                textInputLayout.isErrorEnabled = true
+                textInputLayout.error = errMessage
+            }else{
+                textInputLayout.isErrorEnabled = false
             }
+        }catch(err:Exception){
+            Log.d("test", err.toString())
+            Log.d("test", err.stackTraceToString())
+        }
     }
+
+    private fun writeData(uri: Uri?, fileData:ByteArray) {
+        try {
+            contentResolver.openFileDescriptor(uri!!, "w")?.use { txt ->
+                FileOutputStream(txt.fileDescriptor).use { fos ->
+                    fos.write(fileData)
+                    fos.close()
+                }
+                txt.close()
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+
 
 
 

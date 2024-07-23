@@ -5,7 +5,8 @@
     android:id="@+id/tableFragmentLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".TableFragment">
+    tools:context=".TableFragment"
+    tools:ignore="MissingDefaultResource">
 
     <!-- TODO: Update blank fragment layout -->
     <LinearLayout
@@ -140,15 +141,6 @@
                 android:orientation="horizontal">
 
                 <Button
-                    android:id="@+id/mkSetSizeDialogBtn"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:fontFamily="@font/ongulip"
-                    android:text="크기설정"
-                    android:textSize="30sp" />
-
-                <Button
                     android:id="@+id/mkLogListDialogBtn"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
@@ -171,6 +163,14 @@
                     android:layout_height="match_parent"
                     android:fontFamily="@font/ongulip"
                     android:text="근무표 저장"
+                    android:textSize="30sp" />
+
+                <Button
+                    android:id="@+id/deleteLogBtn"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:fontFamily="@font/ongulip"
+                    android:text="근무표 삭제"
                     android:textSize="30sp" />
 
                 <Button
@@ -206,11 +206,12 @@
                     android:textSize="30sp" />
 
                 <Button
-                    android:id="@+id/deleteLogBtn"
+                    android:id="@+id/mkSetSizeDialogBtn"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
+                    android:layout_weight="1"
                     android:fontFamily="@font/ongulip"
-                    android:text="근무표 삭제"
+                    android:text="크기설정"
                     android:textSize="30sp" />
 
                 <Button
@@ -220,7 +221,7 @@
                     android:fontFamily="@font/ongulip"
                     android:text="테이블 드랍(임시)"
                     android:textSize="30sp"
-                    android:visibility="visible" />
+                    android:visibility="gone" />
 
                 <Button
                     android:id="@+id/printLogBtn"
@@ -229,7 +230,7 @@
                     android:fontFamily="@font/ongulip"
                     android:text="출력(임시)"
                     android:textSize="30sp"
-                    android:visibility="visible" />
+                    android:visibility="gone" />
             </LinearLayout>
         </HorizontalScrollView>
 
