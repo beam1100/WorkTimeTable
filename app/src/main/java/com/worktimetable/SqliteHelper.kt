@@ -54,7 +54,7 @@ class SqliteHelper(context:Context?, name:String, version: Int):SQLiteOpenHelper
 			sizeName TEXT,
 			tableWidth INTEGER,
 			tableHeight INTEGER,
-			typeWidth REAL,
+			typeWidth INTEGER,
 			tableTextSize INTEGER,
 			dateTextSize INTEGER
 		)

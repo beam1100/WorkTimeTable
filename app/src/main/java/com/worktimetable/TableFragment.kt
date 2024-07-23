@@ -88,7 +88,7 @@ class TableFragment : Fragment() {
 
             vBinding.dateTV.apply {
                 text = formatter.format(calendar.time)
-                textSize = mainActivity.preferences.getInt("dateSize", 20).toFloat()
+                textSize = mainActivity.preferences.getInt("dateSize", 30).toFloat()
             }
 
             getLog(0)
@@ -343,12 +343,7 @@ class TableFragment : Fragment() {
 
             //출력 테스트(임시)
             vBinding.printLogBtn.setOnClickListener {
-                /*typeMapList.forEach {
-                    Log.d("test", it.toString())
-                }*/
-                Log.d("test", mainMemberList.toString())
-                Log.d("test", subMemberList.toString())
-
+                Log.d("test", mainActivity.helper.select("SizeTable").toString())
             }
         }catch(err:Exception){
             Log.d("test", err.toString())
@@ -476,8 +471,8 @@ class TableFragment : Fragment() {
                         setBtnStyle(
                             this, R.color.unSelectedColor,
                             doesUpdateSize=true,
-                            height = mainActivity.preferences.getInt("tableHeight", 0),
-                            width = mainActivity.preferences.getInt("tableWidth", 0),
+                            height = mainActivity.preferences.getInt("tableHeight", 250),
+                            width = mainActivity.preferences.getInt("tableWidth", 200),
                             heightRate = typeMap["heightRate"] as Int
                         )
                     }
@@ -500,10 +495,10 @@ class TableFragment : Fragment() {
                         this,
                         androidx.appcompat.R.color.material_grey_600,
                         doesUpdateSize=true,
-                        height = mainActivity.preferences.getInt("tableHeight", 0),
-                        width = mainActivity.preferences.getInt("tableWidth", 0),
+                        height = mainActivity.preferences.getInt("tableHeight", 250),
+                        width = mainActivity.preferences.getInt("tableWidth", 200),
                         heightRate = typeMap["heightRate"] as Int,
-                        widthRate = mainActivity.preferences.getInt("typeWidth", 0)
+                        widthRate = mainActivity.preferences.getInt("typeWidth", 100)
                     )
                     setOnClickListener {setTypeHeightDialog(typeMap)}
                     setOnLongClickListener(selectSameType(type))
@@ -525,8 +520,8 @@ class TableFragment : Fragment() {
                         this,
                         androidx.appcompat.R.color.material_grey_600,
                         doesUpdateSize=true,
-                        height = mainActivity.preferences.getInt("tableHeight", 0),
-                        width = mainActivity.preferences.getInt("tableWidth", 0)
+                        height = mainActivity.preferences.getInt("tableHeight", 250),
+                        width = mainActivity.preferences.getInt("tableWidth", 200)
                     )
                     setOnLongClickListener(selectSameShift(shift))
                 }
@@ -1177,6 +1172,7 @@ class TableFragment : Fragment() {
                                         textSizeSeekBar.progress = map["tableTextSize"] as Int
                                         dateSizeSeekBar.progress = map["dateTextSize"] as Int
                                         dismiss()
+                                        Log.d("test", map.toString())
                                     },
                                     delBtnCallback = {map->
                                         mainActivity.helper.deleteByCondition("SizeTable", hashMapOf("id" to map["id"]))

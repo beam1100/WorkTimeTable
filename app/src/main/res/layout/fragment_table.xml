@@ -230,7 +230,7 @@
                     android:fontFamily="@font/ongulip"
                     android:text="출력(임시)"
                     android:textSize="30sp"
-                    android:visibility="gone" />
+                    android:visibility="visible" />
             </LinearLayout>
         </HorizontalScrollView>
 

@@ -115,7 +115,6 @@ class MainActivity : FragmentActivity() {
                     )
                 }
 
-
                 findViewById<Button>(R.id.getDbBtn).setOnClickListener {
                     mkConfirmDialog(
                         "기존 기록이 모두 지워지고, 가져온 기록이 적용됩니다. 진행하시겠습니까?",
@@ -137,6 +136,9 @@ class MainActivity : FragmentActivity() {
                             listOf("LogTable", "MemberTable", "WorkTable", "SizeTable").forEach {
                                 helper.dropTable(it)
                             }
+                            val editor = preferences.edit()
+                            editor.clear()
+                            editor.apply()
                             Toast.makeText(this@MainActivity, "초기화 되었습니다.", Toast.LENGTH_SHORT).show()
                         },
                         {}
