@@ -2,7 +2,6 @@ package com.worktimetable
 
 import android.app.Dialog
 import android.content.Context
-import android.content.Intent
 import android.content.SharedPreferences
 import android.icu.text.SimpleDateFormat
 import android.icu.util.Calendar
@@ -28,22 +27,23 @@ class MainActivity : FragmentActivity() {
     private lateinit var vBinding:ActivityMainBinding
 
     private val tableFragment = TableFragment()
+    private val databaseFragment = DatabaseFragment()
     val memberFragment = MemberFragment()
     val workFragment = WorkFragment()
     val helper = SqliteHelper(this, "WorkTable.db", 1)
     val preferences: SharedPreferences by lazy {getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)}
 
-    private val resultLauncher =  registerForActivityResult( ActivityResultContracts.StartActivityForResult() ){ result ->
-        if (result.resultCode == RESULT_OK){
+    val resultLauncher =  registerForActivityResult( ActivityResultContracts.StartActivityForResult() ){ result ->
+        if (result.resultCode == FragmentActivity.RESULT_OK){
             val uri = result.data?.data
             val dbFile = getDatabasePath("WorkTable.db").readBytes()
-			writeData(uri, dbFile)
+            writeData(uri, dbFile)
             Toast.makeText(this@MainActivity, "DB파일 백업됨!!!!!", Toast.LENGTH_SHORT).show()
         }
     }
 
-    private val readResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == RESULT_OK) {
+    val readResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == FragmentActivity.RESULT_OK) {
             val uri = result.data?.data
             uri?.let {
                 val fileData = readData(it)
@@ -75,11 +75,10 @@ class MainActivity : FragmentActivity() {
             vBinding.workFragmentBtn.setOnClickListener {
                 handleFragmentChange(workFragment)
             }
-            vBinding.dbDialogBtn.setOnClickListener {
-                mkDbDialog()
+
+            vBinding.dbFragmentBtn.setOnClickListener {
+                handleFragmentChange(databaseFragment)
             }
-
-
 
         }catch(err:Exception){
             Log.d("test", err.toString())
@@ -87,70 +86,6 @@ class MainActivity : FragmentActivity() {
         }
     }
 
-    private fun readData(uri: Uri): ByteArray {
-        return contentResolver.openInputStream(uri)?.use { inputStream ->
-            inputStream.readBytes()
-        } ?: byteArrayOf()
-    }
-
-    private fun mkDbDialog() {
-        try{
-            Dialog(this@MainActivity).apply {
-                setContentView(R.layout.dialog_db)
-                setDialogSize(this, vBinding.mainLayout, 0.9f, null)
-                show()
-
-                findViewById<Button>(R.id.putDbBtn).setOnClickListener {
-                    mkConfirmDialog(
-                        "자료를 백업하시겠습니까?",
-                        {
-                            val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
-                                addCategory(Intent.CATEGORY_OPENABLE)
-                                type = "application/octet-stream"
-                                putExtra(Intent.EXTRA_TITLE, "WorkTable")
-                            }
-                            resultLauncher.launch(intent)
-                        },
-                        {}
-                    )
-                }
-
-                findViewById<Button>(R.id.getDbBtn).setOnClickListener {
-                    mkConfirmDialog(
-                        "기존 기록이 모두 지워지고, 가져온 기록이 적용됩니다. 진행하시겠습니까?",
-                        {
-                            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
-                                addCategory(Intent.CATEGORY_OPENABLE)
-                                type = "application/octet-stream"
-                            }
-                            readResultLauncher.launch(intent)
-                        },
-                        {}
-                    )
-                }
-
-                findViewById<Button>(R.id.resetDbBtn).setOnClickListener {
-                    mkConfirmDialog(
-                        "기존 기록을 모두 삭제합니다. 진행하시겠습니까?",
-                        {
-                            listOf("LogTable", "MemberTable", "WorkTable", "SizeTable").forEach {
-                                helper.dropTable(it)
-                            }
-                            val editor = preferences.edit()
-                            editor.clear()
-                            editor.apply()
-                            Toast.makeText(this@MainActivity, "초기화 되었습니다.", Toast.LENGTH_SHORT).show()
-                        },
-                        {}
-                    )
-                }
-            }
-
-        }catch (err:Exception){
-            Log.d("test", err.toString())
-            Log.d("test", err.stackTraceToString())
-        }
-    }
 
     private fun handleFragmentChange(fragment: Fragment) {
         if (supportFragmentManager.findFragmentById(vBinding.fragmentContainerView.id) == tableFragment) {
@@ -164,7 +99,9 @@ class MainActivity : FragmentActivity() {
                     {replaceFragment(fragment) }
                 )
             } else {replaceFragment(fragment)}
-        } else {replaceFragment(fragment)}
+        } else {
+            replaceFragment(fragment)
+        }
     }
 
     fun replaceFragment(fragment: Fragment){
@@ -426,6 +363,12 @@ class MainActivity : FragmentActivity() {
         }
     }
 
+    private fun readData(uri: Uri): ByteArray {
+        return contentResolver.openInputStream(uri)?.use { inputStream ->
+            inputStream.readBytes()
+        } ?: byteArrayOf()
+    }
+
     private fun writeData(uri: Uri?, fileData:ByteArray) {
         try {
             contentResolver.openFileDescriptor(uri!!, "w")?.use { txt ->
@@ -439,6 +382,8 @@ class MainActivity : FragmentActivity() {
             e.printStackTrace()
         }
     }
+
+
 
 
 

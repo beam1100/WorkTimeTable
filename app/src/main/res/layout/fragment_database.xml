@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".DatabaseFragment">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+
+        <Button
+            android:id="@+id/putDbBtn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/ongulip"
+            android:text="자료 백업하기"
+            android:textSize="30sp" />
+
+        <Button
+            android:id="@+id/getDbBtn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/ongulip"
+            android:text="자료 가져오기"
+            android:textSize="30sp" />
+
+        <Button
+            android:id="@+id/resetDbBtn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/ongulip"
+            android:text="모든 자료 초기화"
+            android:textSize="30sp" />
+
+
+    </LinearLayout>
+</FrameLayout>

@@ -233,7 +233,7 @@ class WorkFragment : Fragment() {
                 }
 
                 // 근무 추가 버튼
-                this.findViewById<ImageButton>(R.id.mkAddWorkDialogBtn).setOnClickListener { _ ->
+                this.findViewById<Button>(R.id.mkAddWorkDialogBtn).setOnClickListener { _ ->
                     //다이얼로그에서 새로운 근무유형 홀더에 담기
                     val inflater = LayoutInflater.from(requireContext())
                     val holder = inflater.inflate(R.layout.holder_item, null) as LinearLayout
@@ -302,7 +302,7 @@ class WorkFragment : Fragment() {
                 }
 
                 // 근무 시간 설정 버튼
-                this.findViewById<ImageButton>(R.id.mkSetShiftDialogAtOnceBtn).setOnClickListener {
+                this.findViewById<Button>(R.id.mkSetShiftDialogBtn).setOnClickListener {
                     shiftHolderLayout.removeAllViews()
                     setShiftAtOnceDialog{ shiftMapList->
                         copiedShiftMapList = shiftMapList
@@ -344,10 +344,12 @@ class WorkFragment : Fragment() {
                 this.findViewById<RadioGroup>(R.id.setWorkRadioGroup).setOnCheckedChangeListener { _, id ->
                     when(id){
                         this.findViewById<RadioButton>(R.id.setTypeRadio).id -> {
+                            Log.d("test", id.toString())
                             this.findViewById<LinearLayout>(R.id.setTypeLayout).isGone = false
                             this.findViewById<LinearLayout>(R.id.setShiftLayout).isGone = true
                         }
                         this.findViewById<RadioButton>(R.id.setTimeRadio).id -> {
+                            Log.d("test", id.toString())
                             this.findViewById<LinearLayout>(R.id.setTypeLayout).isGone = true
                             this.findViewById<LinearLayout>(R.id.setShiftLayout).isGone = false
                         }
@@ -399,7 +401,7 @@ class WorkFragment : Fragment() {
     private fun setShiftAtOnceDialog(callback: (shiftMapList:ArrayList<HashMap<String, Any>>) -> Unit ) {
         try{
             Dialog(requireContext()).apply dialog@{
-                setContentView(R.layout.dialog_set_shift_at_once)
+                setContentView(R.layout.dialog_set_shift)
                 mainActivity.setDialogSize(this, vBinding.workFragmentLayout, 0.85f, null)
                 show()
 
