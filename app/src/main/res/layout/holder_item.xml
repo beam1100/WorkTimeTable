@@ -33,19 +33,19 @@
         android:textSize="50sp" />
 
     <ImageButton
+        android:id="@+id/holderDelBtn"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:src="@drawable/baseline_delete_24" />
+
+    <ImageButton
         android:id="@+id/holderUpdateBtn"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
         android:src="@drawable/outline_edit_24"
         tools:ignore="SpeakableTextPresentCheck" />
-
-    <ImageButton
-        android:id="@+id/holderDelBtn"
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:src="@drawable/baseline_delete_24" />
 
     <ImageButton
         android:id="@+id/holderGetBtn"

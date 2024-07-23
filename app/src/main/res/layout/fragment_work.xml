@@ -49,7 +49,7 @@
                 android:fontFamily="@font/ongulip"
                 android:text="근무 출력"
                 android:textSize="30sp"
-                android:visibility="gone" />
+                android:visibility="visible" />
 
             <Button
                 android:id="@+id/dropWorkTableBtn"

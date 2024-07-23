@@ -86,32 +86,7 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:max="100" />
-    </LinearLayout>
-
-     <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_margin="10dp"
-        android:layout_weight="1"
-        android:orientation="horizontal">
-
-         <TextView
-             android:layout_width="0dp"
-             android:layout_height="match_parent"
-             android:layout_weight="1"
-             android:fontFamily="@font/ongulip"
-             android:gravity="center"
-             android:text="근무시간 높이"
-             android:textSize="30sp" />
-
-         <SeekBar
-             android:id="@+id/shiftHeightSeekbar"
-             style="@android:style/Widget.SeekBar"
-             android:layout_width="0dp"
-             android:layout_height="match_parent"
-             android:layout_weight="1"
-             android:max="100" />
+            android:max="29" />
     </LinearLayout>
 
     <LinearLayout

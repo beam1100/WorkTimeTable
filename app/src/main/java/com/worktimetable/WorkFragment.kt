@@ -480,7 +480,7 @@ class WorkFragment : Fragment() {
                         "type" to workNameEditText.text.toString(),
                         "isPatrol" to isWorkPatrolBox.isChecked,
                         "isConcurrent" to isConcurrentBox.isChecked,
-                        "height" to 0
+                        "heightRate" to 100
                     )
                     saveTypeCallback(toSaveTypeMap)
                     this.dismiss()
