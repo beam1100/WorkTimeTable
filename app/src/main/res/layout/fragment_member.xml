@@ -58,7 +58,7 @@
                 android:fontFamily="@font/ongulip"
                 android:text="인원 드랍"
                 android:textSize="30sp"
-                android:visibility="visible" />
+                android:visibility="gone" />
         </LinearLayout>
     </LinearLayout>
 

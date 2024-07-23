@@ -49,7 +49,7 @@
                 android:fontFamily="@font/ongulip"
                 android:text="근무 출력"
                 android:textSize="30sp"
-                android:visibility="visible" />
+                android:visibility="gone" />
 
             <Button
                 android:id="@+id/dropWorkTableBtn"
@@ -59,7 +59,7 @@
                 android:fontFamily="@font/ongulip"
                 android:text="근무 드랍"
                 android:textSize="30sp"
-                android:visibility="visible" />
+                android:visibility="gone" />
 
         </LinearLayout>
 

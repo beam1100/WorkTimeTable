@@ -166,11 +166,34 @@ class TableFragment : Fragment() {
 
             //근무표 리스트 버튼
             vBinding.mkLogListDialogBtn.setOnClickListener {
-                mkLogListDialog(){toGoDate->
-                    getLog(
-                        mainActivity.daysBetween(formatter.format(calendar.time), toGoDate)
-                    )
-                }
+                mkLogListDialog(
+                    goCallback = {date->
+                        if(isChanged()){
+                            mainActivity.mkConfirmDialog(
+                                "변경된 내용을 저장하시겠습니까?",
+                                {
+                                    saveLog()
+                                    getLog(mainActivity.daysBetween(formatter.format(calendar.time), date))
+                                },
+                                {
+                                    getLog(mainActivity.daysBetween(formatter.format(calendar.time), date))
+                                }
+                            )
+                        }else{
+                            getLog(mainActivity.daysBetween(formatter.format(calendar.time), date))
+                        }
+                    },
+                    getCallback = {map->
+                        typeMapList = map["typeMapList"] as ArrayList<HashMap<String, Any>>
+                        shiftMapList = map["shiftMapList"] as ArrayList<HashMap<String, Any>>
+                        logMapList = map["logMapList"] as ArrayList<HashMap<String, Any>>
+                        mainMemberList = map["mainMemberList"] as ArrayList<String>
+                        subMemberList = map["subMemberList"] as ArrayList<String>
+                        workName = map["workName"] as String
+                        mkTable()
+                    }
+                )
+
             }
 
             //스크롤 연동
@@ -187,7 +210,6 @@ class TableFragment : Fragment() {
 
             //근무표 작성
             vBinding.mkWorkSelectDialogBtn.setOnClickListener {
-
                 if(mainActivity.helper.select("WorkTable").isEmpty()){
                     mainActivity.replaceFragment(mainActivity.workFragment)
                     Toast.makeText(requireContext(), "근무를 생성하세요", Toast.LENGTH_SHORT).show()
@@ -321,9 +343,12 @@ class TableFragment : Fragment() {
 
             //출력 테스트(임시)
             vBinding.printLogBtn.setOnClickListener {
-                typeMapList.forEach {
+                /*typeMapList.forEach {
                     Log.d("test", it.toString())
-                }
+                }*/
+                Log.d("test", mainMemberList.toString())
+                Log.d("test", subMemberList.toString())
+
             }
         }catch(err:Exception){
             Log.d("test", err.toString())
@@ -1136,8 +1161,8 @@ class TableFragment : Fragment() {
                             mainActivity.setDialogSize(this, vBinding.tableFragmentLayout, 0.9f, null)
                             show()
                             val holderLayout = findViewById<LinearLayout>(R.id.holderLayout)
+                            val inflater = LayoutInflater.from(requireContext())
                             selectedSizeMapList.forEach { mapItem->
-                                val inflater = LayoutInflater.from(requireContext())
                                 val holder = inflater.inflate(R.layout.holder_item, null) as LinearLayout
                                 holder.findViewById<ImageButton>(R.id.holderMoveItemUp).isGone = true
                                 holder.findViewById<ImageButton>(R.id.holderMoveItemDown).isGone = true
@@ -1171,10 +1196,13 @@ class TableFragment : Fragment() {
         }
     }
 
-    private fun mkLogListDialog(callback: (String) -> Unit){
+    private fun mkLogListDialog(
+        goCallback: (String) -> Unit,
+        getCallback: (HashMap<String,Any>) -> Unit
+    ){
         Dialog(requireContext()).apply {
             setContentView(R.layout.dialog_log_list)
-            mainActivity.setDialogSize(this, vBinding.tableFragmentLayout, 0.9f, null)
+            mainActivity.setDialogSize(this, vBinding.tableFragmentLayout, 1f, null)
             show()
             val inflater = LayoutInflater.from(requireContext())
             mainActivity.helper.select("LogTable", toSortColumn = "logDate").forEach {logMap->
@@ -1183,12 +1211,16 @@ class TableFragment : Fragment() {
                 holder.findViewById<TextView>(R.id.workNameTV).text = logMap["workName"] as String
                 holder.findViewById<TextView>(R.id.numOfMainTV).text = (logMap["mainMemberList"] as ArrayList<*>).size.toString()
                 holder.findViewById<TextView>(R.id.numOfSubTV).text = (logMap["subMemberList"] as ArrayList<*>).size.toString()
-                holder.findViewById<TextView>(R.id.logDateBtn).apply {
+                holder.findViewById<Button>(R.id.logDateBtn).apply {
                     text = logMap["logDate"] as String
                     setOnClickListener {
-                        callback(logMap["logDate"] as String)
+                        goCallback(logMap["logDate"] as String)
                         dismiss()
                     }
+                }
+                holder.findViewById<ImageButton>(R.id.getLogBtn).setOnClickListener {
+                    getCallback(logMap)
+                    dismiss()
                 }
             }
         }

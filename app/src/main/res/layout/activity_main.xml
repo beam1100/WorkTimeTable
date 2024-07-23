@@ -43,14 +43,15 @@
             android:text="근무"
             android:textSize="20sp" />
 
-        <ImageButton
-            android:id="@+id/settingBtn"
+        <Button
+            android:id="@+id/dbDialogBtn"
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:background="@android:color/transparent"
-            android:src="@drawable/baseline_settings_24"
-            tools:ignore="SpeakableTextPresentCheck" />
+            android:layout_margin="5dp"
+            android:layout_weight="2"
+            android:fontFamily="@font/ghanachocolate"
+            android:text="자료"
+            android:textSize="20sp" />
 
     </LinearLayout>
 
