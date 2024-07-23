@@ -48,6 +48,7 @@ class TableFragment : Fragment() {
     private var logMapList = arrayListOf<HashMap<String,Any>>()
     private var typeMapList = arrayListOf<HashMap<String,Any>>()
     private var shiftMapList = arrayListOf<HashMap<String,Any>>()
+
     private lateinit var mainMemberList:ArrayList<String>
     private var subMemberList = arrayListOf<String>()
 
@@ -226,7 +227,6 @@ class TableFragment : Fragment() {
                         mkTable()
                     }
                 }
-
             }
 
             //근무표 저장
@@ -245,6 +245,8 @@ class TableFragment : Fragment() {
                                 hashMapOf("logDate" to formatter.format(calendar.time))
                             )
                             logMapList.clear()
+                            mainMemberList = ArrayList(mainActivity.helper.select("MemberTable", toSortColumn = "sortIndex").map{it["memberName"] as String})
+                            subMemberList.clear()
                             clearTable()
                         },
                         {}
@@ -404,8 +406,7 @@ class TableFragment : Fragment() {
             vBinding.dateTV.text = formatter.format(calendar.time)
             val recorded = mainActivity.helper.select("LogTable", where = hashMapOf("logDate" to formatter.format(calendar.time)))
             if(recorded.isEmpty()){
-                mainMemberList = ArrayList(mainActivity.helper.select("MemberTable", toSortColumn = "sortIndex")
-                    .map{it["memberName"] as String})
+                mainMemberList = ArrayList(mainActivity.helper.select("MemberTable", toSortColumn = "sortIndex").map{it["memberName"] as String})
                 logMapList.clear()
                 subMemberList.clear()
                 clearTable()
