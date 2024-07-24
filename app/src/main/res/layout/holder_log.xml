@@ -47,7 +47,7 @@
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
-        android:src="@drawable/baseline_touch_app_24"
+        android:src="@drawable/baseline_check_24"
         tools:ignore="SpeakableTextPresentCheck" />
 
 </LinearLayout>

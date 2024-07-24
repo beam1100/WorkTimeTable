@@ -15,7 +15,7 @@
         android:gravity="center"
         android:hint="근무 이름"
         android:inputType="text"
-        android:textSize="60sp"
+        android:textSize="30sp"
         tools:ignore="SpeakableTextPresentCheck" />
 
     <RadioGroup
@@ -29,9 +29,11 @@
             android:id="@+id/setTypeRadio"
             android:layout_width="0dp"
             android:layout_height="match_parent"
+            android:layout_gravity="center"
             android:layout_weight="1"
             android:checked="true"
             android:fontFamily="@font/ongulip"
+            android:gravity="center"
             android:text="근무형태"
             android:textSize="30sp" />
 
@@ -39,8 +41,10 @@
             android:id="@+id/setTimeRadio"
             android:layout_width="0dp"
             android:layout_height="match_parent"
+            android:layout_gravity="center"
             android:layout_weight="1"
             android:fontFamily="@font/ongulip"
+            android:gravity="center"
             android:text="근무시간"
             android:textSize="30sp"
             android:visibility="visible" />

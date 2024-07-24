@@ -231,7 +231,11 @@ class TableFragment : Fragment() {
 
             //근무표 저장
             vBinding.saveLogBtn.setOnClickListener {
-                saveLog()
+                mainActivity.mkConfirmDialog(
+                    "근무표를 저장하시겠습니까?",
+                    {saveLog()},
+                    {}
+                )
             }
 
             //근무표 삭제
@@ -894,7 +898,7 @@ class TableFragment : Fragment() {
     private fun mkSubMemberDialog(callbackSubMember: (ArrayList<String>) -> Unit) {
         Dialog(requireContext()).apply {
             setContentView(R.layout.dialog_set_sub)
-            mainActivity.setDialogSize(this, vBinding.tableFragmentLayout, 0.9f, 0.5f)
+            mainActivity.setDialogSize(this, vBinding.tableFragmentLayout, 0.9f, null)
             show()
             val subMemberLayout = findViewById<LinearLayout>(R.id.sumMemberLayout)
             val inflater = LayoutInflater.from(requireContext())
@@ -1063,7 +1067,7 @@ class TableFragment : Fragment() {
     private fun setSizeDialog(){
         try{
             Dialog(requireContext()).apply {
-                setContentView(R.layout.dialog_size)
+                setContentView(R.layout.dialog_set_size)
                 mainActivity.setDialogSize(this, vBinding.tableFragmentLayout, 0.9f, null)
                 show()
                 val editor = mainActivity.preferences.edit()
@@ -1134,7 +1138,7 @@ class TableFragment : Fragment() {
                 }
 
                 findViewById<Button>(R.id.mkSaveSizeDialogBtn).setOnClickListener {
-                    mainActivity.mkInputTextDialog("저장할 이름") {
+                    mainActivity.mkInputTextDialog("저장할 레이아웃 이름") {
                         mainActivity.helper.insert(
                             "SizeTable",
                             hashMapOf(

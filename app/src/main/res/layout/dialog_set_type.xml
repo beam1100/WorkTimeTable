@@ -2,20 +2,21 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="wrap_content"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical">
 
     <EditText
         android:id="@+id/toAddWorkName"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
         android:ems="10"
         android:fontFamily="@font/ongulip"
+        android:gravity="center"
         android:hint="근무형태"
         android:inputType="text"
-        android:textSize="50sp" />
+        android:textSize="30sp" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -27,20 +28,23 @@
             android:id="@+id/isPatrolCheckBox"
             android:layout_width="0dp"
             android:layout_height="match_parent"
+            android:layout_gravity="center"
             android:layout_weight="1"
             android:fontFamily="@font/ongulip"
             android:gravity="center"
             android:text="외근?"
-            android:textSize="50sp" />
+            android:textSize="30sp" />
 
         <CheckBox
             android:id="@+id/isConcurentCheckBox"
             android:layout_width="0dp"
             android:layout_height="match_parent"
+            android:layout_gravity="center"
             android:layout_weight="1"
             android:fontFamily="@font/ongulip"
+            android:gravity="center"
             android:text="병행?"
-            android:textSize="50sp" />
+            android:textSize="30sp" />
     </LinearLayout>
 
     <LinearLayout
@@ -56,7 +60,7 @@
             android:layout_weight="1"
             android:fontFamily="@font/ongulip"
             android:text="저장"
-            android:textSize="50sp" />
+            android:textSize="30sp" />
 
         <Button
             android:id="@+id/deleteWorkTypeBtn"
@@ -65,7 +69,7 @@
             android:layout_weight="1"
             android:fontFamily="@font/ongulip"
             android:text="삭제"
-            android:textSize="50sp" />
+            android:textSize="30sp" />
 
     </LinearLayout>
 

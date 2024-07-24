@@ -17,5 +17,5 @@
         android:layout_height="wrap_content"
         android:fontFamily="@font/ongulip"
         android:text="작성"
-        android:textSize="50sp" />
+        android:textSize="30sp" />
 </LinearLayout>

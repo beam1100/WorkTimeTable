@@ -10,9 +10,10 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:fontFamily="@font/ongulip"
+        android:gravity="center"
         android:hint="근무자 이름 입력"
         android:inputType="text"
-        android:textSize="50sp"
+        android:textSize="30sp"
         tools:ignore="SpeakableTextPresentCheck" />
 
     <LinearLayout

@@ -5,5 +5,5 @@
     android:fontFamily="@font/ongulip"
     android:padding="5dp"
     android:textColor="#000000"
-    android:textSize="50sp"
+    android:textSize="30sp"
     android:textStyle="bold" />

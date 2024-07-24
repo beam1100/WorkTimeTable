@@ -61,8 +61,15 @@ class MainActivity : FragmentActivity() {
 
             supportFragmentManager
                 .beginTransaction()
-                .add(vBinding.fragmentContainerView.id, tableFragment)
+                .replace(vBinding.fragmentContainerView.id, tableFragment)
                 .commit()
+
+            /*supportFragmentManager
+                .beginTransaction()
+                .add(vBinding.fragmentContainerView.id, tableFragment)
+                .commit()*/
+
+
 
             vBinding.tableFragmentBtn.setOnClickListener {
                 replaceFragment(tableFragment)
@@ -105,7 +112,8 @@ class MainActivity : FragmentActivity() {
     }
 
     fun replaceFragment(fragment: Fragment){
-        supportFragmentManager.beginTransaction()
+        supportFragmentManager
+            .beginTransaction()
             .replace(vBinding.fragmentContainerView.id, fragment)
             .commit()
     }

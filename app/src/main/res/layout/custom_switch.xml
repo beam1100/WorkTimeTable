@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.appcompat.widget.SwitchCompat
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/switch1"
+<androidx.appcompat.widget.SwitchCompat xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_weight="1"
     android:fontFamily="@font/ongulip"
-    android:textSize="50sp" />
+    android:textSize="40sp" />

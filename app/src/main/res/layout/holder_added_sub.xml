@@ -7,18 +7,20 @@
     <TextView
         android:id="@+id/subNameTV"
         android:layout_width="0dp"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
         android:layout_weight="4"
         android:fontFamily="@font/ongulip"
         android:gravity="center"
-        android:textSize="50sp" />
+        android:textSize="30sp" />
 
     <ImageButton
         android:id="@+id/removeSubBtn"
         android:layout_width="0dp"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
         android:layout_weight="1"
-        android:src="@drawable/remove"
         android:background="@android:color/transparent"
+        android:src="@drawable/baseline_remove_circle_outline_24"
         tools:ignore="SpeakableTextPresentCheck" />
 </LinearLayout>
