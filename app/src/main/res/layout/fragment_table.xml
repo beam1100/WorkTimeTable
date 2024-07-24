@@ -140,93 +140,115 @@
                 android:layout_height="match_parent"
                 android:orientation="horizontal">
 
-                <Button
+                <androidx.appcompat.widget.AppCompatButton
                     android:id="@+id/mkLogListDialogBtn"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
+                    android:layout_margin="5dp"
                     android:layout_weight="1"
+                    android:background="@drawable/custom_btn"
                     android:fontFamily="@font/ongulip"
                     android:text="근무표\n리스트"
                     android:textSize="30sp" />
 
-                <Button
+                <androidx.appcompat.widget.AppCompatButton
                     android:id="@+id/mkWorkSelectDialogBtn"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
+                    android:layout_margin="5dp"
+                    android:background="@drawable/custom_btn"
                     android:fontFamily="@font/ongulip"
                     android:text="근무표\n작성"
                     android:textSize="30sp" />
 
-                <Button
+                <androidx.appcompat.widget.AppCompatButton
                     android:id="@+id/saveLogBtn"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
+                    android:layout_margin="5dp"
+                    android:background="@drawable/custom_btn"
                     android:fontFamily="@font/ongulip"
                     android:text="근무표\n저장"
                     android:textSize="30sp" />
 
-                <Button
+                <androidx.appcompat.widget.AppCompatButton
                     android:id="@+id/deleteLogBtn"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
+                    android:layout_margin="5dp"
+                    android:background="@drawable/custom_btn"
                     android:fontFamily="@font/ongulip"
                     android:text="근무표\n삭제"
                     android:textSize="30sp" />
 
-                <Button
+                <androidx.appcompat.widget.AppCompatButton
                     android:id="@+id/mkSwitchMemberDialogBtn"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
+                    android:layout_margin="5dp"
+                    android:background="@drawable/custom_btn"
                     android:fontFamily="@font/ongulip"
                     android:text="연가\n설정"
                     android:textSize="30sp" />
 
-                <Button
+                <androidx.appcompat.widget.AppCompatButton
                     android:id="@+id/mkSubMemberDialogBtn"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
+                    android:layout_margin="5dp"
+                    android:background="@drawable/custom_btn"
                     android:fontFamily="@font/ongulip"
                     android:text="지원근무자\n설정"
                     android:textSize="30sp" />
 
-                <Button
+                <androidx.appcompat.widget.AppCompatButton
                     android:id="@+id/mkExchangeDialogBtn"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
+                    android:layout_margin="5dp"
+                    android:background="@drawable/custom_btn"
                     android:fontFamily="@font/ongulip"
                     android:text="근무자\n교체"
                     android:textSize="30sp" />
 
-                <Button
+                <androidx.appcompat.widget.AppCompatButton
                     android:id="@+id/undoBtn"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
+                    android:layout_margin="5dp"
+                    android:background="@drawable/custom_btn"
                     android:fontFamily="@font/ongulip"
                     android:text="실행\n취소"
                     android:textSize="30sp" />
 
-                <Button
+                <androidx.appcompat.widget.AppCompatButton
                     android:id="@+id/mkSetSizeDialogBtn"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
+                    android:layout_margin="5dp"
                     android:layout_weight="1"
+                    android:background="@drawable/custom_btn"
                     android:fontFamily="@font/ongulip"
                     android:text="레이아웃\n설정"
                     android:textSize="30sp" />
 
-                <Button
+                <androidx.appcompat.widget.AppCompatButton
                     android:id="@+id/dropLogTableBtn"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
+                    android:layout_margin="5dp"
+                    android:background="@drawable/custom_btn"
                     android:fontFamily="@font/ongulip"
                     android:text="테이블 드랍(임시)"
                     android:textSize="30sp"
                     android:visibility="gone" />
 
-                <Button
+                <androidx.appcompat.widget.AppCompatButton
                     android:id="@+id/printLogBtn"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
+                    android:layout_margin="5dp"
+                    android:background="@drawable/custom_btn"
                     android:fontFamily="@font/ongulip"
                     android:text="출력(임시)"
                     android:textSize="30sp"
@@ -234,57 +256,58 @@
             </LinearLayout>
         </HorizontalScrollView>
 
-        <HorizontalScrollView
+        <LinearLayout
             android:id="@+id/selectedBtnLayout"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:visibility="gone"
-            tools:visibility="visible">
+            android:orientation="horizontal">
 
-            <LinearLayout
-                android:layout_width="match_parent"
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/cancelSelectBtn"
+                android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:orientation="horizontal">
+                android:layout_margin="5dp"
+                android:layout_weight="1"
+                android:background="@drawable/custom_btn_selected"
+                android:fontFamily="@font/ongulip"
+                android:text="선택\n취소"
+                android:textSize="30sp" />
 
-                <Button
-                    android:id="@+id/cancelSelectBtn"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:fontFamily="@font/ongulip"
-                    android:text="선택\n취소"
-                    android:textSize="30sp" />
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/removeCellBtn"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_margin="5dp"
+                android:layout_weight="1"
+                android:background="@drawable/custom_btn_selected"
+                android:fontFamily="@font/ongulip"
+                android:text="칸\n지우기"
+                android:textSize="30sp" />
 
-                <Button
-                    android:id="@+id/removeCellBtn"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:fontFamily="@font/ongulip"
-                    android:text="칸\n지우기"
-                    android:textSize="30sp" />
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/copyToNextBtn"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_margin="5dp"
+                android:layout_weight="1"
+                android:background="@drawable/custom_btn_selected"
+                android:fontFamily="@font/ongulip"
+                android:text="다음 칸\n채우기"
+                android:textSize="30sp" />
 
-                <Button
-                    android:id="@+id/copyToNextBtn"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:fontFamily="@font/ongulip"
-                    android:text="다음 칸\n채우기"
-                    android:textSize="30sp" />
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/mkExchangeAtSelectedDialogBtn"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_margin="5dp"
+                android:layout_weight="1"
+                android:background="@drawable/custom_btn_selected"
+                android:fontFamily="@font/ongulip"
+                android:text="근무자\n교체"
+                android:textSize="30sp" />
 
-                <Button
-                    android:id="@+id/mkExchangeAtSelectedDialogBtn"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:fontFamily="@font/ongulip"
-                    android:text="근무자\n교체"
-                    android:textSize="30sp" />
-
-            </LinearLayout>
-        </HorizontalScrollView>
+        </LinearLayout>
 
     </LinearLayout>
 

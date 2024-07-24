@@ -31,17 +31,20 @@
             android:layout_weight="1"
             android:orientation="horizontal">
 
-            <Button
+            <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/mkSetMemberDialog"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
+                android:layout_margin="5dp"
                 android:layout_weight="1"
+                android:background="@drawable/custom_btn"
                 android:fontFamily="@font/ongulip"
                 android:text="인원추가"
                 android:textSize="30sp" />
 
-            <Button
+            <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/selectMemberBtn"
+                android:background="@drawable/custom_btn"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
@@ -50,8 +53,9 @@
                 android:textSize="30sp"
                 android:visibility="gone" />
 
-            <Button
+            <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/dropMemberBtn"
+                android:background="@drawable/custom_btn"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"

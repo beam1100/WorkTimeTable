@@ -13,8 +13,9 @@
         android:layout_weight="1"
         android:orientation="horizontal">
 
-        <Button
+        <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/tableFragmentBtn"
+            android:background="@drawable/custom_btn"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_margin="5dp"
@@ -23,8 +24,9 @@
             android:text="표"
             android:textSize="20sp" />
 
-        <Button
+        <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/memberFragmentBtn"
+            android:background="@drawable/custom_btn"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_margin="5dp"
@@ -33,8 +35,9 @@
             android:text="인원"
             android:textSize="20sp" />
 
-        <Button
+        <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/workFragmentBtn"
+            android:background="@drawable/custom_btn"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_margin="5dp"
@@ -43,8 +46,9 @@
             android:text="근무"
             android:textSize="20sp" />
 
-        <Button
+        <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/dbFragmentBtn"
+            android:background="@drawable/custom_btn"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_margin="5dp"
