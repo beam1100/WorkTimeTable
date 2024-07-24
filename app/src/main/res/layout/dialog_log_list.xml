@@ -15,7 +15,7 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_gravity="center"
-            android:layout_weight="2"
+            android:layout_weight="3"
             android:fontFamily="@font/ongulip"
             android:gravity="center"
             android:text="날짜"
@@ -38,7 +38,7 @@
             android:layout_weight="1"
             android:fontFamily="@font/ongulip"
             android:gravity="center"
-            android:text="근무자"
+            android:text="인원"
             android:textSize="30sp" />
 
         <TextView
@@ -51,15 +51,10 @@
             android:text="지원"
             android:textSize="30sp" />
 
-        <TextView
+        <Space
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_gravity="center"
-            android:layout_weight="1"
-            android:fontFamily="@font/ongulip"
-            android:gravity="center"
-            android:text="재작성"
-            android:textSize="30sp" />
+            android:layout_weight="2" />
 
     </LinearLayout>
 

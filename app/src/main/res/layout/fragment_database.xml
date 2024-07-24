@@ -19,7 +19,7 @@
             android:layout_weight="1"
             android:background="@drawable/custom_btn"
             android:fontFamily="@font/ongulip"
-            android:text="자료 백업하기"
+            android:text="자료 백업"
             android:textSize="30sp" />
 
         <androidx.appcompat.widget.AppCompatButton
@@ -41,7 +41,7 @@
             android:layout_weight="1"
             android:background="@drawable/custom_btn"
             android:fontFamily="@font/ongulip"
-            android:text="모든 자료 초기화"
+            android:text="자료 초기화"
             android:textSize="30sp" />
 
 

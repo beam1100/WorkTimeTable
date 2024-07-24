@@ -367,9 +367,9 @@ class WorkFragment : Fragment() {
                             copiedShiftMapList)
                         dismiss()
                     }else if(copiedTypeMapList.isEmpty()) {
-                        Toast.makeText(requireContext(), "근무형태를 입력하세요", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(requireContext(), "근무형태를 추가하세요", Toast.LENGTH_SHORT).show()
                     }else if(copiedShiftMapList.isEmpty()) {
-                        Toast.makeText(requireContext(), "근무시간을 입력하세요", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(requireContext(), "근무시간을 설정하세요", Toast.LENGTH_SHORT).show()
                     }else if(workName.isBlank()) {
                         Toast.makeText(requireContext(), "근무이름을 입력하세요", Toast.LENGTH_SHORT).show()
                     }

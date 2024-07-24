@@ -758,8 +758,6 @@ class TableFragment : Fragment() {
         }
     }
 
-
-
     private fun getSameTimeMember(shift: String): List<String> {
         val resultSet = mutableSetOf<String>()
         val sameTimeMap = logMapList.filter {it["shift"] == shift}
@@ -829,40 +827,42 @@ class TableFragment : Fragment() {
             val mainMemberHolderLayout = findViewById<LinearLayout>(R.id.mainMemberLayout)
             val subMemberHolderLayout = findViewById<LinearLayout>(R.id.subMemberLayout)
             val inflater = LayoutInflater.from(requireContext())
+            val resultList = ArrayList(alreadySelected)
 
-            mainMemberList.onEach {memberName->
-                val myCheckbox = inflater.inflate(R.layout.custom_checkbox, null) as CheckBox
-                myCheckbox.text = memberName
-                if(memberName in sameTimeSelected){
-                    myCheckbox.isEnabled = false
+            mainMemberList.forEach {memberName->
+                (inflater.inflate(R.layout.custom_checkbox, null) as CheckBox).apply {
+                    text = memberName
+                    isEnabled = memberName !in sameTimeSelected
+                    isChecked = memberName in alreadySelected
+                    setOnCheckedChangeListener { _, isChecked ->
+                        if(isChecked){
+                            resultList.add(memberName)
+                        }else{
+                            resultList.remove(memberName)
+                        }
+                    }
+                    mainMemberHolderLayout.addView(this)
                 }
-                if(memberName in alreadySelected){
-                    myCheckbox.isChecked = true
-                }
-                mainMemberHolderLayout.addView(myCheckbox)
             }
 
-            subMemberList.onEach {memberName->
-                val myCheckbox = (inflater.inflate(R.layout.custom_checkbox, null) as CheckBox)
-                myCheckbox.text = memberName
-                if(memberName in sameTimeSelected){
-                    myCheckbox.isEnabled = false
+            subMemberList.forEach {memberName->
+                (inflater.inflate(R.layout.custom_checkbox, null) as CheckBox).apply {
+                    text = memberName
+                    isChecked = memberName in alreadySelected
+                    isEnabled = memberName !in sameTimeSelected
+                    setOnCheckedChangeListener { _, isChecked ->
+                        if(isChecked){
+                            resultList.add(memberName)
+                        }else{
+                            resultList.remove(memberName)
+                        }
+                    }
+                    subMemberHolderLayout.addView(this)
                 }
-                if(memberName in alreadySelected){
-                    myCheckbox.isChecked = true
-                }
-                subMemberHolderLayout.addView(myCheckbox)
             }
+
             findViewById<Button>(R.id.checkMemberBtn).setOnClickListener {
-                val checkedMainList = mainMemberHolderLayout.children
-                    .filterIsInstance<CheckBox>()
-                    .filter { it.isChecked }
-                    .mapTo(ArrayList()){it.text.toString()}
-                val checkedSubList = subMemberHolderLayout.children
-                    .filterIsInstance<CheckBox>()
-                    .filter{it.isChecked}
-                    .mapTo(ArrayList()){it.text.toString()}
-                callbackChecked(checkedMainList+checkedSubList)
+                callbackChecked(resultList)
                 dismiss()
             }
         }
@@ -877,11 +877,12 @@ class TableFragment : Fragment() {
             val switchMemberLayout = findViewById<LinearLayout>(R.id.switchMemberLayout)
 
             val inflater = LayoutInflater.from(requireContext())
-            mainActivity.helper.select("MemberTable").map { it["memberName"] }.onEach {name->
-                val mySwitch = inflater.inflate(R.layout.custom_switch, null) as SwitchCompat
-                mySwitch.text = name as String
-                mySwitch.isChecked = name in mainMemberList
-                switchMemberLayout.addView(mySwitch)
+            mainActivity.helper.select("MemberTable").map { it["memberName"] }.forEach {name->
+                (inflater.inflate(R.layout.custom_switch, null) as SwitchCompat).apply {
+                    text = name as String
+                    isChecked = name in mainMemberList
+                    switchMemberLayout.addView(this)
+                }
             }
 
             findViewById<Button>(R.id.switchMemberBtn).setOnClickListener {
@@ -1219,7 +1220,7 @@ class TableFragment : Fragment() {
                         dismiss()
                     }
                 }
-                holder.findViewById<ImageButton>(R.id.getLogBtn).setOnClickListener {
+                holder.findViewById<Button>(R.id.getLogBtn).setOnClickListener {
                     getCallback(logMap)
                     dismiss()
                 }
