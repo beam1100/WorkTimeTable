@@ -4,7 +4,7 @@
     <item android:state_pressed="true">
         <shape>
             <stroke
-                android:width="5dp"
+                android:width="3dp"
                 android:color="#BF00FF"
                 />
             <corners
@@ -19,7 +19,7 @@
     <item android:state_pressed="false">
         <shape>
             <stroke
-                android:width="5dp"
+                android:width="3dp"
                 android:color="#6A0888"
                 />
             <corners
