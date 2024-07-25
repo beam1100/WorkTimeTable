@@ -28,8 +28,6 @@ import androidx.appcompat.widget.SwitchCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.children
 import androidx.core.view.isGone
-import com.google.android.gms.ads.MobileAds
-import com.google.android.gms.ads.OnUserEarnedRewardListener
 import com.worktimetable.databinding.FragmentTableBinding
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -87,7 +85,6 @@ class TableFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         try{
             super.onViewCreated(view, savedInstanceState)
-            Log.d("test", "onViewCreated 실행")
 
             vBinding.dateTV.apply {
                 text = formatter.format(calendar.time)
@@ -95,7 +92,6 @@ class TableFragment : Fragment() {
             }
 
             getLog(0)
-
 
             // 다음 날짜로 이동 버튼
             vBinding.nextDateBtn.setOnClickListener{
@@ -128,7 +124,7 @@ class TableFragment : Fragment() {
                 val logDateList = mainActivity.helper.select("LogTable", toSortColumn = "logDate").map { it["logDate"] as String }
                 val betweenList = logDateList.map { mainActivity.daysBetween(it, formatter.format(calendar.time)) }
                 betweenList
-                    .filter {  it > 0}
+                    .filter {it>0}
                     .minOrNull()
                     ?.let{toMoveNum->
                         if(isChanged()){
@@ -150,7 +146,7 @@ class TableFragment : Fragment() {
                 val logDateList = mainActivity.helper.select("LogTable", toSortColumn = "logDate").map { it["logDate"] as String }
                 val betweenList = logDateList.map { mainActivity.daysBetween(it, formatter.format(calendar.time)) }
                 betweenList
-                    .filter {it < 0}
+                    .filter {it<0}
                     .maxOrNull()
                     ?.let{moveToNum->
                         if(isChanged()){
@@ -169,33 +165,35 @@ class TableFragment : Fragment() {
 
             //근무표 리스트 버튼
             vBinding.mkLogListDialogBtn.setOnClickListener {
-                mkLogListDialog(
-                    goCallback = {date->
-                        if(isChanged()){
-                            mainActivity.mkConfirmDialog(
-                                "변경된 내용을 저장하시겠습니까?",
-                                {
-                                    saveLog()
-                                    getLog(mainActivity.daysBetween(formatter.format(calendar.time), date))
-                                },
-                                {
-                                    getLog(mainActivity.daysBetween(formatter.format(calendar.time), date))
-                                }
-                            )
-                        }else{
-                            getLog(mainActivity.daysBetween(formatter.format(calendar.time), date))
+                if(isDbExists()){
+                    mkLogListDialog(
+                        goCallback = {date->
+                            if(isChanged()){
+                                mainActivity.mkConfirmDialog(
+                                    "변경된 내용을 저장하시겠습니까?",
+                                    {
+                                        saveLog()
+                                        getLog(mainActivity.daysBetween(formatter.format(calendar.time), date))
+                                    },
+                                    {
+                                        getLog(mainActivity.daysBetween(formatter.format(calendar.time), date))
+                                    }
+                                )
+                            }else{
+                                getLog(mainActivity.daysBetween(formatter.format(calendar.time), date))
+                            }
+                        },
+                        getCallback = {map->
+                            typeMapList = map["typeMapList"] as ArrayList<HashMap<String, Any>>
+                            shiftMapList = map["shiftMapList"] as ArrayList<HashMap<String, Any>>
+                            logMapList = map["logMapList"] as ArrayList<HashMap<String, Any>>
+                            mainMemberList = map["mainMemberList"] as ArrayList<String>
+                            subMemberList = map["subMemberList"] as ArrayList<String>
+                            workName = map["workName"] as String
+                            mkTable()
                         }
-                    },
-                    getCallback = {map->
-                        typeMapList = map["typeMapList"] as ArrayList<HashMap<String, Any>>
-                        shiftMapList = map["shiftMapList"] as ArrayList<HashMap<String, Any>>
-                        logMapList = map["logMapList"] as ArrayList<HashMap<String, Any>>
-                        mainMemberList = map["mainMemberList"] as ArrayList<String>
-                        subMemberList = map["subMemberList"] as ArrayList<String>
-                        workName = map["workName"] as String
-                        mkTable()
-                    }
-                )
+                    )
+                }
 
             }
 
@@ -213,17 +211,11 @@ class TableFragment : Fragment() {
 
             //근무표 작성
             vBinding.mkWorkSelectDialogBtn.setOnClickListener {
-                if(mainActivity.helper.select("WorkTable").isEmpty()){
-                    mainActivity.replaceFragment(mainActivity.workFragment)
-                    Toast.makeText(requireContext(), "근무를 생성하세요", Toast.LENGTH_SHORT).show()
-                }else if(mainActivity.helper.select("MemberTable").isEmpty()){
-                    mainActivity.replaceFragment(mainActivity.memberFragment)
-                    Toast.makeText(requireContext(), "인원을 추가하세요", Toast.LENGTH_SHORT).show()
-                }else{
+                if(isDbExists()){
                     val point = mainActivity.preferences.getInt("point", 0)
                     if(point <= 0){
                         mainActivity.mkConfirmDialog(
-                            "광고를 시청하고 포인트를 획득하세요",
+                            "포인트가 부족합니다. 광고를 시청하고 포인트를 획득하시겠습니까?",
                             {
                                 mainActivity.rewardedAd?.let { ad ->
                                     ad.show(requireActivity()) { rewardItem ->
@@ -232,7 +224,7 @@ class TableFragment : Fragment() {
                                         Toast.makeText(requireContext(), "+${rewardItem.amount}포인트", Toast.LENGTH_LONG).show()
                                     }
                                 } ?: run {
-                                    Log.d("test", "The rewarded ad wasn't ready yet.")
+                                    Toast.makeText(requireContext(), "광고가 준비되지 않았습니다.", Toast.LENGTH_LONG).show()
                                 }
                             },
                             {}
@@ -251,15 +243,18 @@ class TableFragment : Fragment() {
                         }
                     }
                 }
+
             }
 
             //근무표 저장
             vBinding.saveLogBtn.setOnClickListener {
-                mainActivity.mkConfirmDialog(
-                    "근무표를 저장하시겠습니까?",
-                    {saveLog()},
-                    {}
-                )
+                if(isDbExists()){
+                    mainActivity.mkConfirmDialog(
+                        "근무표를 저장하시겠습니까?",
+                        {saveLog()},
+                        {}
+                    )
+                }
             }
 
             //근무표 삭제
@@ -284,21 +279,25 @@ class TableFragment : Fragment() {
 
             //사고자 설정
             vBinding.mkSwitchMemberDialogBtn.setOnClickListener {
-                mkSwitchMemberDialog{ workingMemberList->
-                    mainMemberList = workingMemberList
-                    logMapList.forEach { map->
-                        val memberList = map["member"] as ArrayList<String>
-                        val btn = map["btn"] as AppCompatButton
-                        memberList.removeIf { name -> name !in workingMemberList }
-                        btn.text = memberList.joinToString("\n")
+                if(isDbExists()){
+                    mkSwitchMemberDialog{ workingMemberList->
+                        mainMemberList = workingMemberList
+                        logMapList.forEach { map->
+                            val memberList = map["member"] as ArrayList<String>
+                            val btn = map["btn"] as AppCompatButton
+                            memberList.removeIf { name -> name !in workingMemberList }
+                            btn.text = memberList.joinToString("\n")
+                        }
                     }
                 }
             }
 
             //지원근무자 설정
             vBinding.mkSubMemberDialogBtn.setOnClickListener {
-                mkSubMemberDialog{
-                    subMemberList = it
+                if(isDbExists()){
+                    mkSubMemberDialog{
+                        subMemberList = it
+                    }
                 }
             }
 
@@ -336,9 +335,12 @@ class TableFragment : Fragment() {
 
             //교체 버튼
             val exchangeMemberClickListener = View.OnClickListener {
-                mkExchangeDialog{ name1, name2 ->
-                    exchangeWorker(name1, name2)
+                if(isDbExists()){
+                    mkExchangeDialog{ name1, name2 ->
+                        exchangeWorker(name1, name2)
+                    }
                 }
+
             }
             vBinding.mkExchangeDialogBtn.setOnClickListener(exchangeMemberClickListener)
             vBinding.mkExchangeAtSelectedDialogBtn.setOnClickListener(exchangeMemberClickListener)
@@ -377,15 +379,28 @@ class TableFragment : Fragment() {
                     tableWidth: ${mainActivity.preferences.getInt("tableWidth", 200)}
                     tableHeight: ${mainActivity.preferences.getInt("tableHeight", 200)}
                     typeWidth: ${ mainActivity.preferences.getInt("typeWidth", 15)}
-                    myTextSize: ${mainActivity.preferences.getInt("myTextSize", 10)}
+                    myTextSize: ${mainActivity.preferences.getInt("myTextSize", 7)}
                     dateSize: ${ mainActivity.preferences.getInt("dateSize", 20)}
                 """.trimIndent())
-
             }
 
         }catch(err:Exception){
             Log.d("test", err.toString())
             Log.d("test", err.stackTraceToString())
+        }
+    }
+
+    private fun isDbExists():Boolean{
+        return if(mainActivity.helper.select("WorkTable").isEmpty()){
+            mainActivity.replaceFragment(mainActivity.workFragment)
+            Toast.makeText(requireContext(), "근무를 생성하세요.", Toast.LENGTH_SHORT).show()
+            false
+        }else if(mainActivity.helper.select("MemberTable").isEmpty()){
+            mainActivity.replaceFragment(mainActivity.memberFragment)
+            Toast.makeText(requireContext(), "인원을 추가하세요.", Toast.LENGTH_SHORT).show()
+            false
+        }else{
+            true
         }
     }
 
@@ -508,7 +523,7 @@ class TableFragment : Fragment() {
                         setBtnStyle(
                             this, R.color.unSelectedColor,
                             doesUpdateSize=true,
-                            width = mainActivity.preferences.getInt("tableWidth", 70),
+                            width = mainActivity.preferences.getInt("tableWidth", 75),
                             height = mainActivity.preferences.getInt("tableHeight", 140),
                             heightRate = typeMap["heightRate"] as Int
                         )
@@ -525,14 +540,14 @@ class TableFragment : Fragment() {
                 AppCompatButton(requireContext()).apply{
                     val type = typeMap["type"] as String
                     this.text = type
-                    textSize = mainActivity.preferences.getInt("myTextSize", 10).toFloat()
+                    textSize = mainActivity.preferences.getInt("myTextSize", 7).toFloat()
                     row.addView(this)
                     rowTL.addView(row)
                     setBtnStyle(
                         this,
                         androidx.appcompat.R.color.material_grey_600,
                         doesUpdateSize=true,
-                        width = mainActivity.preferences.getInt("tableWidth", 70),
+                        width = mainActivity.preferences.getInt("tableWidth", 75),
                         height = mainActivity.preferences.getInt("tableHeight", 140),
                         heightRate = typeMap["heightRate"] as Int,
                         widthRate = mainActivity.preferences.getInt("typeWidth", 200)
@@ -550,14 +565,14 @@ class TableFragment : Fragment() {
                 AppCompatButton(requireContext()).apply {
                     val shift = shiftMap["shift"] as String
                     this.text = shift.replace(" ~ ", "\n~\n")
-                    textSize = mainActivity.preferences.getInt("myTextSize", 10).toFloat()
+                    textSize = mainActivity.preferences.getInt("myTextSize", 7).toFloat()
                     colRow.addView(this)
                     this.setOnClickListener{}
                     setBtnStyle(
                         this,
                         androidx.appcompat.R.color.material_grey_600,
                         doesUpdateSize=true,
-                        width = mainActivity.preferences.getInt("tableWidth", 70),
+                        width = mainActivity.preferences.getInt("tableWidth", 75),
                         height = mainActivity.preferences.getInt("tableHeight", 140)
                     )
                     setOnLongClickListener(selectSameShift(shift))
@@ -823,9 +838,9 @@ class TableFragment : Fragment() {
                     }
                 } else{
                     if(widthRate==null){
-                        width.coerceAtLeast(30)
+                        width.coerceAtLeast(10)
                     }else{
-                        width.coerceAtLeast(30) * widthRate / 100
+                        width.coerceAtLeast(10) * widthRate / 100
                     }
                 }
 
@@ -839,7 +854,7 @@ class TableFragment : Fragment() {
                     }
                 }
 
-                val params = TableRow.LayoutParams(widthToApply.toInt(), heightToApply.toInt())
+                val params = TableRow.LayoutParams(widthToApply, heightToApply)
                 params.gravity = Gravity.NO_GRAVITY
                 params.setMargins(3, 3, 3, 3)
                 btn.layoutParams = params
@@ -1144,7 +1159,7 @@ class TableFragment : Fragment() {
                 }
 
                 val textSizeSeekBar = findViewById<SeekBar>(R.id.textSizeSeekBar).apply {
-                    progress = mainActivity.preferences.getInt("myTextSize", 10)
+                    progress = mainActivity.preferences.getInt("myTextSize", 7)
                     setOnSeekBarChangeListener( object :OnSeekBarChangeListener{
                         override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {
                             mainActivity.editor.putInt("myTextSize", p1)
