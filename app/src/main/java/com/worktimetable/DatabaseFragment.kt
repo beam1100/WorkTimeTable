@@ -2,7 +2,6 @@ package com.worktimetable
 
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.Fragment
@@ -10,10 +9,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.fragment.app.FragmentActivity
 import com.worktimetable.databinding.FragmentDatabaseBinding
-import java.io.FileOutputStream
 
 
 class DatabaseFragment : Fragment() {
@@ -86,9 +82,11 @@ class DatabaseFragment : Fragment() {
                         listOf("LogTable", "MemberTable", "WorkTable", "SizeTable").forEach {
                             mainActivity.helper.dropTable(it)
                         }
-                        val editor = mainActivity.preferences.edit()
+                        /*val editor = mainActivity.preferences.edit()
                         editor.clear()
-                        editor.apply()
+                        editor.apply()*/
+                        mainActivity.editor.clear()
+                        mainActivity.editor.apply()
                         Toast.makeText(requireContext(), "초기화 되었습니다.", Toast.LENGTH_SHORT).show()
                     },
                     {}

@@ -18,6 +18,12 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.FullScreenContentCallback
+import com.google.android.gms.ads.LoadAdError
+import com.google.android.gms.ads.MobileAds
+import com.google.android.gms.ads.rewarded.RewardedAd
+import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback
 import com.google.android.material.textfield.TextInputLayout
 import com.worktimetable.databinding.ActivityMainBinding
 import java.io.FileOutputStream
@@ -26,13 +32,14 @@ class MainActivity : FragmentActivity() {
 
     private lateinit var vBinding:ActivityMainBinding
 
+    //프래그먼트
     private val tableFragment = TableFragment()
     private val databaseFragment = DatabaseFragment()
     val memberFragment = MemberFragment()
     val workFragment = WorkFragment()
-    val helper = SqliteHelper(this, "WorkTable.db", 1)
-    val preferences: SharedPreferences by lazy {getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)}
 
+    //db
+    val helper = SqliteHelper(this, "WorkTable.db", 1)
     val resultLauncher =  registerForActivityResult( ActivityResultContracts.StartActivityForResult() ){ result ->
         if (result.resultCode == FragmentActivity.RESULT_OK){
             val uri = result.data?.data
@@ -41,7 +48,6 @@ class MainActivity : FragmentActivity() {
             Toast.makeText(this@MainActivity, "DB파일 백업됨!!!!!", Toast.LENGTH_SHORT).show()
         }
     }
-
     val readResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == FragmentActivity.RESULT_OK) {
             val uri = result.data?.data
@@ -53,6 +59,15 @@ class MainActivity : FragmentActivity() {
         }
     }
 
+    //SharedPreferences
+    val preferences: SharedPreferences by lazy {getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)}
+    val editor: SharedPreferences.Editor by lazy {preferences.edit()}
+
+    //adMob
+    var rewardedAd: RewardedAd? = null
+    private var adRequest = AdRequest.Builder().build()
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         try{
             vBinding = ActivityMainBinding.inflate(layoutInflater)
@@ -63,13 +78,6 @@ class MainActivity : FragmentActivity() {
                 .beginTransaction()
                 .replace(vBinding.fragmentContainerView.id, tableFragment)
                 .commit()
-
-            /*supportFragmentManager
-                .beginTransaction()
-                .add(vBinding.fragmentContainerView.id, tableFragment)
-                .commit()*/
-
-
 
             vBinding.tableFragmentBtn.setOnClickListener {
                 replaceFragment(tableFragment)
@@ -86,6 +94,9 @@ class MainActivity : FragmentActivity() {
             vBinding.dbFragmentBtn.setOnClickListener {
                 handleFragmentChange(databaseFragment)
             }
+
+            MobileAds.initialize(this)
+            loadAd()
 
         }catch(err:Exception){
             Log.d("test", err.toString())
@@ -391,10 +402,36 @@ class MainActivity : FragmentActivity() {
         }
     }
 
+    fun loadAd() {
+        RewardedAd.load(this, "ca-app-pub-3940256099942544/5224354917", adRequest, object : RewardedAdLoadCallback() {
+            override fun onAdFailedToLoad(adError: LoadAdError) {
+                // 광고 로드가 실패했을 때 호출
+                /*Log.d("test", adError.toString())*/
+                rewardedAd = null
+            }
+            override fun onAdLoaded(ad: RewardedAd) {
+                // 광고가 성공적으로 로드되었을 때 호출
+                rewardedAd = ad
+                setFullScreenContentCallback()
+            }
+        })
+    }
 
-
-
-
-
+    private fun setFullScreenContentCallback() {
+        rewardedAd?.fullScreenContentCallback = object : FullScreenContentCallback() {
+            override fun onAdClicked() {}
+            override fun onAdImpression() {
+                // 광고에 대한 노출이 기록되었을 때 호출.
+            }
+            override fun onAdShowedFullScreenContent() {
+                // 광고가 표시될 때 호출.
+            }
+            override fun onAdDismissedFullScreenContent() {
+                // 광고가 닫혔을 때 호출. 광고 참조를 null로 설정하여 광고 두 번 출력 방지
+                rewardedAd = null
+                loadAd()
+            }
+        }
+    }
 
 } // class MainActivity : FragmentActivity() End

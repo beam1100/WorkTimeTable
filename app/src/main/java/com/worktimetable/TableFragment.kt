@@ -28,6 +28,8 @@ import androidx.appcompat.widget.SwitchCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.children
 import androidx.core.view.isGone
+import com.google.android.gms.ads.MobileAds
+import com.google.android.gms.ads.OnUserEarnedRewardListener
 import com.worktimetable.databinding.FragmentTableBinding
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -218,13 +220,34 @@ class TableFragment : Fragment() {
                     mainActivity.replaceFragment(mainActivity.memberFragment)
                     Toast.makeText(requireContext(), "인원을 추가하세요", Toast.LENGTH_SHORT).show()
                 }else{
-                    mkSelectWorkDialog{selectedWorkName->
-                        val workMap = mainActivity.helper.select("WorkTable", where= hashMapOf("workName" to selectedWorkName)).first()
-                        typeMapList = workMap["typeList"] as ArrayList<HashMap<String, Any>>
-                        shiftMapList = workMap["shiftList"] as ArrayList<HashMap<String, Any>>
-                        logMapList = mkNewLogMapList(typeMapList, shiftMapList)
-                        workName = selectedWorkName
-                        mkTable()
+                    val point = mainActivity.preferences.getInt("point", 0)
+                    if(point <= 4 ){
+                        mainActivity.mkConfirmDialog(
+                            "광고를 시청하고 포인트를 획득하세요",
+                            {
+                                mainActivity.rewardedAd?.let { ad ->
+                                    ad.show(requireActivity()) { rewardItem ->
+                                        mainActivity.editor.putInt("point", mainActivity.preferences.getInt("point",0) + rewardItem.amount)
+                                        mainActivity.editor.apply()
+                                        Toast.makeText(requireContext(), "+${rewardItem.amount}포인트", Toast.LENGTH_LONG).show()
+                                    }
+                                } ?: run {
+                                    Log.d("test", "The rewarded ad wasn't ready yet.")
+                                }
+                            },
+                            {}
+                        )
+                    }else{
+                        mkSelectWorkDialog{selectedWorkName->
+                            mainActivity.editor.putInt("point", point-1)
+                            mainActivity.editor.apply()
+                            val workMap = mainActivity.helper.select("WorkTable", where= hashMapOf("workName" to selectedWorkName)).first()
+                            typeMapList = workMap["typeList"] as ArrayList<HashMap<String, Any>>
+                            shiftMapList = workMap["shiftList"] as ArrayList<HashMap<String, Any>>
+                            logMapList = mkNewLogMapList(typeMapList, shiftMapList)
+                            workName = selectedWorkName
+                            mkTable()
+                        }
                     }
                 }
             }
@@ -348,9 +371,20 @@ class TableFragment : Fragment() {
             }
 
             //출력 테스트(임시)
-            vBinding.printLogBtn.setOnClickListener {
-                Log.d("test", mainActivity.helper.select("SizeTable").toString())
+            vBinding.testBtn.setOnClickListener {
+/*                mainActivity.rewardedAd?.let { ad ->
+                    ad.show(requireActivity(), OnUserEarnedRewardListener { rewardItem ->
+                        Log.d("test", """
+                            rewardItem.amount: ${rewardItem.amount}
+                            rewardItem.type: ${rewardItem.type}
+                        """.trimIndent())
+                    })
+                } ?: run {
+                    Log.d("test", "The rewarded ad wasn't ready yet.")
+                }*/
+                Log.d("test", mainActivity.preferences.getInt("point", 0).toString())
             }
+
         }catch(err:Exception){
             Log.d("test", err.toString())
             Log.d("test", err.stackTraceToString())
@@ -1071,14 +1105,13 @@ class TableFragment : Fragment() {
                 setContentView(R.layout.dialog_set_size)
                 mainActivity.setDialogSize(this, vBinding.tableFragmentLayout, 0.9f, null)
                 show()
-                val editor = mainActivity.preferences.edit()
 
                 val widthSeekBar = findViewById<SeekBar>(R.id.widthSeekBar).apply {
                     progress = mainActivity.preferences.getInt("tableWidth", 200) / 3
                     setOnSeekBarChangeListener( object :OnSeekBarChangeListener{
                         override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {
-                            editor.putInt("tableWidth", p1*3)
-							editor.apply()
+                            mainActivity.editor.putInt("tableWidth", p1*3)
+                            mainActivity.editor.apply()
                             mkTable()
                         }
                         override fun onStartTrackingTouch(p0: SeekBar?) {}
@@ -1090,8 +1123,8 @@ class TableFragment : Fragment() {
                     progress = mainActivity.preferences.getInt("tableHeight", 200) / 3
                     setOnSeekBarChangeListener( object :OnSeekBarChangeListener{
                         override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {
-                            editor.putInt("tableHeight", p1*3)
-							editor.apply()
+                            mainActivity.editor.putInt("tableHeight", p1*3)
+                            mainActivity.editor.apply()
                             mkTable()
                         }
                         override fun onStartTrackingTouch(p0: SeekBar?) {}
@@ -1103,8 +1136,8 @@ class TableFragment : Fragment() {
                     progress = mainActivity.preferences.getInt("typeWidth", 15)/10
                     setOnSeekBarChangeListener( object :OnSeekBarChangeListener{
                         override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {
-                            editor.putInt("typeWidth", (p1+1)*10)
-                            editor.apply()
+                            mainActivity.editor.putInt("typeWidth", (p1+1)*10)
+                            mainActivity.editor.apply()
                             mkTable()
                         }
                         override fun onStartTrackingTouch(p0: SeekBar?) {}
@@ -1116,8 +1149,8 @@ class TableFragment : Fragment() {
                     progress = mainActivity.preferences.getInt("myTextSize", 10) * 5
                     setOnSeekBarChangeListener( object :OnSeekBarChangeListener{
                         override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {
-                            editor.putInt("myTextSize", p1/5)
-                            editor.apply()
+                            mainActivity.editor.putInt("myTextSize", p1/5)
+                            mainActivity.editor.apply()
                             mkTable()
                         }
                         override fun onStartTrackingTouch(p0: SeekBar?) {}
@@ -1129,8 +1162,8 @@ class TableFragment : Fragment() {
                     progress = mainActivity.preferences.getInt("dateSize", 20)
                     setOnSeekBarChangeListener( object:OnSeekBarChangeListener{
                         override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {
-                            editor.putInt("dateSize", p1)
-                            editor.apply()
+                            mainActivity.editor.putInt("dateSize", p1)
+                            mainActivity.editor.apply()
                             vBinding.dateTV.textSize = p1.toFloat()
                         }
                         override fun onStartTrackingTouch(p0: SeekBar?) {}
