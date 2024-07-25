@@ -91,7 +91,7 @@ class TableFragment : Fragment() {
 
             vBinding.dateTV.apply {
                 text = formatter.format(calendar.time)
-                textSize = mainActivity.preferences.getInt("dateSize", 30).toFloat()
+                textSize = mainActivity.preferences.getInt("dateSize", 35).toFloat()
             }
 
             getLog(0)
@@ -221,7 +221,7 @@ class TableFragment : Fragment() {
                     Toast.makeText(requireContext(), "인원을 추가하세요", Toast.LENGTH_SHORT).show()
                 }else{
                     val point = mainActivity.preferences.getInt("point", 0)
-                    if(point <= 4 ){
+                    if(point <= 0){
                         mainActivity.mkConfirmDialog(
                             "광고를 시청하고 포인트를 획득하세요",
                             {
@@ -247,6 +247,7 @@ class TableFragment : Fragment() {
                             logMapList = mkNewLogMapList(typeMapList, shiftMapList)
                             workName = selectedWorkName
                             mkTable()
+                            Toast.makeText(requireContext(), "-1포인트", Toast.LENGTH_LONG).show()
                         }
                     }
                 }
@@ -372,17 +373,14 @@ class TableFragment : Fragment() {
 
             //출력 테스트(임시)
             vBinding.testBtn.setOnClickListener {
-/*                mainActivity.rewardedAd?.let { ad ->
-                    ad.show(requireActivity(), OnUserEarnedRewardListener { rewardItem ->
-                        Log.d("test", """
-                            rewardItem.amount: ${rewardItem.amount}
-                            rewardItem.type: ${rewardItem.type}
-                        """.trimIndent())
-                    })
-                } ?: run {
-                    Log.d("test", "The rewarded ad wasn't ready yet.")
-                }*/
-                Log.d("test", mainActivity.preferences.getInt("point", 0).toString())
+                Log.d("test", """
+                    tableWidth: ${mainActivity.preferences.getInt("tableWidth", 200)}
+                    tableHeight: ${mainActivity.preferences.getInt("tableHeight", 200)}
+                    typeWidth: ${ mainActivity.preferences.getInt("typeWidth", 15)}
+                    myTextSize: ${mainActivity.preferences.getInt("myTextSize", 10)}
+                    dateSize: ${ mainActivity.preferences.getInt("dateSize", 20)}
+                """.trimIndent())
+
             }
 
         }catch(err:Exception){
@@ -481,7 +479,7 @@ class TableFragment : Fragment() {
                         tableRow.addView(this)
                         val logMap = mainActivity.getMapByCondition( logMapList, hashMapOf("type" to type, "shift" to shift))?.apply { set("btn", this@btn) }
                         text = (logMap?.get("member") as ArrayList<*>).joinToString("\n")
-                        textSize = mainActivity.preferences.getInt("myTextSize", 20).toFloat()
+                        textSize = mainActivity.preferences.getInt("myTextSize", 7).toFloat()
                         this.setOnClickListener {
                             val alreadySelected = logMap?.get("member") as List<String>
                             val otherTimeSelected = if(isConcurrent){
@@ -510,8 +508,8 @@ class TableFragment : Fragment() {
                         setBtnStyle(
                             this, R.color.unSelectedColor,
                             doesUpdateSize=true,
-                            height = mainActivity.preferences.getInt("tableHeight", 250),
-                            width = mainActivity.preferences.getInt("tableWidth", 200),
+                            width = mainActivity.preferences.getInt("tableWidth", 70),
+                            height = mainActivity.preferences.getInt("tableHeight", 140),
                             heightRate = typeMap["heightRate"] as Int
                         )
                     }
@@ -527,17 +525,17 @@ class TableFragment : Fragment() {
                 AppCompatButton(requireContext()).apply{
                     val type = typeMap["type"] as String
                     this.text = type
-                    textSize = mainActivity.preferences.getInt("myTextSize", 20).toFloat()
+                    textSize = mainActivity.preferences.getInt("myTextSize", 10).toFloat()
                     row.addView(this)
                     rowTL.addView(row)
                     setBtnStyle(
                         this,
                         androidx.appcompat.R.color.material_grey_600,
                         doesUpdateSize=true,
-                        height = mainActivity.preferences.getInt("tableHeight", 250),
-                        width = mainActivity.preferences.getInt("tableWidth", 200),
+                        width = mainActivity.preferences.getInt("tableWidth", 70),
+                        height = mainActivity.preferences.getInt("tableHeight", 140),
                         heightRate = typeMap["heightRate"] as Int,
-                        widthRate = mainActivity.preferences.getInt("typeWidth", 100)
+                        widthRate = mainActivity.preferences.getInt("typeWidth", 200)
                     )
                     setOnClickListener {setTypeHeightDialog(typeMap)}
                     setOnLongClickListener(selectSameType(type))
@@ -552,15 +550,15 @@ class TableFragment : Fragment() {
                 AppCompatButton(requireContext()).apply {
                     val shift = shiftMap["shift"] as String
                     this.text = shift.replace(" ~ ", "\n~\n")
-                    textSize = mainActivity.preferences.getInt("myTextSize", 20).toFloat()
+                    textSize = mainActivity.preferences.getInt("myTextSize", 10).toFloat()
                     colRow.addView(this)
                     this.setOnClickListener{}
                     setBtnStyle(
                         this,
                         androidx.appcompat.R.color.material_grey_600,
                         doesUpdateSize=true,
-                        height = mainActivity.preferences.getInt("tableHeight", 250),
-                        width = mainActivity.preferences.getInt("tableWidth", 200)
+                        width = mainActivity.preferences.getInt("tableWidth", 70),
+                        height = mainActivity.preferences.getInt("tableHeight", 140)
                     )
                     setOnLongClickListener(selectSameShift(shift))
                 }
@@ -1107,7 +1105,7 @@ class TableFragment : Fragment() {
                 show()
 
                 val widthSeekBar = findViewById<SeekBar>(R.id.widthSeekBar).apply {
-                    progress = mainActivity.preferences.getInt("tableWidth", 200) / 3
+                    progress = mainActivity.preferences.getInt("tableWidth", 70)/3
                     setOnSeekBarChangeListener( object :OnSeekBarChangeListener{
                         override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {
                             mainActivity.editor.putInt("tableWidth", p1*3)
@@ -1120,7 +1118,7 @@ class TableFragment : Fragment() {
                 }
 
                 val heightSeekBar = findViewById<SeekBar>(R.id.heightSeekBar).apply {
-                    progress = mainActivity.preferences.getInt("tableHeight", 200) / 3
+                    progress = mainActivity.preferences.getInt("tableHeight", 140)/3
                     setOnSeekBarChangeListener( object :OnSeekBarChangeListener{
                         override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {
                             mainActivity.editor.putInt("tableHeight", p1*3)
@@ -1133,7 +1131,7 @@ class TableFragment : Fragment() {
                 }
 
                 val typeWidthSeekBar = findViewById<SeekBar>(R.id.workTypeWidthSeekbar).apply {
-                    progress = mainActivity.preferences.getInt("typeWidth", 15)/10
+                    progress = mainActivity.preferences.getInt("typeWidth", 200)/10
                     setOnSeekBarChangeListener( object :OnSeekBarChangeListener{
                         override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {
                             mainActivity.editor.putInt("typeWidth", (p1+1)*10)
@@ -1146,10 +1144,10 @@ class TableFragment : Fragment() {
                 }
 
                 val textSizeSeekBar = findViewById<SeekBar>(R.id.textSizeSeekBar).apply {
-                    progress = mainActivity.preferences.getInt("myTextSize", 10) * 5
+                    progress = mainActivity.preferences.getInt("myTextSize", 10)
                     setOnSeekBarChangeListener( object :OnSeekBarChangeListener{
                         override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {
-                            mainActivity.editor.putInt("myTextSize", p1/5)
+                            mainActivity.editor.putInt("myTextSize", p1)
                             mainActivity.editor.apply()
                             mkTable()
                         }
