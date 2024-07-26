@@ -214,14 +214,14 @@ class WorkFragment : Fragment() {
                     mainActivity.mkHolderFromMap(copiedTypeMapList, typeHolderLayout, holder, typeMap, "type",
                         updateBtnCallback = { toEditTypeMap ->
                             saveTypeDialog(
-                                toEditTypeMap,
-                                { newTypeMap ->
-                                    holder.findViewById<android.widget.TextView>(com.worktimetable.R.id.holderTV).text = newTypeMap["type"] as kotlin.String
-                                    toEditTypeMap["type"] = newTypeMap["type"] as kotlin.String
-                                    toEditTypeMap["isPatrol"] = newTypeMap["isPatrol"] as kotlin.Boolean
-                                    toEditTypeMap["isConcurrent"] = newTypeMap["isConcurrent"] as kotlin.Boolean
+                                typeMap = toEditTypeMap,
+                                inputTypeCallback = { newTypeMap ->
+                                    holder.findViewById<TextView>(R.id.holderTV).text = newTypeMap["type"] as String
+                                    toEditTypeMap["type"] = newTypeMap["type"] as String
+                                    toEditTypeMap["isPatrol"] = newTypeMap["isPatrol"] as Boolean
+                                    toEditTypeMap["isConcurrent"] = newTypeMap["isConcurrent"] as Boolean
                                 },
-                                {
+                                deleteTypeCallback = {
                                     copiedTypeMapList.remove(typeMap)
                                     typeHolderLayout.removeView(holder)
                                 }
@@ -240,8 +240,8 @@ class WorkFragment : Fragment() {
                     holder.findViewById<ImageButton>(R.id.holderGetBtn).isGone = true
                     holder.findViewById<ImageButton>(R.id.holderDelBtn).isGone = true
                     saveTypeDialog(
-                        null,
-                        {toAddTypeMap ->
+                        typeMap = null,
+                        inputTypeCallback = {toAddTypeMap ->
                             copiedTypeMapList.add(toAddTypeMap)
                             mainActivity.mkHolderFromMap(
                                 copiedTypeMapList, typeHolderLayout, holder, toAddTypeMap, "type",
@@ -249,14 +249,14 @@ class WorkFragment : Fragment() {
                                 delBtnCallback = {},
                                 updateBtnCallback = { toEditTypeMap ->
                                     saveTypeDialog(
-                                        toEditTypeMap,
-                                        { newTypeMap ->
+                                        typeMap = toEditTypeMap,
+                                        inputTypeCallback = { newTypeMap ->
                                             holder.findViewById<TextView>(R.id.holderTV).text = newTypeMap["type"] as String
                                             toEditTypeMap["type"] = newTypeMap["type"] as String
                                             toEditTypeMap["isPatrol"] = newTypeMap["isPatrol"] as Boolean
                                             toEditTypeMap["isConcurrent"] = newTypeMap["isConcurrent"] as Boolean
                                         },
-                                        {
+                                        deleteTypeCallback = {
                                             copiedTypeMapList.remove(toEditTypeMap)
                                             typeHolderLayout.removeView(holder)
                                         }
@@ -264,7 +264,7 @@ class WorkFragment : Fragment() {
                                 }
                             )
                         },
-                        {}
+                        deleteTypeCallback = {}
                     )
                 }
 
@@ -304,7 +304,7 @@ class WorkFragment : Fragment() {
                 // 근무 시간 설정 버튼
                 this.findViewById<Button>(R.id.mkSetShiftDialogBtn).setOnClickListener {
                     shiftHolderLayout.removeAllViews()
-                    setShiftAtOnceDialog{ shiftMapList->
+                    setShiftDialog{ shiftMapList->
                         copiedShiftMapList = shiftMapList
                         shiftMapList.forEach {shiftMap->
                             val inflater = LayoutInflater.from(requireContext())
@@ -344,12 +344,10 @@ class WorkFragment : Fragment() {
                 this.findViewById<RadioGroup>(R.id.setWorkRadioGroup).setOnCheckedChangeListener { _, id ->
                     when(id){
                         this.findViewById<RadioButton>(R.id.setTypeRadio).id -> {
-                            Log.d("test", id.toString())
                             this.findViewById<LinearLayout>(R.id.setTypeLayout).isGone = false
                             this.findViewById<LinearLayout>(R.id.setShiftLayout).isGone = true
                         }
                         this.findViewById<RadioButton>(R.id.setTimeRadio).id -> {
-                            Log.d("test", id.toString())
                             this.findViewById<LinearLayout>(R.id.setTypeLayout).isGone = true
                             this.findViewById<LinearLayout>(R.id.setShiftLayout).isGone = false
                         }
@@ -398,7 +396,7 @@ class WorkFragment : Fragment() {
 
 
     @SuppressLint("MissingInflatedId")
-    private fun setShiftAtOnceDialog(callback: (shiftMapList:ArrayList<HashMap<String, Any>>) -> Unit ) {
+    private fun setShiftDialog(callback: (shiftMapList:ArrayList<HashMap<String, Any>>) -> Unit ) {
         try{
             Dialog(requireContext()).apply dialog@{
                 setContentView(R.layout.dialog_set_shift)
@@ -467,7 +465,7 @@ class WorkFragment : Fragment() {
 
     private fun saveTypeDialog(
         typeMap:HashMap<String, Any>?=null,
-        saveTypeCallback:(HashMap<String, Any>)->Unit,
+        inputTypeCallback:(HashMap<String, Any>)->Unit,
         deleteTypeCallback: () -> Unit){
         try{
             Dialog(requireContext()).apply{
@@ -491,7 +489,7 @@ class WorkFragment : Fragment() {
                         "isConcurrent" to isConcurrentBox.isChecked,
                         "heightRate" to 100
                     )
-                    saveTypeCallback(toSaveTypeMap)
+                    inputTypeCallback(toSaveTypeMap)
                     this.dismiss()
                 }
 
