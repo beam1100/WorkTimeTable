@@ -45,12 +45,12 @@ class TableFragment : Fragment() {
     private val vBinding get() = _vBinding!!
     private lateinit var mainActivity:MainActivity
 
-    private var logMapList = arrayListOf<HashMap<String,Any>>()
-    private var typeMapList = arrayListOf<HashMap<String,Any>>()
-    private var shiftMapList = arrayListOf<HashMap<String,Any>>()
+    private lateinit var logMapList:ArrayList<HashMap<String,Any>>
+    private lateinit var typeMapList:ArrayList<HashMap<String,Any>>
+    private lateinit var shiftMapList:ArrayList<HashMap<String,Any>>
 
     private lateinit var mainMemberList:ArrayList<String>
-    private var subMemberList = arrayListOf<String>()
+    private lateinit var subMemberList:ArrayList<String>
 
     private var workName = ""
 
@@ -61,6 +61,8 @@ class TableFragment : Fragment() {
     private val selectedBtnList = arrayListOf<AppCompatButton>()
 
     private val stack: ArrayDeque<ArrayList<HashMap<String, Any>>> = ArrayDeque()
+
+    private lateinit var copiedLogMapList:ArrayList<HashMap<String,Any>>
 
 
     override fun onDestroyView() {
@@ -182,15 +184,6 @@ class TableFragment : Fragment() {
                             }else{
                                 getLog(mainActivity.daysBetween(formatter.format(calendar.time), date))
                             }
-                        },
-                        getCallback = {map->
-                            typeMapList = map["typeMapList"] as ArrayList<HashMap<String, Any>>
-                            shiftMapList = map["shiftMapList"] as ArrayList<HashMap<String, Any>>
-                            logMapList = map["logMapList"] as ArrayList<HashMap<String, Any>>
-                            mainMemberList = map["mainMemberList"] as ArrayList<String>
-                            subMemberList = map["subMemberList"] as ArrayList<String>
-                            workName = map["workName"] as String
-                            mkTable()
                         }
                     )
                 }
@@ -280,13 +273,12 @@ class TableFragment : Fragment() {
             //사고자 설정
             vBinding.mkSwitchMemberDialogBtn.setOnClickListener {
                 if(isDbExists()){
-                    mkSwitchMemberDialog{ workingMemberList->
-                        mainMemberList = workingMemberList
+                    mkSwitchMemberDialog{ newMainMemberList->
+                        mainMemberList = newMainMemberList
                         logMapList.forEach { map->
-                            val memberList = map["member"] as ArrayList<String>
-                            val btn = map["btn"] as AppCompatButton
-                            memberList.removeIf { name -> name !in workingMemberList }
-                            btn.text = memberList.joinToString("\n")
+                            val memberList = map["member"] as ArrayList<*>
+                            memberList.removeIf { name -> name !in (mainMemberList + subMemberList) }
+                            (map["btn"] as AppCompatButton).text = memberList.joinToString("\n")
                         }
                     }
                 }
@@ -295,8 +287,13 @@ class TableFragment : Fragment() {
             //지원근무자 설정
             vBinding.mkSubMemberDialogBtn.setOnClickListener {
                 if(isDbExists()){
-                    mkSubMemberDialog{
-                        subMemberList = it
+                    mkSubMemberDialog{ newSubMemberList->
+                        subMemberList = newSubMemberList
+                        logMapList.forEach { map->
+                            val memberList = map["member"] as ArrayList<*>
+                            memberList.removeIf { name -> name !in (mainMemberList + subMemberList) }
+                            (map["btn"] as AppCompatButton).text = memberList.joinToString("\n")
+                        }
                     }
                 }
             }
@@ -323,13 +320,45 @@ class TableFragment : Fragment() {
                 copyToRight()
             }
 
-            // 되돌리기 버튼
+            // 실행취소 버튼
             vBinding.undoBtn.setOnClickListener {
                 if(stack.isNotEmpty()){
                     logMapList = stack.removeLast()
                     mkTable()
                 }else{
                     Toast.makeText(requireContext(), "이전 작업이 없습니다.", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+
+            //복사 버튼
+            vBinding.copyTableBtn.setOnClickListener {
+                if(logMapList.isNotEmpty()){
+                    copiedLogMapList = logMapList
+                    Toast.makeText(requireContext(), "현재 근무표가 복사되었습니다.", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            //붙여넣기 버튼
+            vBinding.pasteTableBtn.setOnClickListener {
+                if(::copiedLogMapList.isInitialized){
+                    if(logMapList.isNotEmpty()){
+                        stack.add(mainActivity.deepCopy(logMapList) as ArrayList<HashMap<String,Any>>)
+                        logMapList.forEach {toPasteMap->
+                            copiedLogMapList.forEach {copiedMap->
+                                if(toPasteMap["type"] == copiedMap["type"] && toPasteMap["shift"] == copiedMap["shift"]){
+                                    toPasteMap["member"]= (copiedMap["member"] as ArrayList<String>).filter {
+                                        it in (mainMemberList + subMemberList)
+                                    }
+                                }
+                            }
+                        }
+                        mkTable()
+                    }else{
+                        Toast.makeText(requireContext(), "붙여넣을 근무표를 작성하세요", Toast.LENGTH_SHORT).show()
+                    }
+                }else{
+                    Toast.makeText(requireContext(), "근무표를 복사하세요", Toast.LENGTH_SHORT).show()
                 }
             }
 
@@ -1246,7 +1275,6 @@ class TableFragment : Fragment() {
 
     private fun mkLogListDialog(
         goCallback: (String) -> Unit,
-        getCallback: (HashMap<String,Any>) -> Unit
     ){
         Dialog(requireContext()).apply {
             setContentView(R.layout.dialog_log_list)
@@ -1265,10 +1293,6 @@ class TableFragment : Fragment() {
                         goCallback(logMap["logDate"] as String)
                         dismiss()
                     }
-                }
-                holder.findViewById<Button>(R.id.getLogBtn).setOnClickListener {
-                    getCallback(logMap)
-                    dismiss()
                 }
             }
         }

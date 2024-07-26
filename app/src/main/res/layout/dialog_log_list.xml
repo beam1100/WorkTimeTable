@@ -15,7 +15,7 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_gravity="center"
-            android:layout_weight="3"
+            android:layout_weight="2"
             android:fontFamily="@font/ongulip"
             android:gravity="center"
             android:text="날짜"
@@ -50,11 +50,6 @@
             android:gravity="center"
             android:text="지원"
             android:textSize="30sp" />
-
-        <Space
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="2" />
 
     </LinearLayout>
 

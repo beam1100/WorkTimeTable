@@ -9,7 +9,7 @@
         android:id="@+id/logDateBtn"
         android:layout_width="0dp"
         android:layout_height="match_parent"
-        android:layout_weight="3"
+        android:layout_weight="2"
         android:fontFamily="@font/ongulip"
         android:gravity="center"
         android:textSize="20sp"
@@ -41,14 +41,5 @@
         android:fontFamily="@font/ongulip"
         android:gravity="center"
         android:textSize="30sp" />
-
-    <Button
-        android:id="@+id/getLogBtn"
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="2"
-        android:fontFamily="@font/ongulip"
-        android:text="가져\n오기"
-        android:textSize="20sp" />
 
 </LinearLayout>

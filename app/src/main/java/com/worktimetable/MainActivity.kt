@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.icu.text.SimpleDateFormat
 import android.icu.util.Calendar
+//import android.media.tv.AdRequest
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
