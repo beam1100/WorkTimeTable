@@ -48,6 +48,7 @@ class TableFragment : Fragment() {
     private lateinit var logMapList:ArrayList<HashMap<String,Any>>
     private lateinit var typeMapList:ArrayList<HashMap<String,Any>>
     private lateinit var shiftMapList:ArrayList<HashMap<String,Any>>
+    private lateinit var copiedLogMapList:ArrayList<HashMap<String,Any>>
 
     private lateinit var mainMemberList:ArrayList<String>
     private lateinit var subMemberList:ArrayList<String>
@@ -62,7 +63,6 @@ class TableFragment : Fragment() {
 
     private val stack: ArrayDeque<ArrayList<HashMap<String, Any>>> = ArrayDeque()
 
-    private lateinit var copiedLogMapList:ArrayList<HashMap<String,Any>>
 
 
     override fun onDestroyView() {
@@ -333,9 +333,11 @@ class TableFragment : Fragment() {
 
             //복사 버튼
             vBinding.copyTableBtn.setOnClickListener {
-                if(logMapList.isNotEmpty()){
-                    copiedLogMapList = logMapList
-                    Toast.makeText(requireContext(), "현재 근무표가 복사되었습니다.", Toast.LENGTH_SHORT).show()
+                if(isDbExists()){
+                    if(logMapList.isNotEmpty()){
+                        copiedLogMapList = logMapList
+                        Toast.makeText(requireContext(), "현재 근무표가 복사되었습니다.", Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
 
