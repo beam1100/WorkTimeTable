@@ -77,8 +77,7 @@ class WorkFragment : Fragment() {
                     updateBtnCallback = { clickedWorkMap->
                         setWorkDialog(
                             clickedWorkMap,
-                            // 근무 업데이트 콜백
-                            {id, workName, typeList, shiftList->
+                            setMap = {id, workName, typeList, shiftList->
                                 mainActivity.helper.updateByCondition(
                                     "WorkTable",
                                     hashMapOf("id" to id as Any),
@@ -91,8 +90,7 @@ class WorkFragment : Fragment() {
                                 )
                                 onViewCreated(view, savedInstanceState)
                             },
-                            // 근무 복사 콜백
-                            {
+                            copyMap = {
                                 val sortIndexMaxOrNull = mainActivity.helper.select("WorkTable").maxOfOrNull { it["sortIndex"] as Int}
                                 val sortIndex = if(sortIndexMaxOrNull==null){0}else{sortIndexMaxOrNull+1}
                                 mainActivity.helper.insert(
@@ -106,8 +104,7 @@ class WorkFragment : Fragment() {
                                 )
                                 onViewCreated(view, savedInstanceState)
                             },
-                            // 근무 삭제 콜백
-                            {
+                            deleteMap = {
                                 mainActivity.helper.deleteByCondition("WorkTable", hashMapOf("id" to clickedWorkMap["id"]))
                                 onViewCreated(view, savedInstanceState)
                             }
@@ -121,8 +118,7 @@ class WorkFragment : Fragment() {
             vBinding.mkWorkBtn.setOnClickListener {
                 setWorkDialog(
                     null,
-                    // 근무 저장 콜백
-                    { _, workName, typeList, shiftList->
+                    setMap = { _, workName, typeList, shiftList->
                         val sortIndexMaxOrNull = mainActivity.helper.select("WorkTable").maxOfOrNull { it["sortIndex"] as Int}
                         val sortIndex = if(sortIndexMaxOrNull==null){0}else{sortIndexMaxOrNull+1}
                         mainActivity.helper.insert(
@@ -136,8 +132,8 @@ class WorkFragment : Fragment() {
                         )
                         onViewCreated(view, savedInstanceState)
                     },
-                    {},
-                    {}
+                    copyMap = {},
+                    deleteMap = {}
                 )
             }
 
@@ -212,14 +208,15 @@ class WorkFragment : Fragment() {
                     holder.findViewById<ImageButton>(R.id.holderGetBtn).isGone = true
                     holder.findViewById<ImageButton>(R.id.holderDelBtn).isGone = true
                     mainActivity.mkHolderFromMap(copiedTypeMapList, typeHolderLayout, holder, typeMap, "type",
-                        updateBtnCallback = { toEditTypeMap ->
-                            saveTypeDialog(
-                                typeMap = toEditTypeMap,
+                        updateBtnCallback = { toUpdateTypeMap ->
+                            inputTypeDialog(
+                                typeMapList = copiedTypeMapList,
+                                typeMap = toUpdateTypeMap,
                                 inputTypeCallback = { newTypeMap ->
                                     holder.findViewById<TextView>(R.id.holderTV).text = newTypeMap["type"] as String
-                                    toEditTypeMap["type"] = newTypeMap["type"] as String
-                                    toEditTypeMap["isPatrol"] = newTypeMap["isPatrol"] as Boolean
-                                    toEditTypeMap["isConcurrent"] = newTypeMap["isConcurrent"] as Boolean
+                                    toUpdateTypeMap["type"] = newTypeMap["type"] as String
+                                    toUpdateTypeMap["isPatrol"] = newTypeMap["isPatrol"] as Boolean
+                                    toUpdateTypeMap["isConcurrent"] = newTypeMap["isConcurrent"] as Boolean
                                 },
                                 deleteTypeCallback = {
                                     copiedTypeMapList.remove(typeMap)
@@ -232,14 +229,16 @@ class WorkFragment : Fragment() {
                     )
                 }
 
-                // 근무 추가 버튼
-                this.findViewById<Button>(R.id.mkAddWorkDialogBtn).setOnClickListener { _ ->
+                // 근무형태 추가 버튼
+                this.findViewById<Button>(R.id.inputTypeDialogBtn).setOnClickListener { _ ->
                     //다이얼로그에서 새로운 근무유형 홀더에 담기
                     val inflater = LayoutInflater.from(requireContext())
                     val holder = inflater.inflate(R.layout.holder_item, null) as LinearLayout
                     holder.findViewById<ImageButton>(R.id.holderGetBtn).isGone = true
                     holder.findViewById<ImageButton>(R.id.holderDelBtn).isGone = true
-                    saveTypeDialog(
+                    Log.d("test", copiedTypeMapList.toString())
+                    inputTypeDialog(
+                        typeMapList = copiedTypeMapList,
                         typeMap = null,
                         inputTypeCallback = {toAddTypeMap ->
                             copiedTypeMapList.add(toAddTypeMap)
@@ -247,17 +246,18 @@ class WorkFragment : Fragment() {
                                 copiedTypeMapList, typeHolderLayout, holder, toAddTypeMap, "type",
                                 getBtnCallback = {},
                                 delBtnCallback = {},
-                                updateBtnCallback = { toEditTypeMap ->
-                                    saveTypeDialog(
-                                        typeMap = toEditTypeMap,
+                                updateBtnCallback = { toUpdateTypeMap ->
+                                    inputTypeDialog(
+                                        typeMapList = copiedTypeMapList,
+                                        typeMap = toUpdateTypeMap,
                                         inputTypeCallback = { newTypeMap ->
                                             holder.findViewById<TextView>(R.id.holderTV).text = newTypeMap["type"] as String
-                                            toEditTypeMap["type"] = newTypeMap["type"] as String
-                                            toEditTypeMap["isPatrol"] = newTypeMap["isPatrol"] as Boolean
-                                            toEditTypeMap["isConcurrent"] = newTypeMap["isConcurrent"] as Boolean
+                                            toUpdateTypeMap["type"] = newTypeMap["type"] as String
+                                            toUpdateTypeMap["isPatrol"] = newTypeMap["isPatrol"] as Boolean
+                                            toUpdateTypeMap["isConcurrent"] = newTypeMap["isConcurrent"] as Boolean
                                         },
                                         deleteTypeCallback = {
-                                            copiedTypeMapList.remove(toEditTypeMap)
+                                            copiedTypeMapList.remove(toUpdateTypeMap)
                                             typeHolderLayout.removeView(holder)
                                         }
                                     )
@@ -340,7 +340,7 @@ class WorkFragment : Fragment() {
                     }
                 }
 
-                //근무 유형 설정 · 근무 시간 설정 전환
+                //근무형태, 근무시간 설정 전환
                 this.findViewById<RadioGroup>(R.id.setWorkRadioGroup).setOnCheckedChangeListener { _, id ->
                     when(id){
                         this.findViewById<RadioButton>(R.id.setTypeRadio).id -> {
@@ -463,15 +463,16 @@ class WorkFragment : Fragment() {
         }
     }
 
-    private fun saveTypeDialog(
+    private fun inputTypeDialog(
+        typeMapList:ArrayList<HashMap<String,Any>>,
         typeMap:HashMap<String, Any>?=null,
         inputTypeCallback:(HashMap<String, Any>)->Unit,
         deleteTypeCallback: () -> Unit){
         try{
             Dialog(requireContext()).apply{
                 setContentView(R.layout.dialog_set_type)
-
                 findViewById<Button>(R.id.deleteWorkTypeBtn).isGone = (typeMap==null)
+                show()
 
                 val workNameEditText = this.findViewById<TextView>(R.id.toAddWorkName)
                 val isWorkPatrolBox = this.findViewById<CheckBox>(R.id.isPatrolCheckBox)
@@ -483,22 +484,25 @@ class WorkFragment : Fragment() {
 
                 //저장버튼 클릭
                 this.findViewById<Button>(R.id.saveTypeBtn).setOnClickListener {
-                    val toSaveTypeMap = hashMapOf<String, Any>(
-                        "type" to workNameEditText.text.toString(),
-                        "isPatrol" to isWorkPatrolBox.isChecked,
-                        "isConcurrent" to isConcurrentBox.isChecked,
-                        "heightRate" to 100
-                    )
-                    inputTypeCallback(toSaveTypeMap)
-                    this.dismiss()
+                    val toInputType = workNameEditText.text.toString()
+                    if(toInputType !in typeMapList.map{it["type"]}){
+                        val toSaveTypeMap = hashMapOf<String, Any>(
+                            "type" to toInputType,
+                            "isPatrol" to isWorkPatrolBox.isChecked,
+                            "isConcurrent" to isConcurrentBox.isChecked,
+                            "heightRate" to 100
+                        )
+                        inputTypeCallback(toSaveTypeMap)
+                        this.dismiss()
+                    }else{
+                        Toast.makeText(requireContext(), "이미 존재하는 근무유형입니다.", Toast.LENGTH_SHORT).show()
+                    }
                 }
-
                 //삭제버튼 클릭
                 this.findViewById<Button>(R.id.deleteWorkTypeBtn).setOnClickListener {
                     deleteTypeCallback()
                     this.dismiss()
                 }
-                show()
             }
         }catch(err:Exception){
             Log.d("test", err.toString())

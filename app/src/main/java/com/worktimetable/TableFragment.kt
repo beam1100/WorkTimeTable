@@ -223,10 +223,10 @@ class TableFragment : Fragment() {
 //                            {}
 //                        )
 //                    }else{
-                        mkSelectWorkDialog{selectedWorkName->
+                        mkSelectWorkDialog{index, selectedWorkName->
 //                            mainActivity.editor.putInt("point", point-1)
 //                            mainActivity.editor.apply()
-                            val workMap = mainActivity.helper.select("WorkTable", where= hashMapOf("workName" to selectedWorkName)).first()
+                            val workMap = mainActivity.helper.select("WorkTable", where= hashMapOf("workName" to selectedWorkName))[index]
                             typeMapList = workMap["typeList"] as ArrayList<HashMap<String, Any>>
                             shiftMapList = workMap["shiftList"] as ArrayList<HashMap<String, Any>>
                             logMapList = mkNewLogMapList(typeMapList, shiftMapList)
@@ -694,7 +694,7 @@ class TableFragment : Fragment() {
         return resultMapList
     }
 
-    private fun mkSelectWorkDialog(resType:(String)->Unit) {
+    private fun mkSelectWorkDialog(resType:(index:Int, String)->Unit) {
         Dialog(requireContext()).apply {
             setContentView(R.layout.dialog_select_work)
             mainActivity.setDialogSize(this, vBinding.tableFragmentLayout, 0.9f, null)
@@ -702,12 +702,15 @@ class TableFragment : Fragment() {
                 adapter = ArrayAdapter(
                     requireContext(),
                     R.layout.custom_spinner,
-                    mainActivity.helper.select("WorkTable", toSortColumn="sortIndex").map { it["workName"] }
+                    mainActivity.helper.select("WorkTable", toSortColumn="sortIndex").map { it["workName"]}
                 )
             }
             findViewById<Button>(R.id.mkNewTableBtn).setOnClickListener{
                 dismiss()
-                resType(workSpinner.selectedItem.toString())
+                resType(
+                    workSpinner.selectedItemPosition,
+                    workSpinner.selectedItem.toString()
+                )
             }
             show()
         }
