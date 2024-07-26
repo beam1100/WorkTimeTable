@@ -273,7 +273,7 @@
                     android:fontFamily="@font/ongulip"
                     android:text="테스트(임시)"
                     android:textSize="25sp"
-                    android:visibility="gone" />
+                    android:visibility="visible" />
             </LinearLayout>
         </HorizontalScrollView>
 

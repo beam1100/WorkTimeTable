@@ -435,9 +435,16 @@ class WorkFragment : Fragment() {
                             if(i<shiftNum){
                                 val fromTime = fromHour*60 + fromMinuet + i*intervalMinuet
                                 val toTime = fromHour*60 + fromMinuet + (i+1)*intervalMinuet
+                                var shiftStr = "${minuetToTimeStr(fromTime)}~${minuetToTimeStr(toTime)}"
+                                val regex = Regex("\\n\\(\\d+\\)")
+                                val shiftList = resultMapList.map { (it["shift"] as String).replace(regex, "") }
+                                val shiftCount = shiftList.count { it == shiftStr }
+                                if (shiftCount > 0) {
+                                    shiftStr = "$shiftStr\n($shiftCount)"
+                                }
                                 resultMapList.add(
                                     hashMapOf(
-                                        "shift" to "${minuetToTimeStr(fromTime)} ~ ${minuetToTimeStr(toTime)}",
+                                        "shift" to shiftStr,
                                         "fromTime" to fromTime,
                                         "toTime" to toTime,
                                         "interval" to intervalMinuet

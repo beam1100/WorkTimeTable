@@ -406,13 +406,9 @@ class TableFragment : Fragment() {
 
             //출력 테스트(임시)
             vBinding.testBtn.setOnClickListener {
-                Log.d("test", """
-                    tableWidth: ${mainActivity.preferences.getInt("tableWidth", 200)}
-                    tableHeight: ${mainActivity.preferences.getInt("tableHeight", 200)}
-                    typeWidth: ${ mainActivity.preferences.getInt("typeWidth", 15)}
-                    myTextSize: ${mainActivity.preferences.getInt("myTextSize", 7)}
-                    dateSize: ${ mainActivity.preferences.getInt("dateSize", 20)}
-                """.trimIndent())
+                logMapList.forEach {
+                    Log.d("test", it.toString())
+                }
             }
 
         }catch(err:Exception){
@@ -595,7 +591,7 @@ class TableFragment : Fragment() {
             for(shiftMap in shiftMapList){
                 AppCompatButton(requireContext()).apply {
                     val shift = shiftMap["shift"] as String
-                    this.text = shift.replace(" ~ ", "\n~\n")
+                    this.text = shift.replace("~", "\n~\n")
                     textSize = mainActivity.preferences.getInt("myTextSize", 7).toFloat()
                     colRow.addView(this)
                     this.setOnClickListener{}
@@ -746,15 +742,25 @@ class TableFragment : Fragment() {
 
     private fun selectSameShift(shift:String): View.OnLongClickListener? {
         return View.OnLongClickListener {
-            switchSelectMode(true)
-            logMapList.forEach {logMap->
-                if(logMap["shift"] == shift){
-                    val toInputBtn = logMap["btn"] as AppCompatButton
-                    if(toInputBtn !in selectedBtnList){
-                        selectedBtnList.add(toInputBtn)
-                        setBtnStyle(toInputBtn,R.color.selectedColor)
+            try{
+                switchSelectMode(true)
+                logMapList.forEach {logMap->
+                    if(logMap["shift"] == shift){
+                        logMap["btn"].let{toInputBtn->
+                            Log.d("test", logMap.toString())
+                            toInputBtn as AppCompatButton
+                            if(toInputBtn !in selectedBtnList){
+                                selectedBtnList.add(toInputBtn)
+                                setBtnStyle(toInputBtn,R.color.selectedColor)
+                            }
+                        }
+
                     }
                 }
+                return@OnLongClickListener true
+            }catch (err:Exception){
+                Log.d("test", err.toString())
+                Log.d("test", err.stackTraceToString())
             }
             return@OnLongClickListener true
         }
