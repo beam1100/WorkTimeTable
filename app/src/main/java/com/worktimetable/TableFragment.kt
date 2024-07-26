@@ -45,13 +45,13 @@ class TableFragment : Fragment() {
     private val vBinding get() = _vBinding!!
     private lateinit var mainActivity:MainActivity
 
-    private lateinit var logMapList:ArrayList<HashMap<String,Any>>
-    private lateinit var typeMapList:ArrayList<HashMap<String,Any>>
-    private lateinit var shiftMapList:ArrayList<HashMap<String,Any>>
-    private lateinit var copiedLogMapList:ArrayList<HashMap<String,Any>>
+    private var logMapList = arrayListOf<HashMap<String,Any>>()
+    private var typeMapList = arrayListOf<HashMap<String,Any>>()
+    private var shiftMapList = arrayListOf<HashMap<String,Any>>()
+    private var copiedLogMapList = arrayListOf<HashMap<String,Any>>()
 
-    private lateinit var mainMemberList:ArrayList<String>
-    private lateinit var subMemberList:ArrayList<String>
+    private var mainMemberList = arrayListOf<String>()
+    private var subMemberList = arrayListOf<String>()
 
     private var workName = ""
 
@@ -205,36 +205,36 @@ class TableFragment : Fragment() {
             //근무표 작성
             vBinding.mkWorkSelectDialogBtn.setOnClickListener {
                 if(isDbExists()){
-                    val point = mainActivity.preferences.getInt("point", 0)
-                    if(point <= 0){
-                        mainActivity.mkConfirmDialog(
-                            "포인트가 부족합니다. 광고를 시청하고 포인트를 획득하시겠습니까?",
-                            {
-                                mainActivity.rewardedAd?.let { ad ->
-                                    ad.show(requireActivity()) { rewardItem ->
-                                        mainActivity.editor.putInt("point", mainActivity.preferences.getInt("point",0) + rewardItem.amount)
-                                        mainActivity.editor.apply()
-                                        Toast.makeText(requireContext(), "+${rewardItem.amount}포인트", Toast.LENGTH_LONG).show()
-                                    }
-                                } ?: run {
-                                    Toast.makeText(requireContext(), "광고가 준비되지 않았습니다.", Toast.LENGTH_LONG).show()
-                                }
-                            },
-                            {}
-                        )
-                    }else{
+//                    val point = mainActivity.preferences.getInt("point", 0)
+//                    if(point <= 0){
+//                        mainActivity.mkConfirmDialog(
+//                            "포인트가 부족합니다. 광고를 시청하고 포인트를 획득하시겠습니까?",
+//                            {
+//                                mainActivity.rewardedAd?.let { ad ->
+//                                    ad.show(requireActivity()) { rewardItem ->
+//                                        mainActivity.editor.putInt("point", mainActivity.preferences.getInt("point",0) + rewardItem.amount)
+//                                        mainActivity.editor.apply()
+//                                        Toast.makeText(requireContext(), "+${rewardItem.amount}포인트", Toast.LENGTH_LONG).show()
+//                                    }
+//                                } ?: run {
+//                                    Toast.makeText(requireContext(), "광고가 준비되지 않았습니다.", Toast.LENGTH_LONG).show()
+//                                }
+//                            },
+//                            {}
+//                        )
+//                    }else{
                         mkSelectWorkDialog{selectedWorkName->
-                            mainActivity.editor.putInt("point", point-1)
-                            mainActivity.editor.apply()
+//                            mainActivity.editor.putInt("point", point-1)
+//                            mainActivity.editor.apply()
                             val workMap = mainActivity.helper.select("WorkTable", where= hashMapOf("workName" to selectedWorkName)).first()
                             typeMapList = workMap["typeList"] as ArrayList<HashMap<String, Any>>
                             shiftMapList = workMap["shiftList"] as ArrayList<HashMap<String, Any>>
                             logMapList = mkNewLogMapList(typeMapList, shiftMapList)
                             workName = selectedWorkName
                             mkTable()
-                            Toast.makeText(requireContext(), "-1포인트", Toast.LENGTH_LONG).show()
+//                            Toast.makeText(requireContext(), "-1포인트", Toast.LENGTH_LONG).show()
                         }
-                    }
+//                    }
                 }
 
             }
@@ -343,7 +343,7 @@ class TableFragment : Fragment() {
 
             //붙여넣기 버튼
             vBinding.pasteTableBtn.setOnClickListener {
-                if(::copiedLogMapList.isInitialized){
+                if(copiedLogMapList.isNotEmpty()){
                     if(logMapList.isNotEmpty()){
                         stack.add(mainActivity.deepCopy(logMapList) as ArrayList<HashMap<String,Any>>)
                         logMapList.forEach {toPasteMap->
